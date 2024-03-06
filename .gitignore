@@ -1,1 +1,4 @@
 /venv
+/to_json
+to_json.py
+ban_words.txt
