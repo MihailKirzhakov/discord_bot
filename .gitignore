@@ -1,5 +1,5 @@
 /venv
 /to_json
-.env
+__pycache__
 to_json.py
 ban_words.txt
