@@ -1,7 +1,6 @@
 import discord
 import os
 from dotenv import load_dotenv
-from discord.ext import commands
 
 # Подгружаем файл с переменными из .env
 load_dotenv()
@@ -18,8 +17,9 @@ async def on_ready():
 @bot.command()
 async def reload_extention(ctx: discord.ApplicationContext):
     bot.reload_extension('commands')
+    bot.reload_extension('buttons')
     await ctx.respond('Extension reloaded')
 
-
 bot.load_extension('commands')
+bot.load_extension('buttons')
 bot.run(os.getenv('TOKEN'))
