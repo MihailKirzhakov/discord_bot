@@ -16,8 +16,17 @@ class AucButton(View):
     @button(label='300', style=discord.ButtonStyle.green)
     async def callback(self, button, interaction: discord.Interaction):
         user_name = interaction.user.display_name
-        label_count = int(button.label.split()[0])
-        button.label = f'{label_count} K {user_name}'
+        current_label = float(button.label.split()[0])
+        if 300 <= current_label < 900:
+            current_label += 100
+            button.label = f'{current_label} K {user_name}'
+        elif current_label == 900:
+            current_label += 100
+            button.label = f'{current_label / 1000} M {user_name}'
+        else:
+            current_label *= 1000
+            current_label += 100
+            button.label = f'{current_label / 1000} M {user_name}'
         button.style = discord.ButtonStyle.blurple
         await interaction.response.edit_message(view=self)
 
