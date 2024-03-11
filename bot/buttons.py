@@ -15,9 +15,11 @@ class AucButton(View):
 
     @button(label='300', style=discord.ButtonStyle.green)
     async def callback(self, button, interaction: discord.Interaction):
-        button.label = '400'
+        user_name = interaction.user.display_name
+        label_count = int(button.label.split()[0])
+        button.label = f'{label_count} K {user_name}'
         button.style = discord.ButtonStyle.blurple
-        await interaction.respond('Test')
+        await interaction.response.edit_message(view=self)
 
 
 @commands.slash_command()
