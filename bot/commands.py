@@ -1,10 +1,18 @@
 import discord
 from discord.ext import commands
+from discord.ui import Button, View
 
 
 @commands.slash_command()
 async def gogo(ctx: discord.ApplicationContext):
     await ctx.respond('This is a regular command')
+
+
+@commands.slash_command()
+async def go_auc(ctx: discord.ApplicationContext):
+    button = Button(label='300')
+    button_manager = View(button)
+    await ctx.respond(view=button_manager)
 
 
 @commands.slash_command()
@@ -24,5 +32,6 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 
 
 def setup(bot: discord.Bot):
+    bot.add_application_command(go_auc)
     bot.add_application_command(gogo)
     bot.add_application_command(greet)
