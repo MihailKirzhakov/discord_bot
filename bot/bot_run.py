@@ -22,4 +22,7 @@ async def reload_extention(ctx: discord.ApplicationContext):
 
 bot.load_extension('commands')
 bot.load_extension('buttons')
-bot.run(os.getenv('TOKEN'))
+
+
+if __name__ == '__main__':
+    bot.run(os.getenv('TOKEN'))
