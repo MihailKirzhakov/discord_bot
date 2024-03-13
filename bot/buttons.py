@@ -1,45 +1,34 @@
 import discord
 from discord.ext import commands
-from discord.ui import button, View
+from discord.ui import View
+from discord.ui.item import Item
 
 
 class AucButton(View):
-
     def __init__(
             self,
+            *items: Item,
             timeout: float | None = None,
+            disable_on_timeout: bool = False,
+            count: int
     ):
         super().__init__(
+            *items,
             timeout=timeout,
+            disable_on_timeout=disable_on_timeout
         )
+        self.count = count
 
-    @button(label='300', style=discord.ButtonStyle.green)
-    async def callback(self, button, interaction: discord.Interaction):
-        user_name = interaction.user.display_name
-        thousand = 'K'
-        million = 'M'
-        original_label = button.label.split()
-        current_label = float(original_label[0])
-        if 300 <= current_label < 900:
-            current_label += 100
-            button.label = f'{int(current_label)} {thousand} {user_name}'
-        elif current_label == 900:
-            current_label += 100
-            current_label /= 1000
-            button.label = f'{round(current_label)} {million} {user_name}'
-        else:
-            current_label += 0.1
-            if current_label.is_integer():
-                button.label = f'{round(current_label)} {million} {user_name}'
-            else:
-                button.label = f'{round(current_label, 1)} {million} {user_name}'
-        button.style = discord.ButtonStyle.blurple
-        await interaction.response.edit_message(view=self)
+    for i in range(self.count):
+        @discord.ui.button(label="Click me!", style=discord.ButtonStyle.primary)
+        async def button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
+            button.label = interaction.user.display_name
+            await interaction.response.edit_message(view=self)
 
 
 @commands.slash_command()
-async def go_auc(ctx: discord.ApplicationContext):
-    await ctx.respond(view=AucButton())
+async def go_auc(ctx: discord.ApplicationContext, count: int):
+    await ctx.respond(view=AucButton(count=count))
 
 
 def setup(bot: discord.Bot):
