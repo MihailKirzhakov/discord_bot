@@ -3,3 +3,4 @@
 __pycache__
 to_json.py
 ban_words.txt
+.env
