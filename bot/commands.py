@@ -8,9 +8,9 @@ async def gogo(ctx: discord.ApplicationContext):
 
 
 @commands.slash_command()
-@commands.has_role(1216045585166237836)
+@commands.has_role('Аукционер')
 async def greet(ctx: discord.ApplicationContext, name: str):
-    await ctx.respond(f'Hello, {name}!')
+    await ctx.respond(f'Ну привет, {name}! Тестим')
 
 
 @greet.error

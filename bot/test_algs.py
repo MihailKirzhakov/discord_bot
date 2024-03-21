@@ -1,15 +1,19 @@
-class AucButton(discord.ui.View):
-    def __init__(self, count, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        for _ in range(count):
-            btn = discord.ui.Button(label="Click me!")
-            btn.callback = self.custom_callback(btn)
-            self.add_item(btn)
-
-    @staticmethod
-    def custom_callback(button: discord.ui.Button):
-        async def inner(interaction: discord.Interaction):
-            button.label = interaction.user.display_name
-            await interaction.edit_original_message(view=button.view)
-        return inner
+label = str(round(int(1000000) / 1000))
+while True:
+    thousand = 'K'
+    million = 'M'
+    original_label = label.split()
+    current_label = float(original_label[0])
+    if 300 <= current_label < 900:
+        current_label += 100
+        label = f'{int(current_label)} {thousand} СтопарьВодяры'
+    elif current_label >= 900:
+        current_label += 100
+        current_label /= 1000
+        label = f'{round(current_label)} {million} СтопарьВодяры'
+    else:
+        current_label += 0.1
+        if current_label.is_integer():
+            label = f'{round(current_label)} {million} СтопарьВодяры'
+        else:
+            label = f'{round(current_label, 1)} {million} СтопарьВодяры'

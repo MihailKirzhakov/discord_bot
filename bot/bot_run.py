@@ -16,6 +16,7 @@ async def on_ready():
 
 @bot.command()
 async def reload_extention(ctx: discord.ApplicationContext):
+    """Команда перезагружает остальные команды после внесенных изменений"""
     bot.reload_extension('commands')
     bot.reload_extension('buttons')
     await ctx.respond('Extension reloaded')
