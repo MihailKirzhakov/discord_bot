@@ -28,7 +28,12 @@ async def go_auc(
         min_value=100000,
         description='Укажи начальную ставку',
         name_localizations={'ru': 'начальная_ставка'}
-    )  # type: ignore
+    ),  # type: ignore
+    timer: discord.Option(
+        float,
+        description='Укажи время длительности аукциона в секундах',
+        name_localizations={'ru': 'таймер'}
+    ) # type: ignore
 ):
     """Команда создания аукциона"""
     convert_start_bid = (
@@ -36,7 +41,7 @@ async def go_auc(
         <= 900000 else f'{Decimal(start_bid) / Decimal('1000000')} M'
     )
     button_manager = View(timeout=None)
-    for i in range(count):
+    for _ in range(count):
         auc_button: discord.ui.Button = Button(
             label=str(convert_start_bid),
             style=discord.ButtonStyle.green
@@ -47,7 +52,7 @@ async def go_auc(
         label='Завершить аукцион', style=discord.ButtonStyle.red
     )
     button_manager.add_item(stop_button)
-    stop_button.callback = stop_callback(button_manager)
+    stop_button.callback = stop_callback(button_manager, count)
     await ctx.respond(f'{ctx.user.mention} начал аукцион {name}!')
     await ctx.send_followup(view=button_manager)
 
@@ -82,12 +87,15 @@ def bid_callback(button: discord.ui.Button, view: discord.ui.View):
     return inner
 
 
-def stop_callback(view: discord.ui.View):
+def stop_callback(view: discord.ui.View, amount):
     async def inner(interaction: discord.Interaction):
         if discord.utils.get(interaction.user.roles, name='Аукционер'):
             view.disable_all_items()
+            label_values = [btn.label for btn in view.children[:amount]]
+            label_values.sort(reverse=True)
+            message = '\n'.join([f'{i+1}. {val}' for i, val in enumerate(label_values)])
             await interaction.response.edit_message(view=view)
-            await interaction.followup.send(content='Аукцион был остановлен.')
+            await interaction.followup.send(content=message)
         else:
             answer = random.randint(1, 3)
             await interaction.response.send_message(
