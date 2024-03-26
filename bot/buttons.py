@@ -28,12 +28,12 @@ async def go_auc(
         min_value=100000,
         description='Укажи начальную ставку',
         name_localizations={'ru': 'начальная_ставка'}
-    ),  # type: ignore
-    timer: discord.Option(
-        float,
-        description='Укажи время длительности аукциона в секундах',
-        name_localizations={'ru': 'таймер'}
-    ) # type: ignore
+    )  # type: ignore
+    # timer: discord.Option(
+    #     float,
+    #     description='Укажи время длительности аукциона в секундах',
+    #     name_localizations={'ru': 'таймер'}
+    # ) # type: ignore
 ):
     """Команда создания аукциона"""
     convert_start_bid = (
@@ -92,7 +92,7 @@ def stop_callback(view: discord.ui.View, amount):
         if discord.utils.get(interaction.user.roles, name='Аукционер'):
             view.disable_all_items()
             label_values = [btn.label for btn in view.children[:amount]]
-            label_values.sort(reverse=True)
+            label_values.sort()
             message = '\n'.join([f'{i+1}. {val}' for i, val in enumerate(label_values)])
             await interaction.response.edit_message(view=view)
             await interaction.followup.send(content=message)
