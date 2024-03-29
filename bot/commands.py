@@ -18,7 +18,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if isinstance(error, commands.errors.NoPrivateMessage):
         await ctx.respond('Эта команда не может быть вызвана через ЛС')
     elif isinstance(error, commands.errors.MissingRole):
-        await ctx.respond(f'{ctx.author.mention} ты дружочек не достоин просить меня это сделать!')
+        await ctx.respond(f'{ctx.author.mention} ты, дружочек, не достоин просить меня это сделать!')
     else:
         return error
 
