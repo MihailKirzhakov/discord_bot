@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 @commands.slash_command()
+# Проверка роли по названию
 @commands.has_role('Аукционер')
 async def go_auc(
     ctx: discord.ApplicationContext,
@@ -36,11 +37,13 @@ async def go_auc(
     )  # type: ignore
 ):
     """Команда создания аукциона"""
+    # Конвертирование параметра начальной ставки в вид ("300K" или "1M")
     convert_start_bid = (
         f'{Decimal(start_bid) / Decimal('1000')}K' if 100000 <= start_bid
         <= 900000 else f'{Decimal(start_bid) / Decimal('1000000')}M'
     )
     button_manager = View(timeout=None)
+    # Создаём кнопки для каждго лота
     for _ in range(count):
         auc_button: discord.ui.Button = Button(
             label=str(convert_start_bid),
@@ -48,6 +51,7 @@ async def go_auc(
         )
         button_manager.add_item(auc_button)
         auc_button.callback = bid_callback(auc_button, button_manager, bid)
+    # Создаём кнопку для завершения аукциона
     stop_button:  discord.ui.Button = Button(
         label='Завершить аукцион', style=discord.ButtonStyle.red
     )
@@ -57,6 +61,7 @@ async def go_auc(
     await ctx.send_followup(view=button_manager)
 
 
+# Обработка ошибок и вывод сообщения о запрете вызова команды без указанной роли
 @go_auc.error
 async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
     if isinstance(error, commands.errors.MissingRole):
@@ -67,6 +72,7 @@ async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
         raise error
 
 
+# Callback для обработки на нажатие кнопок с лотами
 def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid_step: int):
     async def inner(interaction: discord.Interaction):
         button.style = discord.ButtonStyle.blurple
@@ -89,6 +95,7 @@ def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid_step: int
     return inner
 
 
+# Callback для обработки кнопки остановки аукциона
 def stop_callback(view: discord.ui.View, amount):
     async def inner(interaction: discord.Interaction):
         if discord.utils.get(interaction.user.roles, name='Аукционер'):
