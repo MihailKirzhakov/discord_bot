@@ -101,8 +101,16 @@ def stop_callback(view: discord.ui.View, amount):
         if discord.utils.get(interaction.user.roles, name='Аукционер'):
             view.disable_all_items()
             label_values = [btn.label for btn in view.children[:amount]]
-            label_values.sort()
-            message = '\n'.join([f'{i+1}. {val}' for i, val in enumerate(label_values)])
+            sorted_values = sorted(label_values, reverse=True)
+            result = []
+            check = 0
+            for i in range(0, len(sorted_values)):
+                if 'M' in sorted_values[i]:
+                    result.insert(0 + check, sorted_values[i])
+                    check += 1
+                else:
+                    result.append(sorted_values[i])
+            message = '\n'.join([f'{i+1}. {val}' for i, val in enumerate(result)])
             await interaction.response.edit_message(view=view)
             await interaction.followup.send(content=message)
         else:
