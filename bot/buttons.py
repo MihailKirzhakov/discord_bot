@@ -28,17 +28,17 @@ async def go_auc(
         min_value=100000,
         description='Укажи начальную ставку',
         name_localizations={'ru': 'начальная_ставка'}
+    ),  # type: ignore
+    bid: discord.Option(
+        int,
+        description='Укажи шаг ставки',
+        name_localizations={'ru': 'шаг_ставки'}
     )  # type: ignore
-    # timer: discord.Option(
-    #     float,
-    #     description='Укажи время длительности аукциона в секундах',
-    #     name_localizations={'ru': 'таймер'}
-    # ) # type: ignore
 ):
     """Команда создания аукциона"""
     convert_start_bid = (
-        f'{Decimal(start_bid) / Decimal('1000')} K' if 100000 <= start_bid
-        <= 900000 else f'{Decimal(start_bid) / Decimal('1000000')} M'
+        f'{Decimal(start_bid) / Decimal('1000')}K' if 100000 <= start_bid
+        <= 900000 else f'{Decimal(start_bid) / Decimal('1000000')}M'
     )
     button_manager = View(timeout=None)
     for _ in range(count):
@@ -47,7 +47,7 @@ async def go_auc(
             style=discord.ButtonStyle.green
         )
         button_manager.add_item(auc_button)
-        auc_button.callback = bid_callback(auc_button, button_manager)
+        auc_button.callback = bid_callback(auc_button, button_manager, bid)
     stop_button:  discord.ui.Button = Button(
         label='Завершить аукцион', style=discord.ButtonStyle.red
     )
@@ -67,22 +67,24 @@ async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
         raise error
 
 
-def bid_callback(button: discord.ui.Button, view: discord.ui.View):
+def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid_step: int):
     async def inner(interaction: discord.Interaction):
         button.style = discord.ButtonStyle.blurple
         name = interaction.user.display_name
-        original_label = button.label.split()
-        current_label = Decimal(original_label[0])
-        if Decimal('100') <= current_label < Decimal('900'):
-            current_label += Decimal('100')
-            button.label = f'{current_label} K {name}'
-        elif current_label >= Decimal('900'):
-            current_label += Decimal('100')
-            current_label /= Decimal('1000')
-            button.label = f'{round(current_label)} M {name}'
-        else:
-            current_label += Decimal('0.1')
-            button.label = f'{current_label} M {name}'
+        original_label = Decimal(button.label.split()[0][:-1])
+        if len(button.label.split()) == 1:
+            if 'K' in button.label:
+                button.label = f'{original_label}K {name}'
+            else:
+                button.label = f'{original_label}M {name}'
+        else:    
+            if 'K' in button.label:
+                if original_label < 900:
+                    button.label = f'{original_label + (Decimal(bid_step) / Decimal('1000'))}K {name}'
+                else:
+                    button.label = f'{(original_label + (Decimal(bid_step) / Decimal('1000'))) / Decimal('1000')}M {name}'
+            else:
+                button.label = f'{original_label + (Decimal(bid_step) / Decimal('1000000'))}M {name}'
         await interaction.response.edit_message(view=view)
     return inner
 
