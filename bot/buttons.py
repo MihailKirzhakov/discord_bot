@@ -7,6 +7,7 @@ from discord.ui import View, Button
 from dotenv import load_dotenv
 
 load_dotenv()
+button_mentions = dict()
 
 @commands.slash_command()
 # Проверка роли по названию
@@ -42,6 +43,10 @@ async def go_auc(
         f'{Decimal(start_bid) / Decimal('1000')}K' if 100000 <= start_bid
         <= 900000 else f'{Decimal(start_bid) / Decimal('1000000')}M'
     )
+    convert_bid = (
+        f'{Decimal(bid) / Decimal('1000')}K' if 100000 <= bid
+        <= 900000 else f'{Decimal(bid) / Decimal('1000000')}M'
+    )
     button_manager = View(timeout=None)
     # Создаём кнопки для каждго лота
     for _ in range(count):
@@ -57,7 +62,12 @@ async def go_auc(
     )
     button_manager.add_item(stop_button)
     stop_button.callback = stop_callback(button_manager, count)
-    await ctx.respond(f'{ctx.user.mention} начал аукцион {name}!')
+    await ctx.respond(
+        f'{ctx.user.mention} начал аукцион "{name}"!\n'
+        f'Количество лотов: {count}.\n'
+        f'Начальная ставка: {convert_start_bid}.\n'
+        f'Шаг ставки: {convert_bid}.'
+    )
     await ctx.send_followup(view=button_manager)
 
 
@@ -77,6 +87,7 @@ def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid_step: int
     async def inner(interaction: discord.Interaction):
         button.style = discord.ButtonStyle.blurple
         name = interaction.user.display_name
+        mention = interaction.user.mention
         original_label = Decimal(button.label.split()[0][:-1])
         if len(button.label.split()) == 1:
             if 'K' in button.label:
@@ -91,6 +102,7 @@ def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid_step: int
                     button.label = f'{(original_label + (Decimal(bid_step) / Decimal('1000'))) / Decimal('1000')}M {name}'
             else:
                 button.label = f'{original_label + (Decimal(bid_step) / Decimal('1000000'))}M {name}'
+        button_mentions[name] = mention
         await interaction.response.edit_message(view=view)
     return inner
 
@@ -101,18 +113,29 @@ def stop_callback(view: discord.ui.View, amount):
         if discord.utils.get(interaction.user.roles, name='Аукционер'):
             view.disable_all_items()
             label_values = [btn.label for btn in view.children[:amount]]
-            def convert_to_numeric(label):
-                valueStr = label.split()[0]
-                value = float(valueStr[:-1])
-                multiplier = valueStr[-1]
-                if multiplier == 'M':
-                    return value * 1000000
-                elif multiplier == 'K':
-                    return value * 1000
+            def convert_to_mention(values):
+                result = []
+                for value in values:
+                    split_value = value.split()
+                    if len(split_value) > 1:
+                        split_value[-1] = button_mentions[split_value[-1]]
+                        result.append(' '.join(split_value))
+                    else:
+                        result.append('Лот не был выкуплен')
+                return result
+            convert_label_values = convert_to_mention(label_values)
+            sorted_values = sorted(convert_label_values, reverse=False)
+            result = []
+            check = 0
+            for i in range(0, len(sorted_values)):
+                if 'M' in sorted_values[i]:
+                    result.insert(0, sorted_values[i])
+                    check += 1
+                elif 'K' in sorted_values[i]:
+                    result.insert(check, sorted_values[i])
                 else:
-                    return value
-            sorted_result = sorted(label_values, key=lambda x: convert_to_numeric(x), reverse=True)
-            message = '\n'.join([f'{i+1}. {val}' for i, val in enumerate(sorted_result)])
+                    result.append(sorted_values[i])
+            message = '\n'.join([f'{i+1}. {val}' for i, val in enumerate(result)])
             await interaction.response.edit_message(view=view)
             await interaction.followup.send(content=message)
         else:
