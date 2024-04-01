@@ -96,7 +96,7 @@ def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid_step: int
                 button.label = f'{original_label}M {name}'
         else:    
             if 'K' in button.label:
-                if original_label < 900:
+                if original_label < 900 and (original_label + (Decimal(bid_step) / Decimal('1000'))) < 1000:
                     button.label = f'{original_label + (Decimal(bid_step) / Decimal('1000'))}K {name}'
                 else:
                     button.label = f'{(original_label + (Decimal(bid_step) / Decimal('1000'))) / Decimal('1000')}M {name}'
