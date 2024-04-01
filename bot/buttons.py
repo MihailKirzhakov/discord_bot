@@ -5,6 +5,7 @@ from decimal import Decimal
 from discord.ext import commands
 from discord.ui import View, Button
 from dotenv import load_dotenv
+from answers import answers
 from functions import (
     convert_bid,
     label_count,
@@ -104,9 +105,9 @@ def stop_callback(view: discord.ui.View, amount):
             await interaction.response.edit_message(view=view)
             await interaction.followup.send(content=convert_sorted_message(sorted_values))
         else:
-            answer = random.randint(1, 3)
+            random_amount = random.randint(1, 4)
             await interaction.response.send_message(
-                f'{interaction.user.mention} {os.getenv(str(answer))}'
+                f'{interaction.user.mention} {answers[str(random_amount)]}'
             )
             return inner
     return inner
