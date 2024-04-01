@@ -5,6 +5,12 @@ from decimal import Decimal
 from discord.ext import commands
 from discord.ui import View, Button
 from dotenv import load_dotenv
+from functions import (
+    convert_bid,
+    label_count,
+    convert_to_mention,
+    convert_sorted_message
+)
 
 load_dotenv()
 button_mentions = dict()
@@ -38,20 +44,11 @@ async def go_auc(
     )  # type: ignore
 ):
     """Команда создания аукциона"""
-    # Конвертирование параметра начальной ставки в вид ("300K" или "1M")
-    convert_start_bid = (
-        f'{Decimal(start_bid) / Decimal('1000')}K' if 100000 <= start_bid
-        <= 900000 else f'{Decimal(start_bid) / Decimal('1000000')}M'
-    )
-    convert_bid = (
-        f'{Decimal(bid) / Decimal('1000')}K' if 100000 <= bid
-        <= 900000 else f'{Decimal(bid) / Decimal('1000000')}M'
-    )
     button_manager = View(timeout=None)
     # Создаём кнопки для каждго лота
     for _ in range(count):
         auc_button: discord.ui.Button = Button(
-            label=str(convert_start_bid),
+            label=str(convert_bid(start_bid)),
             style=discord.ButtonStyle.green
         )
         button_manager.add_item(auc_button)
@@ -65,13 +62,14 @@ async def go_auc(
     await ctx.respond(
         f'{ctx.user.mention} начал аукцион "{name}"!\n'
         f'Количество лотов: {count}.\n'
-        f'Начальная ставка: {convert_start_bid}.\n'
-        f'Шаг ставки: {convert_bid}.'
+        f'Начальная ставка: {convert_bid(start_bid)}.\n'
+        f'Шаг ставки: {convert_bid(bid)}.'
     )
     await ctx.send_followup(view=button_manager)
 
 
-# Обработка ошибок и вывод сообщения о запрете вызова команды без указанной роли
+# Обработка ошибок и вывод сообщения
+# о запрете вызова команды без указанной роли
 @go_auc.error
 async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
     if isinstance(error, commands.errors.MissingRole):
@@ -83,25 +81,13 @@ async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
 
 
 # Callback для обработки на нажатие кнопок с лотами
-def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid_step: int):
+def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid: int):
     async def inner(interaction: discord.Interaction):
         button.style = discord.ButtonStyle.blurple
         name = interaction.user.display_name
         mention = interaction.user.mention
         original_label = Decimal(button.label.split()[0][:-1])
-        if len(button.label.split()) == 1:
-            if 'K' in button.label:
-                button.label = f'{original_label}K {name}'
-            else:
-                button.label = f'{original_label}M {name}'
-        else:    
-            if 'K' in button.label:
-                if original_label < 900 and (original_label + (Decimal(bid_step) / Decimal('1000'))) < 1000:
-                    button.label = f'{original_label + (Decimal(bid_step) / Decimal('1000'))}K {name}'
-                else:
-                    button.label = f'{(original_label + (Decimal(bid_step) / Decimal('1000'))) / Decimal('1000')}M {name}'
-            else:
-                button.label = f'{original_label + (Decimal(bid_step) / Decimal('1000000'))}M {name}'
+        label_count(button, original_label, name, bid)
         button_mentions[name] = mention
         await interaction.response.edit_message(view=view)
     return inner
@@ -113,31 +99,10 @@ def stop_callback(view: discord.ui.View, amount):
         if discord.utils.get(interaction.user.roles, name='Аукционер'):
             view.disable_all_items()
             label_values = [btn.label for btn in view.children[:amount]]
-            def convert_to_mention(values):
-                result = []
-                for value in values:
-                    split_value = value.split()
-                    if len(split_value) > 1:
-                        split_value[-1] = button_mentions[split_value[-1]]
-                        result.append(' '.join(split_value))
-                    else:
-                        result.append('Лот не был выкуплен')
-                return result
-            convert_label_values = convert_to_mention(label_values)
+            convert_label_values = convert_to_mention(label_values, button_mentions)
             sorted_values = sorted(convert_label_values, reverse=False)
-            result = []
-            check = 0
-            for i in range(0, len(sorted_values)):
-                if 'M' in sorted_values[i]:
-                    result.insert(0, sorted_values[i])
-                    check += 1
-                elif 'K' in sorted_values[i]:
-                    result.insert(check, sorted_values[i])
-                else:
-                    result.append(sorted_values[i])
-            message = '\n'.join([f'{i+1}. {val}' for i, val in enumerate(result)])
             await interaction.response.edit_message(view=view)
-            await interaction.followup.send(content=message)
+            await interaction.followup.send(content=convert_sorted_message(sorted_values))
         else:
             answer = random.randint(1, 3)
             await interaction.response.send_message(
