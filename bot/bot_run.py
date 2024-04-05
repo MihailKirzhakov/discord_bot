@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 # Подгружаем файл с переменными из .env
 load_dotenv()
 
-bot = discord.Bot(debug_guilds=[1214866204309725244])
+# bot = discord.Bot(debug_guilds=[1126110667666108487])
+bot = discord.Bot()
 
 
 @bot.event
