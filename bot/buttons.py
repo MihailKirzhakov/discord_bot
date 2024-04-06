@@ -18,7 +18,7 @@ button_mentions = dict()
 
 @commands.slash_command()
 # Проверка роли по названию
-@commands.has_role('Аукционер')
+@commands.has_role('Аукцион')
 async def go_auc(
     ctx: discord.ApplicationContext,
     name: discord.Option(
@@ -97,7 +97,7 @@ def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid: int):
 # Callback для обработки кнопки остановки аукциона
 def stop_callback(view: discord.ui.View, amount):
     async def inner(interaction: discord.Interaction):
-        if discord.utils.get(interaction.user.roles, name='Аукционер'):
+        if discord.utils.get(interaction.user.roles, name='Аукцион'):
             view.disable_all_items()
             label_values = [btn.label for btn in view.children[:amount]]
             convert_label_values = convert_to_mention(label_values, button_mentions)

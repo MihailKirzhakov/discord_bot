@@ -188,5 +188,4 @@ def rand_choice(nicknames):
         result[i] = rand_value
 
     message = '\n'.join([f'{key} - {val}' for key, val in result.items()])
-
-    print(message)
+    return message
