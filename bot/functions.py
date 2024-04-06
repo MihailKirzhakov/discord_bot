@@ -1,4 +1,5 @@
 from decimal import Decimal
+from random import randint
 
 
 def convert_bid(bid) -> str:
@@ -163,3 +164,29 @@ def convert_sorted_message(sorted_values):
             second_sort.append(sorted_values[i])
     message = '\n'.join([f'{i+1}. {val}' for i, val in enumerate(second_sort)])
     return message
+
+
+def rand_choice(nicknames):
+    """
+    Функция выдает список победителей в рандомайзере.
+
+    Parameters
+    ----------
+    nicknames: str
+        Строка с никнэймами через пробел.
+
+    Returns
+    -------
+    message: str
+        Результирующая строка никнеймом и числом рандомайзера
+    """
+    values = nicknames.split()
+    result = dict()
+
+    for i in values:
+        rand_value = randint(1, 100)
+        result[i] = rand_value
+
+    message = '\n'.join([f'{key} - {val}' for key, val in result.items()])
+
+    print(message)
