@@ -5,6 +5,7 @@ from functions import rand_choice
 
 @commands.slash_command()
 async def gogo(ctx: discord.ApplicationContext):
+    """Команда для проверки бота"""
     await ctx.respond('This is a regular command')
 
 
@@ -31,6 +32,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 @commands.slash_command()
 @commands.has_role('Аукцион')
 async def greet(ctx: discord.ApplicationContext, name: str):
+    """Команда для теста"""
     await ctx.respond(f'Ну привет, {name}! Тестим')
 
 
