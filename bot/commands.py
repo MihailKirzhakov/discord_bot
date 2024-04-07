@@ -10,7 +10,7 @@ async def gogo(ctx: discord.ApplicationContext):
 
 
 @commands.slash_command()
-@commands.has_role('Аукцион')
+@commands.has_role('Казначей', 'Офицер', 'Лидер гильдии', 'Ветеран', 'Старшина')
 async def random(ctx: discord.ApplicationContext, nicknames: discord.Option(
     str,
     description='Укажи ники через "-", или диапазон в формате "1-100", или оставь поле пустым',
