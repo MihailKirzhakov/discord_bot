@@ -13,11 +13,11 @@ async def gogo(ctx: discord.ApplicationContext):
 @commands.has_role('Аукцион')
 async def random(ctx: discord.ApplicationContext, nicknames: discord.Option(
     str,
-    description='Впиши ники через пробел',
-    name_localizations={'ru': 'никнэймы'}
-)): # type: ignore
+    description='Укажи ники через "-", или диапазон в формате "1-100", или оставь поле пустым',
+    name_localizations={'ru': 'среди_чего_выбрать'}
+)='1-100'): # type: ignore
     """Команда вызывающая рандомайзер"""
-    await ctx.respond(f'Результаты:\n{rand_choice(nicknames)}')
+    await ctx.respond(rand_choice(nicknames))
 
 @random.error
 async def on_application_command_error(ctx: discord.ApplicationContext, error):
