@@ -1,5 +1,5 @@
 from decimal import Decimal
-from random import randint
+from random import randint, choice
 
 
 def convert_bid(bid) -> str:
@@ -180,12 +180,10 @@ def rand_choice(nicknames):
     message: str
         Результирующая строка никнеймом и числом рандомайзера
     """
-    values = nicknames.split()
-    result = dict()
+    values = nicknames.split('-')
 
-    for i in values:
-        rand_value = randint(1, 100)
-        result[i] = rand_value
-
-    message = '\n'.join([f'{key} - {val}' for key, val in result.items()])
-    return message
+    if values[0].isdigit():
+        return randint(int(values[0]), int(values[1]))
+    else:
+        message = f'Участники:\n{'\n'.join([f'{i+1} - {val}' for i, val in enumerate(values)])}\nПобедитель: {choice(values)}'
+        return message
