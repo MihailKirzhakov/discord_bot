@@ -103,7 +103,7 @@ def stop_callback(view: discord.ui.View, amount):
             convert_label_values = convert_to_mention(label_values, button_mentions)
             sorted_values = sorted(convert_label_values, reverse=False)
             await interaction.response.edit_message(view=view)
-            await interaction.followup.send(content=convert_sorted_message(sorted_values))
+            await interaction.followup.send(content=f'Победители:\n{convert_sorted_message(sorted_values)}')
         else:
             random_amount = random.randint(1, 4)
             await interaction.response.send_message(
