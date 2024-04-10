@@ -24,6 +24,7 @@ async def reload_extention(ctx: discord.ApplicationContext):
 
 bot.load_extension('commands')
 bot.load_extension('buttons')
+bot.load_extension('select_menus')
 
 
 if __name__ == '__main__':

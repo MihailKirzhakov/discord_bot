@@ -1,5 +1,8 @@
 import discord
+
 from discord.ext import commands
+from discord.ui import Select, View
+from constants import DEAFAULT_RANDOMISE_VALUE
 from functions import rand_choice
 
 
@@ -10,12 +13,17 @@ async def gogo(ctx: discord.ApplicationContext):
 
 
 @commands.slash_command()
-async def random(ctx: discord.ApplicationContext, nicknames: discord.Option(
-    str,
-    description='Укажи ники через "-", или диапазон в формате "1-100", или оставь поле пустым',
-    name_localizations={'ru': 'среди_чего_выбрать'}
-)='1-100'): # type: ignore
-    """Команда вызывающая рандомайзер"""
+async def random(
+    ctx: discord.ApplicationContext, nicknames: discord.Option(
+        str,
+        default=DEAFAULT_RANDOMISE_VALUE,
+        description='Укажи ники через "-", или диапазон в формате "1-100", или оставь поле пустым',
+        name_localizations={'ru': 'среди_чего_выбрать'}
+    ) # type: ignore
+):
+    """
+    Команда вызывающая рандомайзер. По дэфолту диапазон чисел 1-100.
+    """
     await ctx.respond(rand_choice(nicknames))
 
 @random.error

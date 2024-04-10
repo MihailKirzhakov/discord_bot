@@ -1,10 +1,11 @@
 import discord
-import os
 import random
+
+from constants import MAX_BUTTON_VALUE, MIN_BID_VALUE
 from decimal import Decimal
 from discord.ext import commands
 from discord.ui import View, Button
-from dotenv import load_dotenv
+
 from answers import answers
 from functions import (
     convert_bid,
@@ -13,8 +14,8 @@ from functions import (
     convert_sorted_message
 )
 
-load_dotenv()
 button_mentions = dict()
+
 
 @commands.slash_command()
 # Проверка роли по названию
@@ -28,13 +29,13 @@ async def go_auc(
     ),  # type: ignore
     count: discord.Option(
         int,
-        max_value=24,
+        max_value=MAX_BUTTON_VALUE,
         description='Сколько кнопок с лотами будет запущено',
         name_localizations={'ru': 'количество_лотов'}
     ),  # type: ignore
     start_bid: discord.Option(
         int,
-        min_value=100000,
+        min_value=MIN_BID_VALUE,
         description='Укажи начальную ставку',
         name_localizations={'ru': 'начальная_ставка'}
     ),  # type: ignore
