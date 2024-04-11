@@ -64,7 +64,7 @@ async def rcd(ctx: discord.ApplicationContext):
 
 @rcd.error
 async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
-    if isinstance(error, commands.errors.MissingRole):
+    if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond('Команду может вызвать только руководство!')
     elif isinstance(error, commands.errors.PrivateMessageOnly):
         await ctx.respond('Команду нельзя вызывать в личные сообщения бота!')
