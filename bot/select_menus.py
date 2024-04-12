@@ -1,76 +1,72 @@
 import discord
 
 from discord.ext import commands
-from discord.ui import Modal, InputText, View, button
-from discord.ui.item import Item
+from discord.ui import Modal, InputText, View, Button, button
 
 
-class DominionApplication(Modal):
+class ApplicationButton(View):
+
+    @button(label='Заполни форму', style=discord.ButtonStyle.green, emoji='📋')
+    async def callback(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await interaction.response.send_modal(RoleApplication())
+
+
+class RoleButton(View):
+
+    @button(label='Выдать старшину', style=discord.ButtonStyle.green)
+    async def callback(self, button: discord.ui.Button, interaction: discord.Interaction):
+        
+        await interaction.response
+
+# def access_button(user):
+#     button_manager = View(timeout=None)
+#     button: discord.ui.Button = Button(
+#         label='Выдать старшину',
+#         style=discord.ButtonStyle.green
+#     )
+
+#     async def button_callback(interaction: discord.Interaction):
+#         guild = interaction.guild
+#         role = guild.get_role(1227886432002117734)
+#         await user.add_roles(role)
+#     button.callback = button_callback
+#     button_manager.add_item(button)
+
+
+
+class RoleApplication(Modal):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, title='Заявка на РЧД')
+        super().__init__(*args, **kwargs, title='Заявка на выдачу роли')
 
         self.add_item(
             InputText(
-                label='Укажи, сколько чести сейчас?',
-                placeholder='350'
-            )
-        )
-
-        self.add_item(
-            InputText(
-                label='На каком классе можешь отыграть?',
-                placeholder='шаман/жрец'
-            )
-        )
-
-        self.add_item(
-            InputText(
-                label='Какая накидка сейчас на тебе?',
-                placeholder='красная'
+                label='Укажи свой игровой ник без пробелов',
+                placeholder='Учитывай регистр (большие и маленькие буквы)'
             )
         )
 
     async def callback(self, interaction: discord.Interaction):
-        name = interaction.user.mention
-        honor = self.children[0].value
-        class_name = self.children[1].value
-        clothing = self.children[2].value
-
-        await interaction.response.send_message(
-            f'**принял заявку на РЧД**\n'
-            f'{name} _**записался на РЧД**_\n'
-            f'**ЧЕСТЬ**: {honor}\n'
-            f'**КЛАСС/КЛАССЫ**: {class_name}\n'
-            f'**НАКИДКА**: {clothing}'
+        user = interaction.user
+        nickname = self.children[0].value
+        await interaction.respond(
+            'Твой запрос принят! Дождись выдачи роли',
+            empheral=True
         )
-
-
-class ApplicationView(View):
-    def __init__(self, timeout: float | None = 180):
-        super().__init__(timeout=timeout)
-
-
-    @button(label='Записаться на РЧД', style=discord.ButtonStyle.green, emoji='📋')
-    async def callback(self, button: discord.ui.Button, interaction: discord.Integration):
-        await interaction.response.send_modal(DominionApplication())
+        await interaction.respond(
+            f'Принял запрос!\n'
+            f'{user.mention} просит выдать роль\n'
+            f'Игровой ник: {nickname}'
+        )
 
 
 @commands.slash_command()
 @commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
-async def rcd(ctx: discord.ApplicationContext):
-    """Команда для запуска кнопки заявки на РЧД"""
-    await ctx.respond('**Форма для заполнения заявки на РЧД**', view=ApplicationView())
-
-
-@rcd.error
-async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
-    if isinstance(error, commands.errors.MissingAnyRole):
-        await ctx.respond('Команду может вызвать только руководство!')
-    elif isinstance(error, commands.errors.PrivateMessageOnly):
-        await ctx.respond('Команду нельзя вызывать в личные сообщения бота!')
-    else:
-        raise error
+async def role_application(ctx: discord.ApplicationContext):
+    await ctx.respond(
+        'Привет!\n Заполни форму для получения доступа',
+        view=ApplicationButton()
+    )
 
 
 def setup(bot: discord.Bot):
-    bot.add_application_command(rcd)
+    bot.add_application_command(role_application)

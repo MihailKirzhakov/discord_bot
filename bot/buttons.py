@@ -108,7 +108,8 @@ def stop_callback(view: discord.ui.View, amount):
         else:
             random_amount = random.randint(1, 4)
             await interaction.response.send_message(
-                f'{interaction.user.mention} {answers[str(random_amount)]}'
+                f'{answers[str(random_amount)]}',
+                ephemeral=True
             )
             return inner
     return inner
