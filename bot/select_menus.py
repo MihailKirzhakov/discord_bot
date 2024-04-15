@@ -25,6 +25,7 @@ class RoleButton(View):
         await interaction.response.edit_message(
             view=self
         )
+        await interaction.respond(f'{interaction.user.mention} __**ВЫДАЛ**__ роль!')
 
 
 class DeniedButton(RoleButton):
@@ -44,6 +45,7 @@ class DeniedButton(RoleButton):
         await interaction.response.edit_message(
             view=self
         )
+        await interaction.respond(f'{interaction.user.mention} __**ОТКАЗАЛ**__ в доступе!')
 
 
 class RoleApplication(Modal):
