@@ -27,6 +27,25 @@ class RoleButton(View):
         )
 
 
+class DeniedButton(RoleButton):
+
+    def __init__(self, user, channel: discord.TextChannel, timeout: float | None = None):
+        super().__init__(user=user, channel=channel, timeout=timeout)
+
+
+    @button(label='Отправить в ЛС, что не подходит', style=discord.ButtonStyle.red)
+    async def callback(self, button: discord.ui.Button, interaction: discord.Interaction):
+        self.disable_all_items()
+        await self.user.send(
+            f'_**Приветствую!**_\n'
+            f'_Офицер {interaction.user.display_name} не согласовал приём в гильдию_!\n'
+            f'Рекомендую написать в личные сообщения, для уточнения информации.'
+        )
+        await interaction.response.edit_message(
+            view=self
+        )
+
+
 class RoleApplication(Modal):
 
     def __init__(self, channel: discord.TextChannel, *args, **kwargs):
@@ -73,7 +92,7 @@ class RoleApplication(Modal):
         )
         await user.edit(nick=nickname)
         await self.channel.send(
-            view=RoleButton(user=user, channel=self.channel),
+            view=DeniedButton(user=user, channel=self.channel),
             embed=embed
         )
 
