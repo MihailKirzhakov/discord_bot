@@ -53,7 +53,13 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
         return error
 
 
+@commands.slash_command()
+@commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
+async def clear_all(ctx: discord.ApplicationContext):
+    await ctx.channel.purge()
+
 def setup(bot: discord.Bot):
     bot.add_application_command(gogo)
     bot.add_application_command(greet)
     bot.add_application_command(random)
+    bot.add_application_command(clear_all)
