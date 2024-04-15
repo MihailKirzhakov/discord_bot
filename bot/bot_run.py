@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # bot = discord.Bot(debug_guilds=[1126110667666108487])
-bot = discord.Bot()
+bot = discord.Bot(debug_guilds=[1214866204309725244])
 
 
 @bot.event

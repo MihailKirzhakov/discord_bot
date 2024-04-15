@@ -1,7 +1,10 @@
 import discord
+import requests
 
 from discord.ext import commands
 from discord.ui import Modal, InputText, View, button
+
+from functions import character_lookup
 
 
 
@@ -14,9 +17,11 @@ class RoleButton(View):
 
     @button(label='Выдать старшину', style=discord.ButtonStyle.green)
     async def callback(self, button: discord.ui.Button, interaction: discord.Interaction):
-        role = discord.utils.get(interaction.guild.roles, id=1222655185055252581)
+        role_sergeant = discord.utils.get(interaction.guild.roles, id=1182428098256457819)
+        role_guest = discord.utils.get(interaction.guild.roles, id=1173570849467551744)
         self.disable_all_items()
-        await self.user.add_roles(role)
+        await self.user.add_roles(role_sergeant)
+        await self.user.remove_roles(role_guest)
         await interaction.response.edit_message(
             view=self
         )
@@ -39,16 +44,29 @@ class RoleApplication(Modal):
         user = interaction.user
         member = discord.utils.get(interaction.guild.members, id=user.id)
         nickname = self.children[0].value
+        player_parms = character_lookup(1, nickname)
+        if not player_parms:
+            return None
+
+        description = f'Гильдия: {player_parms['guild']}'
+
+        if 'dragon_emblem' in player_parms:
+            description += f'\nДраконий амулет: {player_parms['dragon_emblem']['name']}'
+
         embed = discord.Embed(
-            title=f'Заявка на доступ',
-            description='Думаю над текстом',
+            title='Заявка на доступ',
+            description=description,
             color=0x6e00ff
         )
-        embed.set_author(name=member.display_name, icon_url='https://avatars.mds.yandex.net/i?id=25468a149adb4b493e2ec75c6dfc0f6a7b318532-7664914-images-thumbs&n=13')
-        embed.add_field(name='Текущий класс', value='Здесь будет отображаться спарсеный класс', inline=True),
-        embed.add_field(name='Текущий ГС', value='Здесь будет отображаться спарсеный ГС', inline=True),
-        embed.add_field(name='Текущий уровень наследия богов', value='Здесь будет отображаться лвл НБ', inline=True),
-        embed.set_thumbnail(url=member.avatar)
+        embed.set_author(name=nickname, icon_url=member.avatar)
+        embed.add_field(name='Гирскор', value=player_parms['gear_score'], inline=True)
+        art_lvl = 'Нет'
+        if 'artifact' in player_parms:
+            art_lvl = player_parms['artifact']['level']
+        embed.add_field(name='Уровень НБ', value=art_lvl, inline=True)
+        embed.set_thumbnail(url=player_parms['class_icon'])
+        if 'emblem' in player_parms:
+            embed.set_image(url=player_parms['emblem']['image_url'])
         await interaction.respond(
             '_Твой запрос принят! Дождись выдачи роли_',
             ephemeral=True
