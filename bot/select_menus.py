@@ -1,8 +1,10 @@
 import discord
+import random
 
 from discord.ext import commands
 from discord.ui import Modal, InputText, View, button
 
+from answers import answers_for_application
 from constants import ANSWER_IF_CHEAT
 from functions import character_lookup
 
@@ -21,18 +23,28 @@ class RoleButton(View):
 
     @button(label='Выдать старшину', style=discord.ButtonStyle.green)
     async def callback(self, button: discord.ui.Button, interaction: discord.Interaction):
-        role_sergeant = discord.utils.get(interaction.guild.roles, id=1182428098256457819)
-        role_guest = discord.utils.get(interaction.guild.roles, id=1173570849467551744)
-        self.disable_all_items()
-        await self.user.add_roles(role_sergeant)
-        await self.user.remove_roles(role_guest)
-        await interaction.response.edit_message(
-            view=self
-        )
-        await interaction.respond(
-            f'{interaction.user.mention} __выдал__ '
-            f'роль игроку __{self.user.display_name}__!'
-        )
+        if (
+            discord.utils.get(interaction.user.roles, name='📣Казначей📣') or
+            discord.utils.get(interaction.user.roles, name='🛡️Офицер🛡️')
+        ):
+            role_sergeant = discord.utils.get(interaction.guild.roles, id=1182428098256457819)
+            role_guest = discord.utils.get(interaction.guild.roles, id=1173570849467551744)
+            self.disable_all_items()
+            await self.user.add_roles(role_sergeant)
+            await self.user.remove_roles(role_guest)
+            await interaction.response.edit_message(
+                view=self
+            )
+            await interaction.respond(
+                f'{interaction.user.mention} __выдал__ '
+                f'роль игроку __{self.user.display_name}__!'
+            )
+        else:
+            random_amount = random.randint(1, 3)
+            await interaction.response.send_message(
+                f'{answers_for_application[str(random_amount)]}',
+                ephemeral=True
+            )
 
 
 class DeniedRoleModal(Modal):
@@ -86,10 +98,20 @@ class DeniedButton(RoleButton):
 
     @button(label='Отправить в ЛС, что не подходит', style=discord.ButtonStyle.red)
     async def callback(self, button: discord.ui.Button, interaction: discord.Interaction):
-        self.disable_all_items()
-        await interaction.response.send_modal(DeniedRoleModal(
-            nickname=self.nickname, view=self, user=self.user
-        ))
+        if (
+            discord.utils.get(interaction.user.roles, name='📣Казначей📣') or
+            discord.utils.get(interaction.user.roles, name='🛡️Офицер🛡️')
+        ):
+            self.disable_all_items()
+            await interaction.response.send_modal(DeniedRoleModal(
+                nickname=self.nickname, view=self, user=self.user
+            ))
+        else:
+            random_amount = random.randint(1, 3)
+            await interaction.response.send_message(
+                f'{answers_for_application[str(random_amount)]}',
+                ephemeral=True
+            )
 
 
 class RoleApplication(Modal):
@@ -173,6 +195,18 @@ async def role_application(
         '_**Привет!\n Заполни форму для получения доступа**_',
         view=ApplicationButton(channel=channel)
     )
+
+
+# Обработка ошибок и вывод сообщения
+# о запрете вызова команды без указанной роли
+@role_application.error
+async def role_application_error(ctx: discord.ApplicationContext, error: Exception):
+    if isinstance(error, commands.errors.MissingAnyRole):
+        await ctx.respond('Команду может вызвать только "Казначей" или "Офицер"!', ephemeral=True)
+    elif isinstance(error, commands.errors.PrivateMessageOnly):
+        await ctx.respond('Команду нельзя вызывать в личные сообщения бота!', ephemeral=True)
+    else:
+        raise error
 
 
 def setup(bot: discord.Bot):

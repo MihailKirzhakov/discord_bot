@@ -252,25 +252,21 @@ def character_lookup(server: int, name: str):
         return player_parms
 
     # Эмблема персонажа
-    emblem = items['primary-19']
+    emblem = items.get('primary-19', None)
     if emblem:
         # Добавляем в словарь название эмблемы и иконку
         player_parms['emblem'] = {
             "name": emblem['name'],
             "image_url": emblem['image']
         }
-    else:
-        return player_parms
     # Драконий артефакт (шип или память света)
-    dragon_emblem = items['secondary-19']
+    dragon_emblem = items.get('secondary-19', None)
     if dragon_emblem:
         # Добавляем в словарь драконий артефакт
         player_parms['dragon_emblem'] = {
             "name": dragon_emblem['name'],
             "image_url": dragon_emblem['image']
         }
-    else:
-        return player_parms
     # Наследие богов
     artifact = {}
 
