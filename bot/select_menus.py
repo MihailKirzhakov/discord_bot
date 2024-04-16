@@ -37,8 +37,10 @@ class DeniedRoleModal(Modal):
 
         self.add_item(
                 InputText(
+                    style=discord.InputTextStyle.multiline,
                     label='Почему решил отказать в заявке',
                     placeholder='Необязательно (если пусто, отправится дэфолт фраза)',
+                    max_length=400,
                     required=False
                 )
             )
