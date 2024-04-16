@@ -259,6 +259,8 @@ def character_lookup(server: int, name: str):
             "name": emblem['name'],
             "image_url": emblem['image']
         }
+    else:
+        return player_parms
     # Драконий артефакт (шип или память света)
     dragon_emblem = items['secondary-19']
     if dragon_emblem:
@@ -267,6 +269,8 @@ def character_lookup(server: int, name: str):
             "name": dragon_emblem['name'],
             "image_url": dragon_emblem['image']
         }
+    else:
+        return player_parms
     # Наследие богов
     artifact = {}
 
