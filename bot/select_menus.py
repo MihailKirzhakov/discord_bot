@@ -3,13 +3,18 @@ import discord
 from discord.ext import commands
 from discord.ui import Modal, InputText, View, button
 
+from constants import ANSWER_IF_CHEAT
 from functions import character_lookup
-
 
 
 class RoleButton(View):
 
-    def __init__(self, user, channel: discord.TextChannel, timeout: float | None = None):
+    def __init__(
+            self,
+            user: discord.Interaction.user,
+            channel: discord.TextChannel,
+            timeout: float | None = None
+    ):
         super().__init__(timeout=timeout)
         self.user = user
         self.channel = channel
@@ -31,9 +36,10 @@ class RoleButton(View):
 
 
 class DeniedRoleModal(Modal):
-    def __init__(self, user, *args, **kwargs):
+    def __init__(self, user, view: discord.ui.Button,  *args, **kwargs):
         super().__init__(*args, **kwargs, title='Комментарий к отказу')
         self.user = user
+        self.view = view
 
         self.add_item(
                 InputText(
@@ -49,16 +55,19 @@ class DeniedRoleModal(Modal):
         user = interaction.user
         comments = (
             f'_**Приветствую!**_\n'
-            f'_Офицер {user.display_name} не согласовал приём в гильдию_!\n'
-            f'_Комментарии:\n{self.children[0].value}._'
+            f'_Офицер гильдии "Айронболз" {user.display_name} не согласовал приём в гильдию_!\n'
+
         )
-        if len(self.children[0].value) == 0:
-            comments = (
-                f'_**Приветствую!**_\n'
-                f'_Офицер {user.display_name} не согласовал приём в гильдию_!\n'
-                f'_Рекомендую написать в личные сообщения, для уточнения информации._'
+        if len(self.children[0].value) > 0:
+            comments += (
+                f'_Комментарии:\n{self.children[0].value}_'
             )
         await self.user.send(comments)
+        await interaction.response.edit_message(view=self.view)
+        await interaction.followup.send(
+            f'{interaction.user.mention} __отказал__ '
+            f'в доступе игроку __{self.user.display_name}__!'
+        )
 
 
 class DeniedButton(RoleButton):
@@ -69,14 +78,8 @@ class DeniedButton(RoleButton):
 
     @button(label='Отправить в ЛС, что не подходит', style=discord.ButtonStyle.red)
     async def callback(self, button: discord.ui.Button, interaction: discord.Interaction):
-        message = interaction.message.id
         self.disable_all_items()
-        await interaction.response.send_modal(DeniedRoleModal(user=self.user))
-        await interaction.followup.edit_message(message_id=message, view=self)
-        await interaction.followup.send(
-            f'{interaction.user.mention} __отказал__ '
-            f'в доступе игроку __{self.user.display_name}__!'
-        )
+        await interaction.response.send_modal(DeniedRoleModal(view=self, user=self.user))
 
 
 class RoleApplication(Modal):
@@ -95,18 +98,11 @@ class RoleApplication(Modal):
     async def callback(self, interaction: discord.Interaction):
         user = interaction.user
         member = discord.utils.get(interaction.guild.members, id=user.id)
-        nickname = self.children[0].value
+        nickname: str = self.children[0].value
         player_parms = character_lookup(1, nickname)
         if not player_parms:
             await interaction.respond(
-                '_В оружейке Аллодов на сервере: НитьСудьбы во фракции; Лига_ '
-                f'_такого никнейма не нашлось_ 🤷‍♂️\n'
-                '_Проверь, правильно ли ты ввел свой ник, а именно:_\n'
-                '_- проверь написание больших и маленьких букв_\n'
-                '_- в никнейме не должно быть пробелов_\n'
-                '_- не нужно в скобках указывать своё реальное имя_\n'
-                '_Как все проверил, попробуй снова отправить форму_👌\n'
-                '_Если ничгео не помогло, обратись к "СтопарьВодяры" в ЛС👍_',
+                ANSWER_IF_CHEAT,
                 ephemeral=True
             )
             return None
