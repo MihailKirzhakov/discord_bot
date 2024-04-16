@@ -36,8 +36,9 @@ class RoleButton(View):
 
 
 class DeniedRoleModal(Modal):
-    def __init__(self, user, view: discord.ui.Button,  *args, **kwargs):
+    def __init__(self, nickname: str, user, view: discord.ui.Button,  *args, **kwargs):
         super().__init__(*args, **kwargs, title='Комментарий к отказу')
+        self.nickname = nickname
         self.user = user
         self.view = view
 
@@ -66,20 +67,29 @@ class DeniedRoleModal(Modal):
         await interaction.response.edit_message(view=self.view)
         await interaction.followup.send(
             f'{interaction.user.mention} __отказал__ '
-            f'в доступе игроку __{self.user.display_name}__!'
+            f'в доступе игроку __{self.nickname}__!'
         )
 
 
 class DeniedButton(RoleButton):
 
-    def __init__(self, user: discord.Interaction.user, channel: discord.TextChannel, timeout: float | None = None):
+    def __init__(
+            self,
+            nickname: str,
+            user: discord.Interaction.user,
+            channel: discord.TextChannel,
+            timeout: float | None = None
+    ):
         super().__init__(user=user, channel=channel, timeout=timeout)
+        self.nickname = nickname
 
 
     @button(label='Отправить в ЛС, что не подходит', style=discord.ButtonStyle.red)
     async def callback(self, button: discord.ui.Button, interaction: discord.Interaction):
         self.disable_all_items()
-        await interaction.response.send_modal(DeniedRoleModal(view=self, user=self.user))
+        await interaction.response.send_modal(DeniedRoleModal(
+            nickname=self.nickname, view=self, user=self.user
+        ))
 
 
 class RoleApplication(Modal):
@@ -132,7 +142,7 @@ class RoleApplication(Modal):
         )
         await user.edit(nick=nickname)
         await self.channel.send(
-            view=DeniedButton(user=user, channel=self.channel),
+            view=DeniedButton(nickname=nickname, user=user, channel=self.channel),
             embed=embed
         )
 
