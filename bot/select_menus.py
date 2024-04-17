@@ -5,7 +5,11 @@ from discord.ext import commands
 from discord.ui import Modal, InputText, View, button
 
 from answers import answers_for_application
-from constants import ANSWER_IF_CHEAT
+from constants import (
+    ANSWER_IF_CHEAT, ACCESS_VALUE,
+    ACCESS_IMAGE_URL, IRONBALLS_IMAGE_URL,
+    DENIED_IMAGE_URL
+)
 from functions import character_lookup
 
 
@@ -13,37 +17,71 @@ class RoleButton(View):
 
     def __init__(
             self,
+            nickname: str,
             user: discord.Interaction.user,
             channel: discord.TextChannel,
             timeout: float | None = None
     ):
         super().__init__(timeout=timeout)
+        self.nickname = nickname
         self.user = user
         self.channel = channel
 
     @button(label='Выдать старшину', style=discord.ButtonStyle.green)
-    async def callback(self, button: discord.ui.Button, interaction: discord.Interaction):
+    async def callback_accept(self, button: discord.ui.Button, interaction: discord.Interaction):
         if (
             discord.utils.get(interaction.user.roles, name='📣Казначей📣') or
             discord.utils.get(interaction.user.roles, name='🛡️Офицер🛡️')
         ):
-            role_sergeant = discord.utils.get(interaction.guild.roles, id=1182428098256457819)
-            role_guest = discord.utils.get(interaction.guild.roles, id=1173570849467551744)
+            role_sergeant = discord.utils.get(interaction.guild.roles, id=1182428098256457819)  # Старшина 1182428098256457819, Выдать 1222655185055252581
+            role_guest = discord.utils.get(interaction.guild.roles, id=1173570849467551744)  # Гость 1173570849467551744, Убрать 1230178082346762240
+            embed = discord.Embed(
+                    title='_Приветствую!_',
+                    description='_Тебе выдан доступ на сервер гильдии Айронболз!_',
+                    color=0x00ff00
+                )
+            embed.add_field(
+                name='_Полезное:_',
+                value=ACCESS_VALUE,
+                inline=False
+            )
+            embed.set_thumbnail(url=ACCESS_IMAGE_URL)
+            embed.set_image(url=IRONBALLS_IMAGE_URL)
             self.disable_all_items()
             await self.user.add_roles(role_sergeant)
             await self.user.remove_roles(role_guest)
             await interaction.response.edit_message(
                 view=self
             )
+            await self.user.send(embed=embed)
             await interaction.respond(
                 f'{interaction.user.mention} __выдал__ '
-                f'роль игроку __{self.user.display_name}__!'
+                f'роль игроку __{self.nickname}__!'
             )
         else:
             random_amount = random.randint(1, 3)
             await interaction.response.send_message(
                 f'{answers_for_application[str(random_amount)]}',
-                ephemeral=True
+                ephemeral=True,
+                delete_after=15
+            )
+
+    @button(label='Отправить в ЛС, что не подходит', style=discord.ButtonStyle.red)
+    async def callback_denied(self, button: discord.ui.Button, interaction: discord.Interaction):
+        if (
+            discord.utils.get(interaction.user.roles, name='📣Казначей📣') or
+            discord.utils.get(interaction.user.roles, name='🛡️Офицер🛡️')
+        ):
+            self.disable_all_items()
+            await interaction.response.send_modal(DeniedRoleModal(
+                nickname=self.nickname, view=self, user=self.user
+            ))
+        else:
+            random_amount = random.randint(1, 3)
+            await interaction.response.send_message(
+                f'{answers_for_application[str(random_amount)]}',
+                ephemeral=True,
+                delete_after=15
             )
 
 
@@ -66,52 +104,38 @@ class DeniedRoleModal(Modal):
 
     async def callback(self, interaction: discord.Interaction):
         user = interaction.user
-        comments = (
-            f'_**Приветствую!**_\n'
-            f'_Офицер гильдии "Айронболз" {user.display_name} не согласовал приём в гильдию_!\n'
-
+        embed = discord.Embed(
+            title='_Приветствую!_',
+            description=(
+                f'_Офицер {user.display_name} отказал тебе '
+                f'в доступе на сервер гильдии Айронболз!_'
+            ),
+            color=0xff0000
         )
+        embed.set_thumbnail(url=DENIED_IMAGE_URL)
+        embed.set_image(url=IRONBALLS_IMAGE_URL)
         if len(self.children[0].value) > 0:
-            comments += (
-                f'_Комментарии:\n{self.children[0].value}_'
+            embed = discord.Embed(
+                title='_Приветствую!_',
+                description=(
+                    f'_Офицер {user.display_name} отказал тебе '
+                    f'в доступе на сервер гильдии Айронболз!_'
+                ),
+                color=0xff0000
             )
-        await self.user.send(comments)
+            embed.add_field(
+                name='_Комментарии:_',
+                value=f'_{self.children[0].value}_',
+                inline=False
+            )
+            embed.set_thumbnail(url=DENIED_IMAGE_URL)
+            embed.set_image(url=IRONBALLS_IMAGE_URL)
+        await self.user.send(embed=embed)
         await interaction.response.edit_message(view=self.view)
         await interaction.followup.send(
             f'{interaction.user.mention} __отказал__ '
             f'в доступе игроку __{self.nickname}__!'
         )
-
-
-class DeniedButton(RoleButton):
-
-    def __init__(
-            self,
-            nickname: str,
-            user: discord.Interaction.user,
-            channel: discord.TextChannel,
-            timeout: float | None = None
-    ):
-        super().__init__(user=user, channel=channel, timeout=timeout)
-        self.nickname = nickname
-
-
-    @button(label='Отправить в ЛС, что не подходит', style=discord.ButtonStyle.red)
-    async def callback(self, button: discord.ui.Button, interaction: discord.Interaction):
-        if (
-            discord.utils.get(interaction.user.roles, name='📣Казначей📣') or
-            discord.utils.get(interaction.user.roles, name='🛡️Офицер🛡️')
-        ):
-            self.disable_all_items()
-            await interaction.response.send_modal(DeniedRoleModal(
-                nickname=self.nickname, view=self, user=self.user
-            ))
-        else:
-            random_amount = random.randint(1, 3)
-            await interaction.response.send_message(
-                f'{answers_for_application[str(random_amount)]}',
-                ephemeral=True
-            )
 
 
 class RoleApplication(Modal):
@@ -135,7 +159,8 @@ class RoleApplication(Modal):
         if not player_parms:
             await interaction.respond(
                 ANSWER_IF_CHEAT,
-                ephemeral=True
+                ephemeral=True,
+                delete_after=30
             )
             return None
 
@@ -149,7 +174,7 @@ class RoleApplication(Modal):
             description=description,
             color=0x6e00ff
         )
-        embed.set_author(name=nickname, icon_url=member.avatar)
+        embed.set_author(name=nickname, url=f'https://discordapp.com/users/{user.id}', icon_url=member.avatar)
         embed.add_field(name='Гирскор', value=player_parms['gear_score'], inline=True)
         art_lvl = 'Нет'
         if 'artifact' in player_parms:
@@ -160,11 +185,12 @@ class RoleApplication(Modal):
             embed.set_image(url=player_parms['emblem']['image_url'])
         await interaction.respond(
             '_Твой запрос принят! Дождись выдачи роли_',
-            ephemeral=True
+            ephemeral=True,
+            delete_after=15
         )
         await user.edit(nick=nickname)
         await self.channel.send(
-            view=DeniedButton(nickname=nickname, user=user, channel=self.channel),
+            view=RoleButton(nickname=nickname, user=user, channel=self.channel),
             embed=embed
         )
 
@@ -202,9 +228,9 @@ async def role_application(
 @role_application.error
 async def role_application_error(ctx: discord.ApplicationContext, error: Exception):
     if isinstance(error, commands.errors.MissingAnyRole):
-        await ctx.respond('Команду может вызвать только "Казначей" или "Офицер"!', ephemeral=True)
+        await ctx.respond('Команду может вызвать только "Казначей" или "Офицер"!', ephemeral=True, delete_after=15)
     elif isinstance(error, commands.errors.PrivateMessageOnly):
-        await ctx.respond('Команду нельзя вызывать в личные сообщения бота!', ephemeral=True)
+        await ctx.respond('Команду нельзя вызывать в личные сообщения бота!', ephemeral=True, delete_after=15)
     else:
         raise error
 

@@ -317,3 +317,7 @@ def generate_thumbnail(player_parms):
     file = discord.File(buffered, filename="thumbnail.jpg")
 
     return file
+
+
+def take_class_attr(clss, *attr):
+    obj = clss()

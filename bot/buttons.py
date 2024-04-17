@@ -65,9 +65,9 @@ async def go_auc(
         f'{ctx.user.mention} начал аукцион "{name}"!\n'
         f'Количество лотов: {count}.\n'
         f'Начальная ставка: {convert_bid(start_bid)}.\n'
-        f'Шаг ставки: {convert_bid(bid)}.'
+        f'Шаг ставки: {convert_bid(bid)}.',
+        view=button_manager
     )
-    await ctx.send_followup(view=button_manager)
 
 
 # Обработка ошибок и вывод сообщения
@@ -75,9 +75,9 @@ async def go_auc(
 @go_auc.error
 async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
     if isinstance(error, commands.errors.MissingRole):
-        await ctx.respond('Команду может вызвать только Аукционер!')
+        await ctx.respond('Команду может вызвать только Аукционер!', ephemeral=True, delete_after=15)
     elif isinstance(error, commands.errors.PrivateMessageOnly):
-        await ctx.respond('Команду нельзя вызывать в личные сообщения бота!')
+        await ctx.respond('Команду нельзя вызывать в личные сообщения бота!', ephemeral=True, delete_after=15)
     else:
         raise error
 
@@ -109,7 +109,8 @@ def stop_callback(view: discord.ui.View, amount):
             random_amount = random.randint(1, 4)
             await interaction.response.send_message(
                 f'{answers[str(random_amount)]}',
-                ephemeral=True
+                ephemeral=True,
+                delete_after=15
             )
             return inner
     return inner
