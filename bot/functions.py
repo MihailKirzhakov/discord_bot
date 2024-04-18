@@ -187,8 +187,11 @@ def rand_choice(nicknames):
     message: str
         Результирующая строка никнеймом и числом рандомайзера
     """
+    nicknames.replace('_', '-')
     values = nicknames.split('-')
 
+    if len(values) == 1:
+        return 'Неправильно заданы параметры!'
     if values[0].isdigit():
         return randint(int(values[0]), int(values[1]))
     else:

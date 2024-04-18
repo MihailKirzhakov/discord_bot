@@ -47,5 +47,10 @@ DENIED_IMAGE_URL = (
 )
 
 IRONBALLS_IMAGE_URL = (
-    'https://media.discordapp.net/attachments/1182584501147279491/1230175591299416104/17492572.jpg?ex=66325d4c&is=661fe84c&hm=7bb3d06693640e474c2e0d69aebbd166ce617a59e75a37df753ef02844156aba&=&format=webp&width=643&height=640'
+    'https://media.discordapp.net/attachments/1182584501147279491/1230493162640904272/IB_original.jpg?ex=6622618f&is=6621100f&hm=2517d446153ff7dbe937c99090fd027427fba41f6e8a2b1f9ddfc00759016aa0&=&format=webp'
+)
+
+
+что_доделать = (
+    '1. Прикрутить нормальную картинку болзов'
 )
