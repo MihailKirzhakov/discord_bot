@@ -1,7 +1,6 @@
 import discord
 
 from discord.ext import commands
-from discord.ui import Select, View
 from constants import DEAFAULT_RANDOMISE_VALUE
 from functions import rand_choice
 
@@ -57,6 +56,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 @commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
 async def clear_all(ctx: discord.ApplicationContext):
     await ctx.channel.purge()
+
 
 def setup(bot: discord.Bot):
     bot.add_application_command(gogo)
