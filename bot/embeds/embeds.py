@@ -36,25 +36,15 @@ def denied_embed(user, reason):
     embed.set_thumbnail(url=DENIED_IMAGE_URL)
     embed.set_image(url=IRONBALLS_IMAGE_URL)
     if len(reason) > 0:
-        embed = discord.Embed(
-            title='_Приветствую!_',
-            description=(
-                f'_Офицер {user.display_name} отказал тебе '
-                f'в доступе на сервер гильдии Айронболз!_'
-            ),
-            color=0xff0000
+        embed.add_field(
+            name='_Комментарии:_',
+            value=f'_{reason}_',
+            inline=False
         )
-    embed.add_field(
-        name='_Комментарии:_',
-        value=f'_{reason}_',
-        inline=False
-    )
-    embed.set_thumbnail(url=DENIED_IMAGE_URL)
-    embed.set_image(url=IRONBALLS_IMAGE_URL)
     return embed
 
 
-def application_embed(description, nickname, user, member, player_parms):
+def application_embed(description, nickname, member, player_parms):
     embed = discord.Embed(
         title='Заявка на доступ',
         description=description,
@@ -62,7 +52,6 @@ def application_embed(description, nickname, user, member, player_parms):
     )
     embed.set_author(
         name=nickname,
-        url=f'https://discordapp.com/users/{user.id}',
         icon_url=member.avatar
     )
     embed.add_field(

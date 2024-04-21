@@ -6,10 +6,16 @@ from discord.ui import Modal, InputText, View, button
 
 from answers import answers_for_application
 from constants import (
-    ANSWER_IF_CHEAT
+    ANSWER_IF_CHEAT,
+    ANSWER_IF_DUPLICATE_APP,
+    ANSWER_IF_DUPLICATE_NAME,
+
 )
 from embeds.embeds import access_embed, denied_embed, application_embed
 from functions import character_lookup
+
+
+app_list: list = []
 
 
 class RoleButton(View):
@@ -17,14 +23,14 @@ class RoleButton(View):
     def __init__(
             self,
             nickname: str,
+            embed: discord.Embed,
             user: discord.Interaction.user,
-            channel: discord.TextChannel,
             timeout: float | None = None
     ):
         super().__init__(timeout=timeout)
         self.nickname = nickname
         self.user = user
-        self.channel = channel
+        self.embed = embed
 
     @button(label='Выдать старшину', style=discord.ButtonStyle.green)
     async def callback_accept(self, button: discord.ui.Button, interaction: discord.Interaction):
@@ -32,19 +38,22 @@ class RoleButton(View):
             discord.utils.get(interaction.user.roles, name='📣Казначей📣') or
             discord.utils.get(interaction.user.roles, name='🛡️Офицер🛡️')
         ):
-            role_sergeant = discord.utils.get(interaction.guild.roles, id=1222655185055252581)  # Старшина 1182428098256457819, Выдать 1222655185055252581
-            role_guest = discord.utils.get(interaction.guild.roles, id=1230178082346762240)  # Гость 1173570849467551744, Убрать 1230178082346762240
+            role_sergeant = discord.utils.get(interaction.guild.roles, id=1182428098256457819)  # Старшина 1182428098256457819, Выдать 1222655185055252581
+            role_guest = discord.utils.get(interaction.guild.roles, id=1173570849467551744)  # Гость 1173570849467551744, Убрать 1230178082346762240
             self.disable_all_items()
+            self.embed.add_field(
+                name='_Результат рассмотрения_ ✔',
+                value=f'_{interaction.user.mention} выдал роль!_',
+                inline=False
+            )
             await self.user.add_roles(role_sergeant)
             await self.user.remove_roles(role_guest)
             await interaction.response.edit_message(
+                embed=self.embed,
                 view=self
             )
             await self.user.send(embed=access_embed())
-            await interaction.respond(
-                f'{interaction.user.mention} __выдал__ '
-                f'роль игроку __{self.nickname}__!'
-            )
+            app_list.remove(self.nickname)
         else:
             random_amount = random.randint(1, 3)
             await interaction.response.send_message(
@@ -61,8 +70,9 @@ class RoleButton(View):
         ):
             self.disable_all_items()
             await interaction.response.send_modal(DeniedRoleModal(
-                nickname=self.nickname, view=self, user=self.user
+                nickname=self.nickname, view=self, user=self.user, embed=self.embed
             ))
+            app_list.remove(self.nickname)
         else:
             random_amount = random.randint(1, 3)
             await interaction.response.send_message(
@@ -73,12 +83,12 @@ class RoleButton(View):
 
 
 class DeniedRoleModal(Modal):
-    def __init__(self, nickname: str, user, view: discord.ui.Button,  *args, **kwargs):
+    def __init__(self, nickname: str, user, view: discord.ui.Button, embed: discord.Embed,  *args, **kwargs):
         super().__init__(*args, **kwargs, title='Комментарий к отказу')
         self.nickname = nickname
         self.user = user
         self.view = view
-
+        self.embed = embed
         self.add_item(
                 InputText(
                     style=discord.InputTextStyle.multiline,
@@ -92,12 +102,13 @@ class DeniedRoleModal(Modal):
     async def callback(self, interaction: discord.Interaction):
         user = interaction.user
         value = self.children[0].value
-        await self.user.send(embed=denied_embed(user=user, reason=value))
-        await interaction.response.edit_message(view=self.view)
-        await interaction.followup.send(
-            f'{interaction.user.mention} __отказал__ '
-            f'в доступе игроку __{self.nickname}__!'
-        )
+        self.embed.add_field(
+                name='_Результат рассмотрения_ ❌',
+                value=f'_{interaction.user.mention} отказал в доступе!_',
+                inline=False
+            )
+        await self.user.send(embed=denied_embed(user, value))
+        await interaction.response.edit_message(embed=self.embed, view=self.view)
 
 
 class RoleApplication(Modal):
@@ -117,16 +128,32 @@ class RoleApplication(Modal):
         user = interaction.user
         member = discord.utils.get(interaction.guild.members, id=user.id)
         nickname: str = self.children[0].value
+        display_names = [name.display_name for name in interaction.guild.members]
+        global_names = [name.global_name for name in interaction.guild.members]
         player_parms = character_lookup(1, nickname)
         if not player_parms:
-            await interaction.respond(
+            return await interaction.respond(
                 ANSWER_IF_CHEAT,
                 ephemeral=True,
                 delete_after=30
             )
-            return None
+        if nickname in display_names or nickname in global_names:
+            return await interaction.respond(
+                ANSWER_IF_DUPLICATE_NAME,
+                ephemeral=True,
+                delete_after=15
+            )
+        if nickname in app_list:
+            return await interaction.respond(
+                ANSWER_IF_DUPLICATE_APP,
+                ephemeral=True,
+                delete_after=15
+            )
 
-        description = f'Гильдия: {player_parms['guild']}'
+        description = (
+            f'Профиль: {user.mention}\n'
+            f'Гильдия: {player_parms['guild']}'
+        )
 
         if 'dragon_emblem' in player_parms:
             description += f'\nДраконий амулет: {player_parms['dragon_emblem']['name']}'
@@ -138,11 +165,18 @@ class RoleApplication(Modal):
         )
         await user.edit(nick=nickname)
         await self.channel.send(
-            view=RoleButton(nickname=nickname, user=user, channel=self.channel),
+            view=RoleButton(
+                nickname=nickname,
+                user=user,
+                embed=application_embed(
+                    description, nickname, member, player_parms
+                )
+            ),
             embed=application_embed(
-                description, nickname, user, member, player_parms
+                description, nickname, member, player_parms
             )
         )
+        app_list.append(nickname)
 
 
 class ApplicationButton(View):
