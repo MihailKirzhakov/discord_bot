@@ -1,17 +1,18 @@
 import discord
 import random
 
-from constants import MAX_BUTTON_VALUE, MIN_BID_VALUE
 from decimal import Decimal
 from discord.ext import commands
 from discord.ui import View, Button
 
-from answers import answers
-from functions import (
+from auc_buttons.functions import (
     convert_bid,
     label_count,
     convert_to_mention,
     convert_sorted_message
+)
+from auc_buttons.variables import (
+    ANSWERS_IF_NO_ROLE, MAX_BUTTON_VALUE, MIN_BID_VALUE
 )
 
 button_mentions = dict()
@@ -75,9 +76,17 @@ async def go_auc(
 @go_auc.error
 async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
     if isinstance(error, commands.errors.MissingRole):
-        await ctx.respond('Команду может вызвать только Аукционер!', ephemeral=True, delete_after=15)
+        await ctx.respond(
+            'Команду может вызвать только Аукционер!',
+            ephemeral=True,
+            delete_after=15
+        )
     elif isinstance(error, commands.errors.PrivateMessageOnly):
-        await ctx.respond('Команду нельзя вызывать в личные сообщения бота!', ephemeral=True, delete_after=15)
+        await ctx.respond(
+            'Команду нельзя вызывать в личные сообщения бота!',
+            ephemeral=True,
+            delete_after=15
+        )
     else:
         raise error
 
@@ -101,14 +110,18 @@ def stop_callback(view: discord.ui.View, amount):
         if discord.utils.get(interaction.user.roles, name='Аукцион'):
             view.disable_all_items()
             label_values = [btn.label for btn in view.children[:amount]]
-            convert_label_values = convert_to_mention(label_values, button_mentions)
+            convert_label_values = convert_to_mention(
+                label_values, button_mentions
+            )
             sorted_values = sorted(convert_label_values, reverse=False)
             await interaction.response.edit_message(view=view)
-            await interaction.followup.send(content=f'Победители:\n{convert_sorted_message(sorted_values)}')
+            await interaction.followup.send(
+                content=f'Победители:\n{convert_sorted_message(sorted_values)}'
+            )
         else:
             random_amount = random.randint(1, 4)
             await interaction.response.send_message(
-                f'{answers[str(random_amount)]}',
+                f'{ANSWERS_IF_NO_ROLE[str(random_amount)]}',
                 ephemeral=True,
                 delete_after=15
             )

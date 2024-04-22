@@ -1,8 +1,8 @@
 import discord
 
 from discord.ext import commands
-from constants import DEAFAULT_RANDOMISE_VALUE
-from functions import rand_choice
+from regular_commands.variables import DEAFAULT_RANDOMISE_VALUE
+from regular_commands.functions import rand_choice
 
 
 @commands.slash_command()
@@ -16,9 +16,12 @@ async def random(
     ctx: discord.ApplicationContext, nicknames: discord.Option(
         str,
         default=DEAFAULT_RANDOMISE_VALUE,
-        description='Укажи ники через "-", или диапазон в формате "1-100", или оставь поле пустым',
+        description=(
+            'Укажи ники через "-", или диапазон в формате "1-100", '
+            'или оставь поле пустым'
+        ),
         name_localizations={'ru': 'среди_чего_выбрать'}
-    ) # type: ignore
+    )  # type: ignore
 ):
     """
     Команда вызывающая рандомайзер. По дэфолту диапазон чисел 1-100.
@@ -30,7 +33,10 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if isinstance(error, commands.errors.NoPrivateMessage):
         await ctx.respond('Эта команда не может быть вызвана через ЛС')
     elif isinstance(error, commands.errors.MissingRole):
-        await ctx.respond(f'{ctx.author.mention} ты, дружочек, не достоин просить меня это сделать!')
+        await ctx.respond(
+            f'{ctx.author.mention} ты, дружочек, '
+            f'не достоин просить меня это сделать!'
+        )
     else:
         return error
 
@@ -47,7 +53,10 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
     if isinstance(error, commands.errors.NoPrivateMessage):
         await ctx.respond('Эта команда не может быть вызвана через ЛС')
     elif isinstance(error, commands.errors.MissingRole):
-        await ctx.respond(f'{ctx.author.mention} ты, дружочек, не достоин просить меня это сделать!')
+        await ctx.respond(
+            f'{ctx.author.mention} ты, дружочек, '
+            f'не достоин просить меня это сделать!'
+        )
     else:
         return error
 
@@ -55,7 +64,9 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 @commands.slash_command()
 @commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
 async def clear_all(ctx: discord.ApplicationContext):
-    await ctx.channel.purge()
+    await ctx.channel.purge(
+        bulk=False
+    )
 
 
 def setup(bot: discord.Bot):

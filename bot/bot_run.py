@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 # Подгружаем файл с переменными из .env
 load_dotenv()
 
-# bot = discord.Bot(debug_guilds=[1126110667666108487])
+# bot = discord.Bot(debug_guilds=[1214866204309725244])
 bot = discord.Bot()
 
 
@@ -18,13 +18,14 @@ async def on_ready():
 @bot.command()
 async def reload_extention(ctx: discord.ApplicationContext):
     """Команда перезагружает остальные команды после внесенных изменений"""
-    bot.reload_extension('commands')
-    bot.reload_extension('buttons')
+    bot.reload_extension('regular_commands.regular_commands')
+    bot.reload_extension('auc_buttons.auc_buttons')
+    bot.reload_extension('role_application.role_application')
     await ctx.respond('Extension reloaded')
 
-bot.load_extension('commands')
-bot.load_extension('buttons')
-bot.load_extension('select_menus')
+bot.load_extension('regular_commands.regular_commands')
+bot.load_extension('auc_buttons.auc_buttons')
+bot.load_extension('role_application.role_application')
 
 
 if __name__ == '__main__':
