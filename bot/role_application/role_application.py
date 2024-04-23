@@ -45,10 +45,10 @@ class RoleButton(View):
         ):
             role_sergeant = discord.utils.get(
                 interaction.guild.roles, name='Старшина'
-            )  # Старшина 1182428098256457819, Выдать 1222655185055252581
+            )
             role_guest = discord.utils.get(
                 interaction.guild.roles, name='Гость'
-            )  # Гость 1173570849467551744, Убрать 1230178082346762240
+            )
             self.disable_all_items()
             self.embed.add_field(
                 name='_Результат рассмотрения_ ✔',
@@ -160,7 +160,7 @@ class RoleApplication(Modal):
         member_by_display_name = discord.utils.get(
             interaction.guild.members, display_name=nickname
         )
-        role = discord.utils.get(interaction.guild.roles, name='Старшина')
+        role = discord.utils.get(interaction.guild.roles, name='Гость')
         player_parms = character_lookup(1, nickname)
         if not player_parms:
             return await interaction.respond(
@@ -169,7 +169,7 @@ class RoleApplication(Modal):
                 delete_after=30
             )
         if member_by_display_name:
-            if role in member_by_display_name.roles:
+            if role not in member_by_display_name.roles:
                 return await interaction.respond(
                     ANSWER_IF_DUPLICATE_NICK,
                     ephemeral=True,

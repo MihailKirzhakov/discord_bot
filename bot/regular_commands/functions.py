@@ -18,13 +18,12 @@ def rand_choice(nicknames):
     values = nicknames.replace('_', '-').split('-')
 
     if len(values) == 1:
-        return 'Неправильно заданы параметры!'
+        return None
     if values[0].isdigit():
         return randint(int(values[0]), int(values[1]))
     else:
         message = (
-            f'Участники:\n'
-            f'{'\n'.join([f'{i+1} - {val}' for i, val in enumerate(values)])}\n'
-            f'Победитель: {choice(values)}'
+            f'_{'\n'.join([f'{i+1} - {val}' for i, val in enumerate(values)])}\n'
+            f'Победитель: **{choice(values)}**_'
         )
         return message

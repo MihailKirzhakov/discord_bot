@@ -1,44 +1,67 @@
 import discord
 
 from discord.ext import commands
-from regular_commands.variables import DEAFAULT_RANDOMISE_VALUE
-from regular_commands.functions import rand_choice
+
+from regular_commands.randomaizer import ApplicationButton
 
 
 @commands.slash_command()
+@commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
 async def gogo(ctx: discord.ApplicationContext):
     """Команда для проверки бота"""
     await ctx.respond('This is a regular command')
 
 
+@gogo.error
+async def gogo_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+):
+    if isinstance(error, commands.errors.MissingAnyRole):
+        await ctx.respond(
+            'Команду может вызвать только "Казначей" или "Офицер"!',
+            ephemeral=True,
+            delete_after=15
+        )
+    elif isinstance(error, commands.errors.PrivateMessageOnly):
+        await ctx.respond(
+            'Команду нельзя вызывать в личные сообщения бота!',
+            ephemeral=True,
+            delete_after=15
+        )
+    else:
+        raise error
+
+
 @commands.slash_command()
+@commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
 async def random(
-    ctx: discord.ApplicationContext, nicknames: discord.Option(
-        str,
-        default=DEAFAULT_RANDOMISE_VALUE,
-        description=(
-            'Укажи ники через "-", или диапазон в формате "1-100", '
-            'или оставь поле пустым'
-        ),
-        name_localizations={'ru': 'среди_чего_выбрать'}
-    )  # type: ignore
+    ctx: discord.ApplicationContext
 ):
     """
     Команда вызывающая рандомайзер. По дэфолту диапазон чисел 1-100.
     """
-    await ctx.respond(rand_choice(nicknames))
+    await ctx.respond(view=ApplicationButton())
 
 @random.error
-async def on_application_command_error(ctx: discord.ApplicationContext, error):
-    if isinstance(error, commands.errors.NoPrivateMessage):
-        await ctx.respond('Эта команда не может быть вызвана через ЛС')
-    elif isinstance(error, commands.errors.MissingRole):
+async def random_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+):
+    if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(
-            f'{ctx.author.mention} ты, дружочек, '
-            f'не достоин просить меня это сделать!'
+            'Команду может вызвать только "Казначей" или "Офицер"!',
+            ephemeral=True,
+            delete_after=15
+        )
+    elif isinstance(error, commands.errors.PrivateMessageOnly):
+        await ctx.respond(
+            'Команду нельзя вызывать в личные сообщения бота!',
+            ephemeral=True,
+            delete_after=15
         )
     else:
-        return error
+        raise error
 
 
 @commands.slash_command()
@@ -67,6 +90,27 @@ async def clear_all(ctx: discord.ApplicationContext):
     await ctx.channel.purge(
         bulk=False
     )
+
+
+@clear_all.error
+async def clear_all_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+):
+    if isinstance(error, commands.errors.MissingAnyRole):
+        await ctx.respond(
+            'Команду может вызвать только "Казначей" или "Офицер"!',
+            ephemeral=True,
+            delete_after=15
+        )
+    elif isinstance(error, commands.errors.PrivateMessageOnly):
+        await ctx.respond(
+            'Команду нельзя вызывать в личные сообщения бота!',
+            ephemeral=True,
+            delete_after=15
+        )
+    else:
+        raise error
 
 
 def setup(bot: discord.Bot):
