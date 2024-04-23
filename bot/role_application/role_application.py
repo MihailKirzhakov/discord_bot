@@ -8,6 +8,7 @@ from role_application.variables import (
     ANSWERS_IF_NO_ROLE,
     ANSWER_IF_CHEAT,
     ANSWER_IF_DUPLICATE_APP,
+    ANSWER_IF_DUPLICATE_NICK
 )
 from role_application.embeds import (
     access_embed, denied_embed, application_embed
@@ -43,10 +44,10 @@ class RoleButton(View):
             discord.utils.get(interaction.user.roles, name='🛡️Офицер🛡️')
         ):
             role_sergeant = discord.utils.get(
-                interaction.guild.roles, id=1222655185055252581
+                interaction.guild.roles, name='Старшина'
             )  # Старшина 1182428098256457819, Выдать 1222655185055252581
             role_guest = discord.utils.get(
-                interaction.guild.roles, id=1230178082346762240
+                interaction.guild.roles, name='Гость'
             )  # Гость 1173570849467551744, Убрать 1230178082346762240
             self.disable_all_items()
             self.embed.add_field(
@@ -119,7 +120,9 @@ class DeniedRoleModal(Modal):
                 InputText(
                     style=discord.InputTextStyle.multiline,
                     label='Почему решил отказать в заявке',
-                    placeholder='Необязательно (если пусто, отправится дэфолт фраза)',
+                    placeholder=(
+                        'Необязательно (если пусто, отправится дэфолт фраза)'
+                    ),
                     max_length=400,
                     required=False
                 )
@@ -151,9 +154,13 @@ class RoleApplication(Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        nickname: str = self.children[0].value
         user = interaction.user
         member = discord.utils.get(interaction.guild.members, id=user.id)
-        nickname: str = self.children[0].value
+        member_by_display_name = discord.utils.get(
+            interaction.guild.members, display_name=nickname
+        )
+        role = discord.utils.get(interaction.guild.roles, name='Старшина')
         player_parms = character_lookup(1, nickname)
         if not player_parms:
             return await interaction.respond(
@@ -161,6 +168,13 @@ class RoleApplication(Modal):
                 ephemeral=True,
                 delete_after=30
             )
+        if member_by_display_name:
+            if role in member_by_display_name.roles:
+                return await interaction.respond(
+                    ANSWER_IF_DUPLICATE_NICK,
+                    ephemeral=True,
+                    delete_after=15
+                )
         if nickname in app_list:
             return await interaction.respond(
                 ANSWER_IF_DUPLICATE_APP,
@@ -177,7 +191,7 @@ class RoleApplication(Modal):
             description += f'\nДраконий амулет: {player_parms['dragon_emblem']['name']}'
 
         await interaction.respond(
-            '_Твой запрос принят! Дождись выдачи роли_',
+            '👍\n_Твой запрос принят! Дождись выдачи роли_',
             ephemeral=True,
             delete_after=15
         )
@@ -230,7 +244,7 @@ async def role_application(
 ):
     """Команда для вызова кнопки, которая обрабатывает запросы на доступ"""
     await ctx.respond(
-        '_**Привет!\n Заполни форму для получения доступа**_',
+        '👋\n_**Привет!\nЗаполни форму для получения доступа**_',
         view=ApplicationButton(channel=channel)
     )
 
