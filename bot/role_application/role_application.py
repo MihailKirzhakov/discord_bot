@@ -8,7 +8,8 @@ from role_application.variables import (
     ANSWERS_IF_NO_ROLE,
     ANSWER_IF_CHEAT,
     ANSWER_IF_DUPLICATE_APP,
-    ANSWER_IF_DUPLICATE_NICK
+    ANSWER_IF_DUPLICATE_NICK,
+    ANSWER_IF_CLICKED_THE_SAME_TIME
 )
 from role_application.embeds import (
     access_embed, denied_embed, application_embed
@@ -91,7 +92,6 @@ class RoleButton(View):
                 user=self.user,
                 embed=self.embed
             ))
-            app_list.remove(self.nickname)
         else:
             random_amount = random.randint(1, 3)
             await interaction.response.send_message(
@@ -136,8 +136,16 @@ class DeniedRoleModal(Modal):
                 value=f'_{interaction.user.mention} отказал в доступе!_',
                 inline=False
             )
-        await self.user.send(embed=denied_embed(user, value))
-        await interaction.response.edit_message(embed=self.embed, view=self.view)
+        if self.nickname not in app_list:
+            await interaction.respond(
+                ANSWER_IF_CLICKED_THE_SAME_TIME,
+                ephemeral=True,
+                delete_after=30
+            )
+        else:
+            app_list.remove(self.nickname)
+            await self.user.send(embed=denied_embed(user, value))
+            await interaction.response.edit_message(embed=self.embed, view=self.view)
 
 
 class RoleApplication(Modal):
@@ -168,6 +176,12 @@ class RoleApplication(Modal):
                 ephemeral=True,
                 delete_after=30
             )
+        if nickname in app_list:
+            return await interaction.respond(
+                ANSWER_IF_DUPLICATE_APP,
+                ephemeral=True,
+                delete_after=15
+            )
         if member_by_display_name:
             if role not in member_by_display_name.roles:
                 return await interaction.respond(
@@ -175,12 +189,6 @@ class RoleApplication(Modal):
                     ephemeral=True,
                     delete_after=15
                 )
-        if nickname in app_list:
-            return await interaction.respond(
-                ANSWER_IF_DUPLICATE_APP,
-                ephemeral=True,
-                delete_after=15
-            )
 
         description = (
             f'Профиль: {user.mention}\n'
