@@ -126,7 +126,7 @@ async def clear_all(
     limit: discord.Option(
         int,
         description='Кол-во сообщений для удаления',
-        name_localizations={'ru':'кол-во_последних_сообщений_для_удаления'},
+        name_localizations={'ru':'сколько_удалить'},
         default=100,
         required=False
     )  # type: ignore
@@ -137,7 +137,7 @@ async def clear_all(
         bulk=True
     )
     await ctx.respond(
-        '_Сообщения удалены!_',
+        f'_Сообщения удалены в канале {channel.mention}!_',
         ephemeral=True,
         delete_after=10
     )
