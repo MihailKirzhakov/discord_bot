@@ -47,10 +47,8 @@ ANSWER_IF_CLICKED_THE_SAME_TIME = (
 )
 
 DENIED_IMAGE_URL = (
-    'https://media.discordapp.net/attachments/1182584501147279491/1230181583894614016/1626870875_29-p-krasnii-krest-fon-32.png?ex=663262e1&is=661fede1&hm=aa82b7a480e25320dc5e940d72c4134167252f4a7f42d2d736fd907703a668b0&=&format=webp&quality=lossless&width=960&height=547'
+    'https://media.discordapp.net/attachments/1182584501147279491/1235613979468890203/620aa731fdd06c8a3fcbb87c_X-p-3200.png?ex=663502b1&is=6633b131&hm=aea28542a471088120a83b916423296a7e31076ef5194ea03fac5dc7cb8d8c55&=&format=webp&quality=lossless&width=640&height=640'
 )
-
-DEAFAULT_RANDOMISE_VALUE = '1-100'
 
 IRONBALLS_IMAGE_URL = (
     'https://media.discordapp.net/attachments/1182584501147279491/1230493162640904272/IB_original.jpg?ex=6622618f&is=6621100f&hm=2517d446153ff7dbe937c99090fd027427fba41f6e8a2b1f9ddfc00759016aa0&=&format=webp'
