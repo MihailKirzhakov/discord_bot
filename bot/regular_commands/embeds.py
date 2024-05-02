@@ -1,6 +1,7 @@
 import discord
 
-from regular_commands.variables import PLAYING_DICES_URL_ICON
+from regular_commands.variables import PLAYING_DICES_URL_ICON, TEСHNICAL_WORKS, WRENCH_IMAGE_URL
+from role_application.variables import IRONBALLS_IMAGE_URL
 
 
 def number_range(value, ranje):
@@ -29,4 +30,19 @@ def nickname_range(value):
         inline=False
     )
     embed.set_thumbnail(url=PLAYING_DICES_URL_ICON)
+    return embed
+
+
+def technical_works_embed():
+    embed = discord.Embed(
+        title='_IronBot_',
+        color=0xfffb00
+    )
+    embed.add_field(
+        name='_Технические работы..._',
+        value=TEСHNICAL_WORKS,
+        inline=False
+    )
+    embed.set_thumbnail(url=WRENCH_IMAGE_URL)
+    embed.set_image(url=IRONBALLS_IMAGE_URL)
     return embed
