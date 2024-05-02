@@ -3,17 +3,30 @@ import discord
 from discord.ext import commands
 
 from regular_commands.randomaizer import ApplicationButton
+from regular_commands.embeds import technical_works_embed
 
 
 @commands.slash_command()
 @commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
-async def gogo(ctx: discord.ApplicationContext):
-    """Команда для проверки бота"""
-    await ctx.respond('This is a regular command')
+async def technical_works(
+    ctx: discord.ApplicationContext,
+    channel: discord.Option(
+        discord.TextChannel,
+        description='Куда отправить сообщение?',
+        name_localizations={'ru':'текстовый_канал'},
+    )  # type: ignore
+):
+    """Команда для отправки сообщения о тех. работах"""
+    await channel.send(embed=technical_works_embed())
+    await ctx.respond(
+        f'_Сообщение о тех работах отправлено в канал {channel.mention}!_',
+        ephemeral=True,
+        delete_after=10
+    )
 
 
-@gogo.error
-async def gogo_error(
+@technical_works.error
+async def technical_works_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ):
@@ -36,12 +49,22 @@ async def gogo_error(
 @commands.slash_command()
 @commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
 async def random(
-    ctx: discord.ApplicationContext
+    ctx: discord.ApplicationContext,
+    channel: discord.Option(
+        discord.TextChannel,
+        description='Куда отправить кнопку?',
+        name_localizations={'ru':'текстовый_канал'},
+    )  # type: ignore
 ):
     """
     Команда вызывающая рандомайзер. По дэфолту диапазон чисел 1-100.
     """
-    await ctx.respond(view=ApplicationButton())
+    await channel.send(view=ApplicationButton())
+    await ctx.respond(
+        f'_Кнопка рандомайзера отправлена в канал {channel.mention}!_',
+        ephemeral=True,
+        delete_after=10
+    )
 
 @random.error
 async def random_error(
@@ -66,9 +89,16 @@ async def random_error(
 
 @commands.slash_command()
 @commands.has_role('Аукцион')
-async def greet(ctx: discord.ApplicationContext, name: str):
+async def greet(
+    ctx: discord.ApplicationContext,
+    value: discord.Option(
+        str,
+        description='Впиши любое слово',
+        name_localizations={'ru':'что_угодно'},
+    )  # type: ignore
+):
     """Команда для теста"""
-    await ctx.respond(f'Ну привет, {name}! Тестим')
+    await ctx.respond(f'Ну привет {ctx.user.mention}!\n{value} - что означает?')
 
 
 @greet.error
@@ -96,7 +126,7 @@ async def clear_all(
     limit: discord.Option(
         int,
         description='Кол-во сообщений для удаления',
-        name_localizations={'ru':'клво_пслдн_сбщ'},
+        name_localizations={'ru':'кол-во_последних_сообщений_для_удаления'},
         default=100,
         required=False
     )  # type: ignore
@@ -135,7 +165,7 @@ async def clear_all_error(
 
 
 def setup(bot: discord.Bot):
-    bot.add_application_command(gogo)
+    bot.add_application_command(technical_works)
     bot.add_application_command(greet)
     bot.add_application_command(random)
     bot.add_application_command(clear_all)
