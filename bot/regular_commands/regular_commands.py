@@ -86,9 +86,30 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 
 @commands.slash_command()
 @commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
-async def clear_all(ctx: discord.ApplicationContext):
-    await ctx.channel.purge(
-        bulk=False
+async def clear_all(
+    ctx: discord.ApplicationContext,
+    channel: discord.Option(
+        discord.TextChannel,
+        description='Канал для очистки',
+        name_localizations={'ru':'текстовый_канал'},
+    ),  # type: ignore
+    limit: discord.Option(
+        int,
+        description='Кол-во сообщений для удаления',
+        name_localizations={'ru':'клво_пслдн_сбщ'},
+        default=100,
+        required=False
+    )  # type: ignore
+):
+    """Команда для удаления сообщений в текстовых каналах"""
+    await channel.purge(
+        limit=limit,
+        bulk=True
+    )
+    await ctx.respond(
+        '_Сообщения удалены!_',
+        ephemeral=True,
+        delete_after=10
     )
 
 
