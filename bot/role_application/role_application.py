@@ -56,6 +56,7 @@ class RoleButton(View):
                 value=f'_{interaction.user.mention} выдал роль!_',
                 inline=False
             )
+            await self.user.edit(nick=self.nickname)
             await self.user.add_roles(role_sergeant)
             await self.user.remove_roles(role_guest)
             await interaction.response.edit_message(
@@ -191,7 +192,7 @@ class RoleApplication(Modal):
                 )
 
         description = (
-            f'Профиль: {user.mention}\n'
+            f'Профиль Discord: {user.mention}\n'
             f'Гильдия: {player_parms['guild']}'
         )
 
@@ -203,7 +204,6 @@ class RoleApplication(Modal):
             ephemeral=True,
             delete_after=15
         )
-        await user.edit(nick=nickname)
         await self.channel.send(
             view=RoleButton(
                 nickname=nickname,
