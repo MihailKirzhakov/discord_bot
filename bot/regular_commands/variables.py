@@ -4,7 +4,7 @@ DEAFAULT_RANDOMISE_VALUE = '1-100'
 
 PLAYING_DICES_URL_ICON = 'https://media.discordapp.net/attachments/1182584501147279491/1235613464194584689/dice_PNG64.png?ex=66350236&is=6633b0b6&hm=d7df1ef64c9d647e0fa292199bf7be5160d2f95d6fecc4aa61622fe4bd9649e1&=&format=webp&quality=lossless&width=951&height=640'
 
-WRONG_PARMS = 'Неверно заданы параметры, повтори снова!🔁'
+WRONG_PARMS = '_Неверно заданы параметры, повтори снова!🔁_'
 
 TEСHNICAL_WORKS = (
     '_Скоро запустим!_👌'
