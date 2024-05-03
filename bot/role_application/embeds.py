@@ -51,7 +51,7 @@ def application_embed(description, nickname, member, player_parms):
         color=0x6e00ff
     )
     embed.set_author(
-        name=f'Игровой ник: {nickname}',
+        name=nickname,
         icon_url=member.avatar
     )
     embed.add_field(
