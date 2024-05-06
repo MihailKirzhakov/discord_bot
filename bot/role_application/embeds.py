@@ -1,6 +1,6 @@
 import discord
 
-from role_application.variables import (
+from .variables import (
     ACCESS_VALUE,
     ACCESS_IMAGE_URL,
     IRONBALLS_IMAGE_URL,

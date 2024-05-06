@@ -5,13 +5,13 @@ from decimal import Decimal
 from discord.ext import commands
 from discord.ui import View, Button
 
-from auc_buttons.functions import (
+from .functions import (
     convert_bid,
     label_count,
     convert_to_mention,
     convert_sorted_message
 )
-from auc_buttons.variables import (
+from .variables import (
     ANSWERS_IF_NO_ROLE, MAX_BUTTON_VALUE, MIN_BID_VALUE
 )
 

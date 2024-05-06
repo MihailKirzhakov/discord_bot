@@ -4,17 +4,17 @@ import random
 from discord.ext import commands
 from discord.ui import Modal, InputText, View, button
 
-from role_application.variables import (
+from .variables import (
     ANSWERS_IF_NO_ROLE,
     ANSWER_IF_CHEAT,
     ANSWER_IF_DUPLICATE_APP,
     ANSWER_IF_DUPLICATE_NICK,
     ANSWER_IF_CLICKED_THE_SAME_TIME
 )
-from role_application.embeds import (
+from .embeds import (
     access_embed, denied_embed, application_embed
 )
-from role_application.functions import character_lookup
+from .functions import character_lookup
 
 
 app_list: list = []

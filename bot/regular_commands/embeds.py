@@ -1,6 +1,8 @@
 import discord
 
-from regular_commands.variables import PLAYING_DICES_URL_ICON, TEСHNICAL_WORKS, WRENCH_IMAGE_URL
+from .variables import (
+    PLAYING_DICES_URL_ICON, TEСHNICAL_WORKS, WRENCH_IMAGE_URL
+)
 from role_application.variables import IRONBALLS_IMAGE_URL
 
 

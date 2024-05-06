@@ -2,9 +2,9 @@ import discord
 
 from discord.ui import Modal, InputText, View, button
 
-from regular_commands.embeds import number_range, nickname_range
-from regular_commands.functions import rand_choice
-from regular_commands.variables import DEAFAULT_RANDOMISE_VALUE, WRONG_PARMS
+from .embeds import number_range, nickname_range
+from .functions import rand_choice
+from .variables import DEAFAULT_RANDOMISE_VALUE, WRONG_PARMS
 
 
 class RoleApplication(Modal):

@@ -2,8 +2,8 @@ import discord
 
 from discord.ext import commands
 
-from regular_commands.randomaizer import ApplicationButton
-from regular_commands.embeds import technical_works_embed
+from .randomaizer import ApplicationButton
+from .embeds import technical_works_embed
 
 
 @commands.slash_command()
