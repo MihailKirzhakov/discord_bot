@@ -94,38 +94,55 @@ async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
 # Callback для обработки на нажатие кнопок с лотами
 def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid: int):
     async def inner(interaction: discord.Interaction):
-        button.style = discord.ButtonStyle.blurple
-        name = interaction.user.display_name
-        mention = interaction.user.mention
-        original_label = Decimal(button.label.split()[0][:-1])
-        label_count(button, original_label, name, bid)
-        button_mentions[name] = mention
-        await interaction.response.edit_message(view=view)
+        try:
+            button.style = discord.ButtonStyle.blurple
+            name = interaction.user.display_name
+            mention = interaction.user.mention
+            original_label = Decimal(button.label.split()[0][:-1])
+            label_count(button, original_label, name, bid)
+            button_mentions[name] = mention
+            await interaction.response.edit_message(view=view)
+        except discord.errors.NotFound:
+            await interaction.respond(
+                '_Сильно не торопись тыкать на кнопку, бот чутка запыхался 😥_',
+                ephemeral=True,
+                delete_after=10
+            )
     return inner
 
 
 # Callback для обработки кнопки остановки аукциона
 def stop_callback(view: discord.ui.View, amount):
     async def inner(interaction: discord.Interaction):
-        if discord.utils.get(interaction.user.roles, name='Аукцион'):
-            view.disable_all_items()
-            label_values = [btn.label for btn in view.children[:amount]]
-            convert_label_values = convert_to_mention(
-                label_values, button_mentions
-            )
-            sorted_values = sorted(convert_label_values, reverse=False)
-            await interaction.response.edit_message(view=view)
-            await interaction.followup.send(
-                content=f'Победители:\n{convert_sorted_message(sorted_values)}'
-            )
-        else:
-            random_amount = random.randint(1, 4)
-            await interaction.response.send_message(
-                f'{ANSWERS_IF_NO_ROLE[str(random_amount)]}',
+        try:
+            if discord.utils.get(interaction.user.roles, name='Аукцион'):
+                view.disable_all_items()
+                label_values = [btn.label for btn in view.children[:amount]]
+                convert_label_values = convert_to_mention(
+                    label_values, button_mentions
+                )
+                sorted_values = sorted(convert_label_values, reverse=False)
+                await interaction.response.edit_message(view=view)
+                await interaction.followup.send(
+                    content=f'Победители:\n{
+                        convert_sorted_message(sorted_values)
+                    }'
+                )
+            else:
+                random_amount = random.randint(1, 4)
+                await interaction.response.send_message(
+                    f'{ANSWERS_IF_NO_ROLE[str(random_amount)]}',
+                    ephemeral=True,
+                    delete_after=15
+                )
+                return inner
+        except discord.errors.NotFound:
+            await interaction.respond(
+                '_Ботец словил багулю, попробуй еще раз! Если не поможет, '
+                'напиши СтопарьВодяры 👍_',
                 ephemeral=True,
-                delete_after=15
+                delete_after=10
             )
-            return inner
     return inner
 
 
