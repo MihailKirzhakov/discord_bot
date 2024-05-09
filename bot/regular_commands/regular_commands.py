@@ -7,7 +7,7 @@ from .embeds import technical_works_embed
 
 
 @commands.slash_command()
-@commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
+@commands.has_any_role('🌀Лидер гильдии🌀', '📣Казначей📣', '🛡️Офицер🛡️')
 async def technical_works(
     ctx: discord.ApplicationContext,
     channel: discord.Option(
@@ -32,7 +32,7 @@ async def technical_works_error(
 ):
     if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(
-            'Команду может вызвать только "Казначей" или "Офицер"!',
+            'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
             ephemeral=True,
             delete_after=15
         )
@@ -47,7 +47,7 @@ async def technical_works_error(
 
 
 @commands.slash_command()
-@commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
+@commands.has_any_role('🌀Лидер гильдии🌀', '📣Казначей📣', '🛡️Офицер🛡️')
 async def random(
     ctx: discord.ApplicationContext,
     channel: discord.Option(
@@ -73,7 +73,7 @@ async def random_error(
 ):
     if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(
-            'Команду может вызвать только "Казначей" или "Офицер"!',
+            'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
             ephemeral=True,
             delete_after=15
         )
@@ -115,7 +115,7 @@ async def on_application_command_error(ctx: discord.ApplicationContext, error):
 
 
 @commands.slash_command()
-@commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
+@commands.has_any_role('🌀Лидер гильдии🌀', '📣Казначей📣', '🛡️Офицер🛡️')
 async def clear_all(
     ctx: discord.ApplicationContext,
     channel: discord.Option(
@@ -150,7 +150,7 @@ async def clear_all_error(
 ):
     if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(
-            'Команду может вызвать только "Казначей" или "Офицер"!',
+            'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
             ephemeral=True,
             delete_after=15
         )

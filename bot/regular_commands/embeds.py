@@ -8,7 +8,7 @@ from role_application.variables import IRONBALLS_IMAGE_URL
 
 def number_range(value, ranje):
     embed = discord.Embed(
-        title='_Рандомайзер Айронболз!_',
+        title='_Рандомайзер!_',
         description=f'_Диапазон чисел {ranje}._',
         color=0x00ff00
     )
@@ -23,7 +23,7 @@ def number_range(value, ranje):
 
 def nickname_range(value):
     embed = discord.Embed(
-        title='_Рандомайзер Айронболз!_',
+        title='_Рандомайзер!_',
         color=0x00ff00
     )
     embed.add_field(

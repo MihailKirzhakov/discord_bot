@@ -11,7 +11,7 @@ from .variables import (
 def access_embed():
     embed = discord.Embed(
         title='_Приветствую!_',
-        description='_Тебе выдан доступ на сервер гильдии Айронболз!_',
+        description='_Тебе выдан доступ на сервер гильдии Ревенжерс!_',
         color=0x00ff00
     )
     embed.add_field(
@@ -29,7 +29,7 @@ def denied_embed(user, reason):
         title='_Приветствую!_',
         description=(
             f'_Офицер {user.display_name} отказал тебе '
-            f'в доступе на сервер гильдии Айронболз!_'
+            f'в доступе на сервер гильдии Ревенжерс!_'
         ),
         color=0xff0000
     )

@@ -41,6 +41,7 @@ class RoleButton(View):
         interaction: discord.Interaction
     ):
         if (
+            discord.utils.get(interaction.user.roles, name='🌀Лидер гильдии🌀') or
             discord.utils.get(interaction.user.roles, name='📣Казначей📣') or
             discord.utils.get(interaction.user.roles, name='🛡️Офицер🛡️')
         ):
@@ -83,6 +84,7 @@ class RoleButton(View):
         interaction: discord.Interaction
     ):
         if (
+            discord.utils.get(interaction.user.roles, name='🌀Лидер гильдии🌀') or
             discord.utils.get(interaction.user.roles, name='📣Казначей📣') or
             discord.utils.get(interaction.user.roles, name='🛡️Офицер🛡️')
         ):
@@ -241,7 +243,7 @@ class ApplicationButton(View):
 
 
 @commands.slash_command()
-@commands.has_any_role('📣Казначей📣', '🛡️Офицер🛡️')
+@commands.has_any_role('🌀Лидер гильдии🌀', '📣Казначей📣', '🛡️Офицер🛡️')
 async def role_application(
     ctx: discord.ApplicationContext,
     channel: discord.Option(
@@ -266,7 +268,7 @@ async def role_application_error(
 ):
     if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(
-            'Команду может вызвать только "Казначей" или "Офицер"!',
+            'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
             ephemeral=True,
             delete_after=15
         )
