@@ -51,21 +51,29 @@ class RoleButton(View):
             role_guest = discord.utils.get(
                 interaction.guild.roles, name='Гость'
             )
-            self.disable_all_items()
-            self.embed.add_field(
-                name='_Результат рассмотрения_ ✔',
-                value=f'_{interaction.user.mention} выдал роль!_',
-                inline=False
-            )
-            await self.user.edit(nick=self.nickname)
-            await self.user.add_roles(role_sergeant)
-            await self.user.remove_roles(role_guest)
-            await interaction.response.edit_message(
-                embed=self.embed,
-                view=self
-            )
-            await self.user.send(embed=access_embed())
-            app_list.remove(self.nickname)
+            try:
+                self.disable_all_items()
+                self.embed.add_field(
+                    name='_Результат рассмотрения_ ✔',
+                    value=f'_{interaction.user.mention} выдал роль!_',
+                    inline=False
+                )
+                await self.user.edit(nick=self.nickname)
+                await self.user.add_roles(role_sergeant)
+                await self.user.remove_roles(role_guest)
+                await interaction.response.edit_message(
+                    embed=self.embed,
+                    view=self
+                )
+                await self.user.send(embed=access_embed())
+                app_list.remove(self.nickname)
+            except discord.errors.NotFound:
+                await interaction.respond(
+                    '_Ботец словил багулю, попробуй еще раз! Если не поможет, '
+                    'напиши СтопарьВодяры 👍_',
+                    ephemeral=True,
+                    delete_after=10
+                )
         else:
             random_amount = random.randint(1, 3)
             await interaction.response.send_message(
@@ -88,13 +96,21 @@ class RoleButton(View):
             discord.utils.get(interaction.user.roles, name='📣Казначей📣') or
             discord.utils.get(interaction.user.roles, name='🛡️Офицер🛡️')
         ):
-            self.disable_all_items()
-            await interaction.response.send_modal(DeniedRoleModal(
-                nickname=self.nickname,
-                view=self,
-                user=self.user,
-                embed=self.embed
-            ))
+            try:
+                self.disable_all_items()
+                await interaction.response.send_modal(DeniedRoleModal(
+                    nickname=self.nickname,
+                    view=self,
+                    user=self.user,
+                    embed=self.embed
+                ))
+            except discord.errors.NotFound:
+                await interaction.respond(
+                    '_Ботец словил багулю, попробуй еще раз! Если не поможет, '
+                    'напиши СтопарьВодяры 👍_',
+                    ephemeral=True,
+                    delete_after=10
+                )
         else:
             random_amount = random.randint(1, 3)
             await interaction.response.send_message(
