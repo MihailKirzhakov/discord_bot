@@ -3,7 +3,7 @@ import discord
 from .variables import (
     PLAYING_DICES_URL_ICON, TEСHNICAL_WORKS, WRENCH_IMAGE_URL
 )
-from role_application.variables import IRONBALLS_IMAGE_URL
+from role_application.variables import GUILD_IMAGE_URL
 
 
 def number_range(value, ranje):
@@ -37,7 +37,7 @@ def nickname_range(value):
 
 def technical_works_embed():
     embed = discord.Embed(
-        title='_IronBot_',
+        title='_RevengersBot_',
         color=0xfffb00
     )
     embed.add_field(
@@ -46,5 +46,5 @@ def technical_works_embed():
         inline=False
     )
     embed.set_thumbnail(url=WRENCH_IMAGE_URL)
-    embed.set_image(url=IRONBALLS_IMAGE_URL)
+    embed.set_image(url=GUILD_IMAGE_URL)
     return embed

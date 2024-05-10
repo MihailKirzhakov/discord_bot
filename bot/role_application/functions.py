@@ -93,7 +93,9 @@ def character_lookup(server: int, name: str):
     artifact = {}
 
     # Берём параметры наследия богов
-    arts_lookup = [i for k, i in items.items() if i['id'] == 14078]
+    arts_lookup = [
+        i for k, i in items.items() if 'id' in i and i['id'] == 14078
+    ]
     if len(arts_lookup) > 0:
         # Элемент списка для выбора параметров
         artifact = arts_lookup[0]

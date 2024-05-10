@@ -50,6 +50,6 @@ DENIED_IMAGE_URL = (
     'https://media.discordapp.net/attachments/1182584501147279491/1235613979468890203/620aa731fdd06c8a3fcbb87c_X-p-3200.png?ex=663502b1&is=6633b131&hm=aea28542a471088120a83b916423296a7e31076ef5194ea03fac5dc7cb8d8c55&=&format=webp&quality=lossless&width=640&height=640'
 )
 
-IRONBALLS_IMAGE_URL = (
+GUILD_IMAGE_URL = (
     'https://media.discordapp.net/attachments/1182584501147279491/1238237856418238604/edaf98e615504012.png?ex=663e8e5e&is=663d3cde&hm=4c12428dd38b7723421d919da6a9df092fbe8abfab8aa482089aca4226249585&=&format=webp&quality=lossless'
 )

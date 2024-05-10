@@ -3,7 +3,7 @@ import discord
 from .variables import (
     ACCESS_VALUE,
     ACCESS_IMAGE_URL,
-    IRONBALLS_IMAGE_URL,
+    GUILD_IMAGE_URL,
     DENIED_IMAGE_URL
 )
 
@@ -20,7 +20,7 @@ def access_embed():
         inline=False
     )
     embed.set_thumbnail(url=ACCESS_IMAGE_URL)
-    embed.set_image(url=IRONBALLS_IMAGE_URL)
+    embed.set_image(url=GUILD_IMAGE_URL)
     return embed
 
 
@@ -34,7 +34,7 @@ def denied_embed(user, reason):
         color=0xff0000
     )
     embed.set_thumbnail(url=DENIED_IMAGE_URL)
-    embed.set_image(url=IRONBALLS_IMAGE_URL)
+    embed.set_image(url=GUILD_IMAGE_URL)
     if len(reason) > 0:
         embed.add_field(
             name='_Комментарии:_',
