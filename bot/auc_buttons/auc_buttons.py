@@ -139,7 +139,7 @@ def stop_callback(view: discord.ui.View, amount):
         except discord.errors.NotFound:
             await interaction.respond(
                 '_Ботец словил багулю, попробуй еще раз! Если не поможет, '
-                'напиши СтопарьВодяры 👍_',
+                'напиши СтопарьВоды 👍_',
                 ephemeral=True,
                 delete_after=10
             )

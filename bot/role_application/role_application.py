@@ -70,7 +70,7 @@ class RoleButton(View):
             except discord.errors.NotFound:
                 await interaction.respond(
                     '_Ботец словил багулю, попробуй еще раз! Если не поможет, '
-                    'напиши СтопарьВодяры 👍_',
+                    'напиши СтопарьВоды 👍_',
                     ephemeral=True,
                     delete_after=10
                 )
@@ -107,7 +107,7 @@ class RoleButton(View):
             except discord.errors.NotFound:
                 await interaction.respond(
                     '_Ботец словил багулю, попробуй еще раз! Если не поможет, '
-                    'напиши СтопарьВодяры 👍_',
+                    'напиши СтопарьВоды 👍_',
                     ephemeral=True,
                     delete_after=10
                 )
