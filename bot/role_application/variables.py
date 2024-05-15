@@ -51,5 +51,7 @@ DENIED_IMAGE_URL = (
 )
 
 GUILD_IMAGE_URL = (
-    'https://media.discordapp.net/attachments/1182584501147279491/1238237856418238604/edaf98e615504012.png?ex=663e8e5e&is=663d3cde&hm=4c12428dd38b7723421d919da6a9df092fbe8abfab8aa482089aca4226249585&=&format=webp&quality=lossless'
+    'https://media.discordapp.net/attachments/1182584501147279491/1240334907277054082/a3d3e57f80276f68.png?ex=66462f66&is=6644dde6&hm=d1a39c3682d2d10b06f696d112193c450fd9de6aafde0892971b661aa8fe0b8d&=&format=webp&quality=lossless'
 )
+
+GUILD_NAME = 'Абсолют'

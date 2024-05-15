@@ -4,14 +4,15 @@ from .variables import (
     ACCESS_VALUE,
     ACCESS_IMAGE_URL,
     GUILD_IMAGE_URL,
-    DENIED_IMAGE_URL
+    DENIED_IMAGE_URL,
+    GUILD_NAME
 )
 
 
 def access_embed():
     embed = discord.Embed(
         title='_Приветствую!_',
-        description='_Тебе выдан доступ на сервер гильдии Ревенжерс!_',
+        description=f'_Тебе выдан доступ на сервер гильдии {GUILD_NAME}!_',
         color=0x00ff00
     )
     embed.add_field(
@@ -29,7 +30,7 @@ def denied_embed(user, reason):
         title='_Приветствую!_',
         description=(
             f'_Офицер {user.display_name} отказал тебе '
-            f'в доступе на сервер гильдии Ревенжерс!_'
+            f'в доступе на сервер гильдии {GUILD_NAME}!_'
         ),
         color=0xff0000
     )
