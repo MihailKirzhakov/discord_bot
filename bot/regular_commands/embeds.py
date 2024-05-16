@@ -1,9 +1,12 @@
 import discord
 
 from .variables import (
-    PLAYING_DICES_URL_ICON, TEСHNICAL_WORKS, WRENCH_IMAGE_URL
+    PLAYING_DICES_URL_ICON,
+    TEСHNICAL_WORKS,
+    WRENCH_IMAGE_URL,
+    ATTENTION
 )
-from role_application.variables import GUILD_IMAGE_URL
+from role_application.variables import GUILD_IMAGE_URL, SMALL_GUILD_ICON_URL
 
 
 def number_range(value, ranje):
@@ -37,7 +40,7 @@ def nickname_range(value):
 
 def technical_works_embed():
     embed = discord.Embed(
-        title='_RevengersBot_',
+        title='_Kavo4avoBot_',
         color=0xfffb00
     )
     embed.add_field(
@@ -47,4 +50,14 @@ def technical_works_embed():
     )
     embed.set_thumbnail(url=WRENCH_IMAGE_URL)
     embed.set_image(url=GUILD_IMAGE_URL)
+    return embed
+
+
+def attention_embed(value):
+    embed = discord.Embed(
+        title=ATTENTION,
+        description=f'_**{value}!**_',
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
     return embed
