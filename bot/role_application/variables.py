@@ -55,3 +55,5 @@ GUILD_IMAGE_URL = (
 )
 
 GUILD_NAME = 'Абсолют'
+
+SMALL_GUILD_ICON_URL = 'https://media.discordapp.net/attachments/1182584501147279491/1240355631756476568/ed6baceccefda434.png?ex=6646eb73&is=664599f3&hm=0a63e1af6611ea5029932c3966d7e31a7725811ea09ffe3f0251a817e446d63d&=&format=webp&quality=lossless&width=655&height=655'
