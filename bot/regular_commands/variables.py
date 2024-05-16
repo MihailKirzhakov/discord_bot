@@ -10,4 +10,6 @@ TEСHNICAL_WORKS = (
     '_Скоро запустим!_👌'
 )
 
+ATTENTION = '【В】【Н】【И】【М】【А】【Н】【И】【Е】'
+
 WRENCH_IMAGE_URL = 'https://media.discordapp.net/attachments/1182584501147279491/1235611311896002600/1672451474_flomaster-club-p-gaechnii-klyuch-risunok-dlya-detei-vkontak-16.png?ex=66350035&is=6633aeb5&hm=0055b69a7b0ba64d904bc8e2b1fb4057ae3ee781312920e5b6508b036b707d35&=&format=webp&quality=lossless&width=960&height=480'
