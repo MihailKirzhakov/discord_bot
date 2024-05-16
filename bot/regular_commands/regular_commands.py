@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 
 from .randomaizer import ApplicationButton
-from .embeds import technical_works_embed
+from .embeds import technical_works_embed, attention_embed
 
 
 @commands.slash_command()
@@ -21,12 +21,57 @@ async def technical_works(
     await ctx.respond(
         f'_Сообщение о тех работах отправлено в канал {channel.mention}!_',
         ephemeral=True,
-        delete_after=10
+        delete_after=5
     )
 
 
 @technical_works.error
 async def technical_works_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+):
+    if isinstance(error, commands.errors.MissingAnyRole):
+        await ctx.respond(
+            'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
+            ephemeral=True,
+            delete_after=15
+        )
+    elif isinstance(error, commands.errors.PrivateMessageOnly):
+        await ctx.respond(
+            'Команду нельзя вызывать в личные сообщения бота!',
+            ephemeral=True,
+            delete_after=15
+        )
+    else:
+        raise error
+
+
+@commands.slash_command()
+@commands.has_any_role('🌀Лидер гильдии🌀', '📣Казначей📣', '🛡️Офицер🛡️')
+async def attention(
+    ctx: discord.ApplicationContext,
+    channel: discord.Option(
+        discord.TextChannel,
+        description='Куда отправить сообщение?',
+        name_localizations={'ru':'текстовый_канал'},
+    ),  # type: ignore
+    value: discord.Option(
+        str,
+        description='Введи текст сообщения',
+        name_localizations={'ru':'текст'},
+    )  # type: ignore
+):
+    """Команда для отправки сообщения с пометкой 'Внимание!'"""
+    await channel.send(embed=attention_embed(value=value))
+    await ctx.respond(
+        f'_Сообщение отправлено в канал {channel.mention}!_',
+        ephemeral=True,
+        delete_after=5
+    )
+
+
+@attention.error
+async def attention_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ):
@@ -166,6 +211,7 @@ async def clear_all_error(
 
 def setup(bot: discord.Bot):
     bot.add_application_command(technical_works)
+    bot.add_application_command(attention)
     bot.add_application_command(greet)
     bot.add_application_command(random)
     bot.add_application_command(clear_all)
