@@ -52,21 +52,28 @@ class RoleButton(View):
                 interaction.guild.roles, name='Гость'
             )
             try:
-                self.disable_all_items()
-                self.embed.add_field(
-                    name='_Результат рассмотрения_ ✔',
-                    value=f'_{interaction.user.mention} выдал роль!_',
-                    inline=False
-                )
-                await self.user.edit(nick=self.nickname)
-                await self.user.add_roles(role_sergeant)
-                await self.user.remove_roles(role_guest)
-                await interaction.response.edit_message(
-                    embed=self.embed,
-                    view=self
-                )
-                await self.user.send(embed=access_embed())
-                app_list.remove(self.nickname)
+                if self.nickname not in app_list:
+                    await interaction.respond(
+                        ANSWER_IF_CLICKED_THE_SAME_TIME,
+                        ephemeral=True,
+                        delete_after=30
+                    )
+                else:
+                    self.disable_all_items()
+                    self.embed.add_field(
+                        name='_Результат рассмотрения_ ✔',
+                        value=f'_{interaction.user.mention} выдал роль!_',
+                        inline=False
+                    )
+                    await self.user.edit(nick=self.nickname)
+                    await self.user.add_roles(role_sergeant)
+                    await self.user.remove_roles(role_guest)
+                    await interaction.response.edit_message(
+                        embed=self.embed,
+                        view=self
+                    )
+                    await self.user.send(embed=access_embed())
+                    app_list.remove(self.nickname)
             except discord.errors.NotFound:
                 await interaction.respond(
                     '_Ботец словил багулю, попробуй еще раз! Если не поможет, '
