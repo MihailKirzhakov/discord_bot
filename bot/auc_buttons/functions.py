@@ -146,14 +146,14 @@ def convert_to_mention(label_values, button_mentions):
     return result
 
 
-def convert_sorted_message(sorted_values):
+def convert_sorted_message(values):
     """
     Функция преобразует список строк, в нумерованный,
     отсортированный список победителей.
 
     Parameters
     ----------
-    sorted_values: list
+    values: list
         Список строк с содержимым кнопок (ставка + тэг ника).
 
     Returns
@@ -162,15 +162,9 @@ def convert_sorted_message(sorted_values):
         Результирующая, отсортированная, пронумерованная строка
         с переносами на новую строку с тэгами ников.
     """
-    second_sort = list()
-    check = 0
-    for i in range(0, len(sorted_values)):
-        if 'M' in sorted_values[i]:
-            second_sort.insert(0, sorted_values[i])
-            check += 1
-        elif 'K' in sorted_values[i]:
-            second_sort.insert(check, sorted_values[i])
-        else:
-            second_sort.append(sorted_values[i])
-    message = '\n'.join([f'{i+1}. {val}' for i, val in enumerate(second_sort)])
-    return message
+    cost = values.split(' ')[0]
+    cost_mult = (
+        1_000_000 if cost[-1] == 'M' else 1_000 if cost[-1] == 'K' else 1
+    )
+    cost = float(cost[:-1]) * cost_mult
+    return cost
