@@ -73,8 +73,8 @@ def application_embed(description, nickname, member, player_parms):
 
 def start_app_embed():
     embed = discord.Embed(
-        title='_**Привет, друг!👋**_',
-        description='_Заполни форму для получения доступа!_',
+        title='_**Привет, друг! 👋**_',
+        description='_Заполни форму для получения доступа!\n\nТыкай кнопку 👇_',
         color=0xfffb00
     )
     embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
