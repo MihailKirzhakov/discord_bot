@@ -4,12 +4,13 @@ import random
 from discord.ext import commands
 from discord.ui import Modal, InputText, View, button
 
-from .variables import (
-    ANSWERS_IF_NO_ROLE,
-    ANSWER_IF_CHEAT,
+from bot.variables import (
     ANSWER_IF_DUPLICATE_APP,
     ANSWER_IF_DUPLICATE_NICK,
-    ANSWER_IF_CLICKED_THE_SAME_TIME
+    ANSWER_IF_CHEAT,
+    ANSWER_IF_CLICKED_THE_SAME_TIME,
+    ANSWERS_IF_NO_ROLE,
+    CATCH_BUG_MESSAGE
 )
 from .embeds import (
     access_embed, denied_embed, application_embed
@@ -76,8 +77,7 @@ class RoleButton(View):
                     app_list.remove(self.nickname)
             except discord.errors.NotFound:
                 await interaction.respond(
-                    '_Ботец словил багулю, попробуй еще раз! Если не поможет, '
-                    'напиши СтопарьВоды 👍_',
+                    CATCH_BUG_MESSAGE,
                     ephemeral=True,
                     delete_after=10
                 )
@@ -113,8 +113,7 @@ class RoleButton(View):
                 ))
             except discord.errors.NotFound:
                 await interaction.respond(
-                    '_Ботец словил багулю, попробуй еще раз! Если не поможет, '
-                    'напиши СтопарьВоды 👍_',
+                    CATCH_BUG_MESSAGE,
                     ephemeral=True,
                     delete_after=10
                 )

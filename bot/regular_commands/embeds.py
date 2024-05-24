@@ -1,12 +1,13 @@
 import discord
 
-from .variables import (
+from bot.variables import (
+    ATTENTION,
+    GUILD_IMAGE_URL,
     PLAYING_DICES_URL_ICON,
+    SMALL_GUILD_ICON_URL,
     TEСHNICAL_WORKS,
     WRENCH_IMAGE_URL,
-    ATTENTION
 )
-from role_application.variables import GUILD_IMAGE_URL, SMALL_GUILD_ICON_URL
 
 
 def number_range(value, ranje):

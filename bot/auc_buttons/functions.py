@@ -1,10 +1,13 @@
 from decimal import Decimal
 
 
+from bot.variables import NOT_SOLD
+
+
 def convert_bid(bid) -> str:
     """
     Функция для конвертирования стартовой стоимости лота
-    в вид к примеру "800K" или "1,2M" в десятичную систему.
+    в вид к примеру "800K" или "1.2M" в десятичную систему.
 
     Parameters
     ----------
@@ -142,7 +145,7 @@ def convert_to_mention(label_values, button_mentions):
             split_value[-1] = button_mentions[split_value[-1]]
             result.append(' '.join(split_value))
         else:
-            result.append('Лот не был выкуплен')
+            result.append(NOT_SOLD)
     return result
 
 
@@ -162,6 +165,8 @@ def convert_sorted_message(values):
         Результирующая, отсортированная, пронумерованная строка
         с переносами на новую строку с тэгами ников.
     """
+    if values == NOT_SOLD:
+        return values
     cost = values.split(' ')[0]
     cost_mult = (
         1_000_000 if cost[-1] == 'M' else 1_000 if cost[-1] == 'K' else 1

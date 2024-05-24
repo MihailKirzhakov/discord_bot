@@ -1,10 +1,10 @@
 import discord
 
-from .variables import (
-    ACCESS_VALUE,
+from bot.variables import (
     ACCESS_IMAGE_URL,
-    GUILD_IMAGE_URL,
+    ACCESS_VALUE,
     DENIED_IMAGE_URL,
+    GUILD_IMAGE_URL,
     GUILD_NAME
 )
 

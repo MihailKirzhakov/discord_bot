@@ -4,7 +4,7 @@ from discord.ui import Modal, InputText, View, button
 
 from .embeds import number_range, nickname_range
 from .functions import rand_choice
-from .variables import DEAFAULT_RANDOMISE_VALUE, WRONG_PARMS
+from bot.variables import DEAFAULT_RANDOMISE_VALUE, WRONG_PARMS
 
 
 class RoleApplication(Modal):
