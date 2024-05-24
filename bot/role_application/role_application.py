@@ -13,7 +13,7 @@ from variables import (
     CATCH_BUG_MESSAGE
 )
 from .embeds import (
-    access_embed, denied_embed, application_embed
+    access_embed, denied_embed, application_embed, start_app_embed
 )
 from .functions import character_lookup
 
@@ -276,7 +276,7 @@ async def role_application(
 ):
     """Команда для вызова кнопки, которая обрабатывает запросы на доступ"""
     await ctx.respond(
-        '👋\n_**Привет!\nЗаполни форму для получения доступа**_',
+        embed=start_app_embed(),
         view=ApplicationButton(channel=channel)
     )
 

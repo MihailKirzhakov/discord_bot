@@ -5,7 +5,8 @@ from variables import (
     ACCESS_VALUE,
     DENIED_IMAGE_URL,
     GUILD_IMAGE_URL,
-    GUILD_NAME
+    GUILD_NAME,
+    SMALL_GUILD_ICON_URL
 )
 
 
@@ -67,4 +68,14 @@ def application_embed(description, nickname, member, player_parms):
     embed.set_thumbnail(url=player_parms['class_icon'])
     if 'emblem' in player_parms:
         embed.set_image(url=player_parms['emblem']['image_url'])
+    return embed
+
+
+def start_app_embed():
+    embed = discord.Embed(
+        title='_**Привет, друг!👋**_',
+        description='_Заполни форму для получения доступа!_',
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
     return embed
