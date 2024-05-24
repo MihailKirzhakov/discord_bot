@@ -5,14 +5,16 @@ from decimal import Decimal
 from discord.ext import commands
 from discord.ui import View, Button
 
+from .embeds import attention_embed, results_embed
 from .functions import (
     convert_bid,
     label_count,
     convert_to_mention,
     convert_sorted_message
 )
-from .variables import (
-    ANSWERS_IF_NO_ROLE, MAX_BUTTON_VALUE, MIN_BID_VALUE
+from bot.variables import (
+    ANSWERS_IF_NO_ROLE, CATCH_BUG_MESSAGE,
+    MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD
 )
 
 button_mentions = dict()
@@ -63,10 +65,13 @@ async def go_auc(
     button_manager.add_item(stop_button)
     stop_button.callback = stop_callback(button_manager, count)
     await ctx.respond(
-        f'{ctx.user.mention} начал аукцион "{name}"!\n'
-        f'Количество лотов: {count}.\n'
-        f'Начальная ставка: {convert_bid(start_bid)}.\n'
-        f'Шаг ставки: {convert_bid(bid)}.',
+        embed=attention_embed(
+            user_mention=ctx.user.mention,
+            name_auc=name,
+            lot_count=count,
+            first_bid=convert_bid(start_bid),
+            next_bid=convert_bid(bid)
+        ),
         view=button_manager
     )
 
@@ -121,11 +126,18 @@ def stop_callback(view: discord.ui.View, amount):
                 convert_label_values = convert_to_mention(
                     label_values, button_mentions
                 )
+                count_not_bid = convert_label_values.count(NOT_SOLD)
+                removed_not_bid = []
+                for i in convert_label_values:
+                    if i != NOT_SOLD:
+                        removed_not_bid.append(i)
                 sorted_list = sorted(
-                    convert_label_values,
+                    removed_not_bid,
                     key=convert_sorted_message,
                     reverse=True
                 )
+                for _ in range(count_not_bid):
+                    sorted_list.append(NOT_SOLD)
                 message = (
                     '\n'.join([f'{i+1}. {val}' for i, val in enumerate(
                         sorted_list
@@ -133,7 +145,7 @@ def stop_callback(view: discord.ui.View, amount):
                 )
                 await interaction.response.edit_message(view=view)
                 await interaction.followup.send(
-                    content=f'Победители:\n{message}'
+                    embed=results_embed(message)
                 )
             else:
                 random_amount = random.randint(1, 4)
@@ -145,8 +157,7 @@ def stop_callback(view: discord.ui.View, amount):
                 return inner
         except discord.errors.NotFound:
             await interaction.respond(
-                '_Ботец словил багулю, попробуй еще раз! Если не поможет, '
-                'напиши СтопарьВоды 👍_',
+                CATCH_BUG_MESSAGE,
                 ephemeral=True,
                 delete_after=10
             )
