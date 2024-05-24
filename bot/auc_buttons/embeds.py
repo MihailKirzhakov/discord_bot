@@ -1,7 +1,7 @@
 import discord
 
 
-from bot.variables import ATTENTION, AUCTION_IMAGE_URL
+from variables import ATTENTION, AUCTION_IMAGE_URL
 
 
 def attention_embed(user_mention, name_auc, lot_count, first_bid, next_bid):

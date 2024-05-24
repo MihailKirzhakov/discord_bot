@@ -4,7 +4,7 @@ import random
 from discord.ext import commands
 from discord.ui import Modal, InputText, View, button
 
-from bot.variables import (
+from variables import (
     ANSWER_IF_DUPLICATE_APP,
     ANSWER_IF_DUPLICATE_NICK,
     ANSWER_IF_CHEAT,

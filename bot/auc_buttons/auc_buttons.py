@@ -12,7 +12,7 @@ from .functions import (
     convert_to_mention,
     convert_sorted_message
 )
-from bot.variables import (
+from variables import (
     ANSWERS_IF_NO_ROLE, CATCH_BUG_MESSAGE,
     MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD
 )

@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 
-from bot.variables import NOT_SOLD
+from variables import NOT_SOLD
 
 
 def convert_bid(bid) -> str:

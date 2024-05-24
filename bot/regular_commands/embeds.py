@@ -1,6 +1,6 @@
 import discord
 
-from bot.variables import (
+from variables import (
     ATTENTION,
     GUILD_IMAGE_URL,
     PLAYING_DICES_URL_ICON,
