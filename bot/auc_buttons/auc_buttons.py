@@ -84,13 +84,13 @@ async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
         await ctx.respond(
             'Команду может вызвать только Аукционер!',
             ephemeral=True,
-            delete_after=15
+            delete_after=10
         )
     elif isinstance(error, commands.errors.PrivateMessageOnly):
         await ctx.respond(
             'Команду нельзя вызывать в личные сообщения бота!',
             ephemeral=True,
-            delete_after=15
+            delete_after=10
         )
     else:
         raise error
@@ -152,7 +152,7 @@ def stop_callback(view: discord.ui.View, amount):
                 await interaction.response.send_message(
                     f'{ANSWERS_IF_NO_ROLE[str(random_amount)]}',
                     ephemeral=True,
-                    delete_after=15
+                    delete_after=10
                 )
                 return inner
         except discord.errors.NotFound:

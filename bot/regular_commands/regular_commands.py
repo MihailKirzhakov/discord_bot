@@ -34,13 +34,13 @@ async def technical_works_error(
         await ctx.respond(
             'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
             ephemeral=True,
-            delete_after=15
+            delete_after=10
         )
     elif isinstance(error, commands.errors.PrivateMessageOnly):
         await ctx.respond(
             'Команду нельзя вызывать в личные сообщения бота!',
             ephemeral=True,
-            delete_after=15
+            delete_after=10
         )
     else:
         raise error
@@ -79,13 +79,13 @@ async def attention_error(
         await ctx.respond(
             'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
             ephemeral=True,
-            delete_after=15
+            delete_after=10
         )
     elif isinstance(error, commands.errors.PrivateMessageOnly):
         await ctx.respond(
             'Команду нельзя вызывать в личные сообщения бота!',
             ephemeral=True,
-            delete_after=15
+            delete_after=10
         )
     else:
         raise error
@@ -120,13 +120,13 @@ async def random_error(
         await ctx.respond(
             'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
             ephemeral=True,
-            delete_after=15
+            delete_after=10
         )
     elif isinstance(error, commands.errors.PrivateMessageOnly):
         await ctx.respond(
             'Команду нельзя вызывать в личные сообщения бота!',
             ephemeral=True,
-            delete_after=15
+            delete_after=10
         )
     else:
         raise error
@@ -197,13 +197,13 @@ async def clear_all_error(
         await ctx.respond(
             'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
             ephemeral=True,
-            delete_after=15
+            delete_after=10
         )
     elif isinstance(error, commands.errors.PrivateMessageOnly):
         await ctx.respond(
             'Команду нельзя вызывать в личные сообщения бота!',
             ephemeral=True,
-            delete_after=15
+            delete_after=10
         )
     else:
         raise error
