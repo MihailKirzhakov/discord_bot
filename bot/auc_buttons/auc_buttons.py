@@ -148,7 +148,7 @@ def stop_callback(view: discord.ui.View, amount):
                     embed=results_embed(message)
                 )
             else:
-                random_amount = random.randint(1, 4)
+                random_amount = random.randint(1, 3)
                 await interaction.response.send_message(
                     f'{ANSWERS_IF_NO_ROLE[str(random_amount)]}',
                     ephemeral=True,

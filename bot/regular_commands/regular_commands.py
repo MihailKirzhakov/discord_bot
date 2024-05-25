@@ -4,10 +4,30 @@ from discord.ext import commands
 
 from .randomaizer import ApplicationButton
 from .embeds import technical_works_embed, attention_embed
+from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
+
+
+async def command_error(
+        ctx: discord.ApplicationContext, error: Exception, command_name
+):
+    if isinstance(error, commands.errors.MissingAnyRole):
+        await ctx.respond(
+            f'Команду {command_name} может вызвать только "Лидер", "Казначей" или "Офицер"!',
+            ephemeral=True,
+            delete_after=10
+        )
+    elif isinstance(error, commands.errors.PrivateMessageOnly):
+        await ctx.respond(
+            f'Команду {command_name} нельзя вызывать в личные сообщения бота!',
+            ephemeral=True,
+            delete_after=10
+        )
+    else:
+        raise error
 
 
 @commands.slash_command()
-@commands.has_any_role('🌀Лидер гильдии🌀', '📣Казначей📣', '🛡️Офицер🛡️')
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def technical_works(
     ctx: discord.ApplicationContext,
     channel: discord.Option(
@@ -30,24 +50,11 @@ async def technical_works_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ):
-    if isinstance(error, commands.errors.MissingAnyRole):
-        await ctx.respond(
-            'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
-            ephemeral=True,
-            delete_after=10
-        )
-    elif isinstance(error, commands.errors.PrivateMessageOnly):
-        await ctx.respond(
-            'Команду нельзя вызывать в личные сообщения бота!',
-            ephemeral=True,
-            delete_after=10
-        )
-    else:
-        raise error
+    await command_error(ctx, error, "technical_works")
 
 
 @commands.slash_command()
-@commands.has_any_role('🌀Лидер гильдии🌀', '📣Казначей📣', '🛡️Офицер🛡️')
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def attention(
     ctx: discord.ApplicationContext,
     channel: discord.Option(
@@ -75,24 +82,11 @@ async def attention_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ):
-    if isinstance(error, commands.errors.MissingAnyRole):
-        await ctx.respond(
-            'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
-            ephemeral=True,
-            delete_after=10
-        )
-    elif isinstance(error, commands.errors.PrivateMessageOnly):
-        await ctx.respond(
-            'Команду нельзя вызывать в личные сообщения бота!',
-            ephemeral=True,
-            delete_after=10
-        )
-    else:
-        raise error
+    await command_error(ctx, error, "attention")
 
 
 @commands.slash_command()
-@commands.has_any_role('🌀Лидер гильдии🌀', '📣Казначей📣', '🛡️Офицер🛡️')
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def random(
     ctx: discord.ApplicationContext,
     channel: discord.Option(
@@ -111,25 +105,13 @@ async def random(
         delete_after=10
     )
 
+
 @random.error
 async def random_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ):
-    if isinstance(error, commands.errors.MissingAnyRole):
-        await ctx.respond(
-            'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
-            ephemeral=True,
-            delete_after=10
-        )
-    elif isinstance(error, commands.errors.PrivateMessageOnly):
-        await ctx.respond(
-            'Команду нельзя вызывать в личные сообщения бота!',
-            ephemeral=True,
-            delete_after=10
-        )
-    else:
-        raise error
+    await command_error(ctx, error, "random")
 
 
 @commands.slash_command()
@@ -147,20 +129,12 @@ async def greet(
 
 
 @greet.error
-async def on_application_command_error(ctx: discord.ApplicationContext, error):
-    if isinstance(error, commands.errors.NoPrivateMessage):
-        await ctx.respond('Эта команда не может быть вызвана через ЛС')
-    elif isinstance(error, commands.errors.MissingRole):
-        await ctx.respond(
-            f'{ctx.author.mention} ты, дружочек, '
-            f'не достоин просить меня это сделать!'
-        )
-    else:
-        return error
+async def greet_error(ctx: discord.ApplicationContext, error):
+    await command_error(ctx, error, "greet")
 
 
 @commands.slash_command()
-@commands.has_any_role('🌀Лидер гильдии🌀', '📣Казначей📣', '🛡️Офицер🛡️')
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def clear_all(
     ctx: discord.ApplicationContext,
     channel: discord.Option(
@@ -193,20 +167,7 @@ async def clear_all_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ):
-    if isinstance(error, commands.errors.MissingAnyRole):
-        await ctx.respond(
-            'Команду может вызвать только "Лидер", "Казначей" или "Офицер"!',
-            ephemeral=True,
-            delete_after=10
-        )
-    elif isinstance(error, commands.errors.PrivateMessageOnly):
-        await ctx.respond(
-            'Команду нельзя вызывать в личные сообщения бота!',
-            ephemeral=True,
-            delete_after=10
-        )
-    else:
-        raise error
+    await command_error(ctx, error, "clear_all")
 
 
 def setup(bot: discord.Bot):

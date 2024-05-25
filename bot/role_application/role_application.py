@@ -81,6 +81,7 @@ class RoleButton(View):
                 # Сперва была задумка просто disablить кнопки и выводить их,
                 # но потом решил сделать так,
                 # чтобы кнопки убирались после выдачи роли
+                self.disable_all_items()
                 self.clear_items()
                 await interaction.response.edit_message(
                     embed=self.embed,
@@ -177,6 +178,7 @@ class DeniedRoleModal(Modal):
         else:
             app_list.remove(self.nickname)
             await self.user.send(embed=denied_embed(user, value))
+            self.disable_all_items()
             self.view.clear_items()
             await interaction.response.edit_message(embed=self.embed, view=self.view)
 
