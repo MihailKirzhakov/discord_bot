@@ -30,7 +30,7 @@ def denied_embed(user, reason):
     embed = discord.Embed(
         title='_Приветствую!_',
         description=(
-            f'_Офицер {user.display_name} отказал тебе '
+            f'_{user.display_name} отказал тебе '
             f'в доступе на сервер гильдии {GUILD_NAME}!_'
         ),
         color=0xff0000

@@ -1,4 +1,8 @@
+import discord
 import requests
+import random
+
+from variables import ANSWERS_IF_NO_ROLE
 
 
 def character_lookup(server: int, name: str):
@@ -107,3 +111,21 @@ def character_lookup(server: int, name: str):
                 "level": artifact['level']
             }  # type: ignore
     return player_parms
+
+
+def has_required_role(user):
+    """Проверка на наличие требуемых ролей у пользователя"""
+    return (
+        discord.utils.get(user.roles, name='🌀Лидер гильдии🌀') or
+        discord.utils.get(user.roles, name='📣Казначей📣') or
+        discord.utils.get(user.roles, name='🛡️Офицер🛡️')
+    )
+
+
+def answer_if_no_role(interaction):
+    """Ответ на запрос, если у пользователя нет требуемых ролей"""
+    return interaction.response.send_message(
+                f'{ANSWERS_IF_NO_ROLE[str(random.randint(1, 3))]}',
+                ephemeral=True,
+                delete_after=15
+            )
