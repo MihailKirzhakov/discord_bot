@@ -30,17 +30,18 @@ async def reload_extentions(ctx: discord.ApplicationContext):
     :param channel: Текстовый канал, в который нужно отправить сообщение.
     :return: None
     """
-    if not has_required_role(ctx.user):
+    if has_required_role(ctx.user):
+        bot.reload_extension('regular_commands.regular_commands')
+        bot.reload_extension('auc_buttons.auc_buttons')
+        bot.reload_extension('role_application.role_application')
+        await ctx.respond(
+            'Расширения перезагружены',
+            ephemeral=True,
+            delete_after=10
+        )
+    else:
         await answer_if_no_role(ctx)
 
-    bot.reload_extension('regular_commands.regular_commands')
-    bot.reload_extension('auc_buttons.auc_buttons')
-    bot.reload_extension('role_application.role_application')
-    await ctx.respond(
-        'Расширения перезагружены',
-        ephemeral=True,
-        delete_after=10
-    )
 
 bot.load_extension('regular_commands.regular_commands')
 bot.load_extension('auc_buttons.auc_buttons')
