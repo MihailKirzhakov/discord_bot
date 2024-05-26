@@ -11,6 +11,13 @@ from variables import (
 
 
 def number_range(value, ranje):
+    """
+    Функция для создания вложения с рандомным числом в заданном диапазоне.
+
+    :param value: рандомное число
+    :param ranje: диапазон чисел
+    :return: вложение с рандомным числом
+    """
     embed = discord.Embed(
         title='_Рандомайзер!_',
         description=f'_Диапазон чисел {ranje}._',
@@ -26,6 +33,12 @@ def number_range(value, ranje):
 
 
 def nickname_range(value):
+    """
+    Функция для создания вложения с рандомным участником.
+
+    :param value: рандомный участник
+    :return: вложение с рандомным участником
+    """
     embed = discord.Embed(
         title='_Рандомайзер!_',
         color=0x00ff00
@@ -40,6 +53,11 @@ def nickname_range(value):
 
 
 def technical_works_embed():
+    """
+    Функция для создания вложения с информацией о технических работах.
+
+    :return: вложение с информацией о технических работах
+    """
     embed = discord.Embed(
         title='_Kavo4avoBot_',
         color=0xfffb00
@@ -55,6 +73,12 @@ def technical_works_embed():
 
 
 def attention_embed(value):
+    """
+    Функция для создания вложения с предупреждением.
+
+    :param value: текст предупреждения
+    :return: вложение с предупреждением
+    """
     embed = discord.Embed(
         title=ATTENTION,
         description=f'_**{value}!**_',

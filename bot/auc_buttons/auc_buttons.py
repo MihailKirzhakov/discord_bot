@@ -48,7 +48,16 @@ async def go_auc(
         name_localizations={'ru': 'шаг_ставки'}
     )  # type: ignore
 ):
-    """Команда создания аукциона"""
+    """
+    Команда для запуска аукциона.
+
+    :param ctx: Контекст команды
+    :param name: Название лотов
+    :param count: Количество лотов
+    :param start_bid: Начальная ставка
+    :param bid: Шаг ставки
+    :return: None
+    """
     button_manager = View(timeout=None)
     # Создаём кнопки для каждго лота
     for _ in range(count):
@@ -80,6 +89,13 @@ async def go_auc(
 # о запрете вызова команды без указанной роли
 @go_auc.error
 async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
+    """
+    Обработчик ошибок для команды go_auc
+
+    :param ctx: Контекст команды.
+    :param error: Исключение, возникшее при выполнении команды.
+    :return: None
+    """
     if isinstance(error, commands.errors.MissingRole):
         await ctx.respond(
             'Команду может вызвать только Аукционер!',
@@ -96,9 +112,22 @@ async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
         raise error
 
 
-# Callback для обработки на нажатие кнопок с лотами
 def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid: int):
+    """
+    Функция для обработки нажатия на кнопку ставки
+
+    :param button: Объект класса discord.ui.Button
+    :param view: Объект класса discord.ui.View
+    :param bid: Шаг ставки
+    :return: inner() функция
+    """
     async def inner(interaction: discord.Interaction):
+        """
+        Внутренняя функция, помощник
+
+        :param interaction: Объект класса discord.Interaction
+        :return: None
+        """
         try:
             button.style = discord.ButtonStyle.blurple
             name = interaction.user.display_name
@@ -118,7 +147,20 @@ def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid: int):
 
 # Callback для обработки кнопки остановки аукциона
 def stop_callback(view: discord.ui.View, amount):
+    """
+    Функция для обработки нажатия на кнопку завершения аукциона
+
+    :param view: Объект класса discord.ui.View
+    :param amount: Количество объектов внутри менеджера кнопок
+    :return: inner() функция
+    """
     async def inner(interaction: discord.Interaction):
+        """
+        Внутренняя функция, помощник
+
+        :param interaction: Объект класса discord.Interaction
+        :return: None
+        """
         try:
             if discord.utils.get(interaction.user.roles, name='Аукцион'):
                 view.disable_all_items()

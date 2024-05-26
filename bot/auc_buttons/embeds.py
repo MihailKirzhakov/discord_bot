@@ -5,6 +5,16 @@ from variables import ATTENTION, AUCTION_IMAGE_URL
 
 
 def attention_embed(user_mention, name_auc, lot_count, first_bid, next_bid):
+    """
+    Создает встраиваемое сообщение об открытии аукциона.
+
+    :param user_mention: упоминание пользователя, открывшего аукцион
+    :param name_auc: название аукциона
+    :param lot_count: количество лотов в аукционе
+    :param first_bid: начальная ставка
+    :param next_bid: шаг ставки
+    :return: встраиваемое сообщение
+    """
     embed = discord.Embed(
         title=ATTENTION,
         description=(
@@ -20,6 +30,12 @@ def attention_embed(user_mention, name_auc, lot_count, first_bid, next_bid):
 
 
 def results_embed(results_message):
+    """
+    Создает встраиваемое сообщение с результатами аукциона.
+
+    :param results_message: результаты аукциона в виде строки
+    :return: встраиваемое сообщение
+    """
     embed = discord.Embed(
         title='_**Результаты аукциона:**_',
         description=f'_{results_message}!_',

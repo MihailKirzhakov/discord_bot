@@ -8,7 +8,10 @@ from variables import (
     ANSWER_IF_DUPLICATE_NICK,
     ANSWER_IF_CHEAT,
     ANSWER_IF_CLICKED_THE_SAME_TIME,
-    CATCH_BUG_MESSAGE
+    CATCH_BUG_MESSAGE,
+    LEADER_ROLE,
+    OFICER_ROLE,
+    TREASURER_ROLE
 )
 from .embeds import (
     access_embed, denied_embed, application_embed, start_app_embed
@@ -20,11 +23,11 @@ app_list: list = []
 
 
 class RoleButton(View):
-    """Объект кнопки роли для взаимодействия с пользователем в Discord.
+    """Класс кнопки роли для взаимодействия с пользователем в Discord.
     Создаёт 2 кнопки. Первая для выдачи роли,
     вторая для отказа в выдаче роли 'Старшина'
 
-    Атрибуты:
+    Attributes:
         nickname: Discord - псевдоним пользователя.
         embed: Embed объект, связанный с взаимодействием с пользователем.
         user: User объект из discord.Interaction.
@@ -125,7 +128,7 @@ class RoleButton(View):
 
 
 class DeniedRoleModal(Modal):
-    """Объект модального окна для взаимодействия с пользователем в Discord.
+    """Класс модального окна для взаимодействия с пользователем в Discord.
     В данном случае, модальное окно используется для отказа в выдаче роли 'Старшина'.
 
     Attributes:
@@ -138,7 +141,7 @@ class DeniedRoleModal(Modal):
     def __init__(
         self,
         nickname: str,
-        user: discord.Integration.user,
+        user: discord.Interaction.user,
         view: discord.ui.Button,
         embed: discord.Embed,
         *args,
@@ -184,7 +187,7 @@ class DeniedRoleModal(Modal):
 
 
 class RoleApplication(Modal):
-    """Объект модального окна для взаимодействия с пользователем в Discord.
+    """Класс модального окна для взаимодействия с пользователем в Discord.
     Используется для создания модального окна с полем для ввода никнейма.
 
     Attributes:
@@ -260,7 +263,13 @@ class RoleApplication(Modal):
 
 
 class ApplicationButton(View):
-    """Кнопка для отправки запроса на доступ"""
+    """Класс кнопки роли для взаимодействия с пользователем в Discord.
+    Создаёт 2 кнопки. Первая для выдачи роли,
+    вторая для отказа в выдаче роли 'Старшина'
+
+    Attributes:
+        channel: Объект discord.TextChannel.
+    """
 
     def __init__(
             self,
@@ -282,7 +291,7 @@ class ApplicationButton(View):
 
 
 @commands.slash_command()
-@commands.has_any_role('🌀Лидер гильдии🌀', '📣Казначей📣', '🛡️Офицер🛡️')
+@commands.has_any_role(LEADER_ROLE, TREASURER_ROLE, OFICER_ROLE)
 async def role_application(
     ctx: discord.ApplicationContext,
     channel: discord.Option(

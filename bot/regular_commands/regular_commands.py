@@ -2,14 +2,23 @@ import discord
 
 from discord.ext import commands
 
-from .randomaizer import ApplicationButton
 from .embeds import technical_works_embed, attention_embed
+from .randomaizer import ApplicationButton
+
 from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
 
 
 async def command_error(
         ctx: discord.ApplicationContext, error: Exception, command_name
 ):
+    """
+    Обработчик ошибок для команд.
+
+    :param ctx: Контекст команды.
+    :param error: Исключение, возникшее при выполнении команды.
+    :param command_name: Имя команды.
+    :return: None
+    """
     if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(
             f'Команду {command_name} может вызвать только "Лидер", "Казначей" или "Офицер"!',
@@ -36,7 +45,13 @@ async def technical_works(
         name_localizations={'ru':'текстовый_канал'},
     )  # type: ignore
 ):
-    """Команда для отправки сообщения о тех. работах"""
+    """
+    Команда для отправки сообщения о технических работах.
+
+    :param ctx: Контекст команды.
+    :param channel: Текстовый канал, в который нужно отправить сообщение.
+    :return: None
+    """
     await channel.send(embed=technical_works_embed())
     await ctx.respond(
         f'_Сообщение о тех работах отправлено в канал {channel.mention}!_',
@@ -50,6 +65,13 @@ async def technical_works_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ):
+    """
+    Обработчик ошибок для команды technical_works.
+
+    :param ctx: Контекст команды.
+    :param error: Исключение, возникшее при выполнении команды.
+    :return: None
+    """
     await command_error(ctx, error, "technical_works")
 
 
@@ -68,7 +90,14 @@ async def attention(
         name_localizations={'ru':'текст'},
     )  # type: ignore
 ):
-    """Команда для отправки сообщения с пометкой 'Внимание!'"""
+    """
+    Команда для отправки сообщения с пометкой 'Внимание!'.
+    
+    :param ctx: контекст вызова команды
+    :param channel: канал, в который нужно отправить сообщение
+    :param value: текст сообщения
+    :return: None
+    """
     await channel.send(embed=attention_embed(value=value))
     await ctx.respond(
         f'_Сообщение отправлено в канал {channel.mention}!_',
@@ -82,6 +111,13 @@ async def attention_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ):
+    """
+    Обработчик ошибок для команды attention.
+
+    :param ctx: Контекст команды.
+    :param error: Исключение, возникшее при выполнении команды.
+    :return: None
+    """
     await command_error(ctx, error, "attention")
 
 
@@ -96,7 +132,11 @@ async def random(
     )  # type: ignore
 ):
     """
-    Команда вызывающая рандомайзер. По дэфолту диапазон чисел 1-100.
+    Команда для отправки кнопки рандомайзера.
+
+    :param ctx: контекст вызова команды
+    :param channel: канал, в который нужно отправить кнопку
+    :return: None
     """
     await channel.send(view=ApplicationButton())
     await ctx.respond(
@@ -111,11 +151,18 @@ async def random_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ):
+    """
+    Обработчик ошибок для команды random.
+
+    :param ctx: Контекст команды.
+    :param error: Исключение, возникшее при выполнении команды.
+    :return: None
+    """
     await command_error(ctx, error, "random")
 
 
 @commands.slash_command()
-@commands.has_role('Аукцион')
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def greet(
     ctx: discord.ApplicationContext,
     value: discord.Option(
@@ -124,12 +171,28 @@ async def greet(
         name_localizations={'ru':'что_угодно'},
     )  # type: ignore
 ):
-    """Команда для теста"""
+    """
+    Команда для тестирования отправки сообщений и тэгов.
+
+    :param ctx: контекст вызова команды
+    :param channel: канал, в который нужно отправить кнопку
+    :return: None
+    """
     await ctx.respond(f'Ну привет {ctx.user.mention}!\n{value} - что означает?')
 
 
 @greet.error
-async def greet_error(ctx: discord.ApplicationContext, error):
+async def greet_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+):
+    """
+    Обработчик ошибок для команды greet.
+
+    :param ctx: Контекст команды.
+    :param error: Исключение, возникшее при выполнении команды.
+    :return: None
+    """
     await command_error(ctx, error, "greet")
 
 
@@ -150,7 +213,14 @@ async def clear_all(
         required=False
     )  # type: ignore
 ):
-    """Команда для удаления сообщений в текстовых каналах"""
+    """
+    Команда для удаления сообщений в текстовом канале.
+
+    :param ctx: контекст вызова команды
+    :param channel: канал, в котором нужно удалить сообщения
+    :param limit: кол-во сообщений, для удаления с конца
+    :return: None
+    """
     await channel.purge(
         limit=limit,
         bulk=True
@@ -167,6 +237,13 @@ async def clear_all_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ):
+    """
+    Обработчик ошибок для команды clear_all.
+
+    :param ctx: Контекст команды.
+    :param error: Исключение, возникшее при выполнении команды.
+    :return: None
+    """
     await command_error(ctx, error, "clear_all")
 
 
