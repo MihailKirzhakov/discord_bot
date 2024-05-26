@@ -2,7 +2,12 @@ import discord
 import requests
 import random
 
-from variables import ANSWERS_IF_NO_ROLE
+from variables import (
+    ANSWERS_IF_NO_ROLE,
+    LEADER_ROLE,
+    OFICER_ROLE,
+    TREASURER_ROLE
+)
 
 
 def character_lookup(server: int, name: str):
@@ -116,9 +121,9 @@ def character_lookup(server: int, name: str):
 def has_required_role(user):
     """Проверка на наличие требуемых ролей у пользователя"""
     return (
-        discord.utils.get(user.roles, name='🌀Лидер гильдии🌀') or
-        discord.utils.get(user.roles, name='📣Казначей📣') or
-        discord.utils.get(user.roles, name='🛡️Офицер🛡️')
+        discord.utils.get(user.roles, name=LEADER_ROLE) or
+        discord.utils.get(user.roles, name=TREASURER_ROLE) or
+        discord.utils.get(user.roles, name=OFICER_ROLE)
     )
 
 
