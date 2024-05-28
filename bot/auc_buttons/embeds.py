@@ -38,7 +38,7 @@ def results_embed(results_message):
     """
     embed = discord.Embed(
         title='_**Результаты аукциона:**_',
-        description=f'_{results_message}!_',
+        description=f'_{results_message}_',
         color=0xfffb00
     )
     embed.set_thumbnail(url=AUCTION_IMAGE_URL)
