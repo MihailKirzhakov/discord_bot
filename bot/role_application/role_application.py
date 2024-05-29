@@ -181,7 +181,7 @@ class DeniedRoleModal(Modal):
         else:
             app_list.remove(self.nickname)
             await self.user.send(embed=denied_embed(user, value))
-            self.disable_all_items()
+            self.view.disable_all_items()
             self.view.clear_items()
             await interaction.response.edit_message(embed=self.embed, view=self.view)
 
