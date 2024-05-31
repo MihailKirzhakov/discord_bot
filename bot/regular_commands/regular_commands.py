@@ -1,4 +1,6 @@
 import discord
+import logging
+from logging.handlers import RotatingFileHandler
 
 from discord.ext import commands
 
@@ -6,6 +8,13 @@ from .embeds import technical_works_embed, attention_embed
 from .randomaizer import ApplicationButton
 
 from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
+
+regular_commands_logger = logging.getLogger('regular_commands')
+handler = RotatingFileHandler(
+    'main.log', maxBytes=50000000, backupCount=5
+)
+regular_commands_logger.addHandler(handler)
+regular_commands_logger.setLevel(logging.INFO)
 
 
 async def command_error(
@@ -53,6 +62,9 @@ async def technical_works(
     :return: None
     """
     await channel.send(embed=technical_works_embed())
+    regular_commands_logger.info(
+        f'Команда "Технические работы" вызвана в {channel}'
+    )
     await ctx.respond(
         f'_Сообщение о тех работах отправлено в канал {channel.mention}!_',
         ephemeral=True,

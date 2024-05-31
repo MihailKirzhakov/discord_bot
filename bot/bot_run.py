@@ -1,5 +1,7 @@
 import discord
 import os
+import logging
+from logging.handlers import RotatingFileHandler
 
 from dotenv import load_dotenv
 
@@ -7,8 +9,24 @@ from role_application.role_application import (
      has_required_role, answer_if_no_role
 )
 
-# Подгружаем файл с переменными из .env
 load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    filename='main.log',
+    filemode='a',
+    encoding='utf-8',
+    format=(
+        '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
+    )
+)
+
+main_logger = logging.getLogger('main')
+handler = RotatingFileHandler(
+    'main.log', maxBytes=50000000, backupCount=5
+)
+main_logger.setLevel(logging.INFO)
+main_logger.addHandler(handler)
 
 bot = discord.Bot()
 if os.getenv('DEBUG_SERVER_ID'):
@@ -18,7 +36,7 @@ if os.getenv('DEBUG_SERVER_ID'):
 @bot.event
 async def on_ready():
     """Событие запуска бота"""
-    print("Бот подключился к Discord API")
+    main_logger.info('Бот запущен и готов к работе!')
 
 
 @bot.command()
@@ -39,13 +57,19 @@ async def reload_extentions(ctx: discord.ApplicationContext):
             ephemeral=True,
             delete_after=10
         )
+        main_logger.info('Расширения перезагружены')
     else:
         await answer_if_no_role(ctx)
+        main_logger.error(
+            f'{ctx.user.display_name} попытался '
+            'использовать команду /reload_extentions!'
+        )
 
 
 bot.load_extension('regular_commands.regular_commands')
 bot.load_extension('auc_buttons.auc_buttons')
 bot.load_extension('role_application.role_application')
+main_logger.info('Приложения запущены')
 
 
 if __name__ == '__main__':
