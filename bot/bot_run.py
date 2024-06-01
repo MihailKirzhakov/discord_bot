@@ -1,7 +1,7 @@
 import discord
 import os
 import logging
-from logging.handlers import RotatingFileHandler
+# from logging.handlers import RotatingFileHandler
 
 from dotenv import load_dotenv
 
@@ -18,15 +18,20 @@ logging.basicConfig(
     encoding='utf-8',
     format=(
         '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
-    )
+    ),
 )
 
 main_logger = logging.getLogger('main')
-handler = RotatingFileHandler(
-    'main.log', maxBytes=50000000, backupCount=5
-)
-main_logger.setLevel(logging.INFO)
-main_logger.addHandler(handler)
+# main_logger.setLevel(logging.INFO)
+# format = (
+#         '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
+#     )
+# handler = RotatingFileHandler(
+#     'main.log', maxBytes=50000000,
+#     backupCount=5, encoding='utf-8', errors='backslashreplace'
+# )
+# handler.setFormatter(logging.Formatter(format))
+# main_logger.addHandler(handler)
 
 bot = discord.Bot()
 if os.getenv('DEBUG_SERVER_ID'):

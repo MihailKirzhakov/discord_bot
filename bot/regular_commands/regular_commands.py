@@ -1,6 +1,6 @@
 import discord
 import logging
-from logging.handlers import RotatingFileHandler
+# from logging.handlers import RotatingFileHandler
 
 from discord.ext import commands
 
@@ -10,11 +10,12 @@ from .randomaizer import ApplicationButton
 from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
 
 regular_commands_logger = logging.getLogger('regular_commands')
-handler = RotatingFileHandler(
-    'main.log', maxBytes=50000000, backupCount=5
-)
-regular_commands_logger.addHandler(handler)
-regular_commands_logger.setLevel(logging.INFO)
+# handler = RotatingFileHandler(
+#     'main.log', maxBytes=50000000,
+#     backupCount=5, encoding='utf-8', errors='backslashreplace'
+# )
+# regular_commands_logger.addHandler(handler)
+# regular_commands_logger.setLevel(logging.INFO)
 
 
 async def command_error(
@@ -30,9 +31,15 @@ async def command_error(
     """
     if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(
-            f'Команду {command_name} может вызвать только "Лидер", "Казначей" или "Офицер"!',
+            f'Команду {command_name} может вызвать только '
+            f'"Лидер", "Казначей" или "Офицер"!',
             ephemeral=True,
             delete_after=10
+        )
+        regular_commands_logger.info(
+            f'Пользователь "{ctx.user.display_name}" '
+            f'пытался вызвать команду "{command_name}"! '
+            f'В результате возникло исключение "{error}"!'
         )
     elif isinstance(error, commands.errors.PrivateMessageOnly):
         await ctx.respond(
@@ -40,7 +47,17 @@ async def command_error(
             ephemeral=True,
             delete_after=10
         )
+        regular_commands_logger.info(
+            f'Пользователь "{ctx.user.display_name}" '
+            f'пытался вызвать команду "{command_name}" в лс! '
+            f'В результате возникло исключение "{error}"!'
+        )
     else:
+        regular_commands_logger.error(
+            f'Пользователь "{ctx.user.display_name}" '
+            f'пытался вызвать команду "{command_name}"! '
+            f'В результате возникло исключение "{error}"!'
+        )
         raise error
 
 
@@ -63,7 +80,8 @@ async def technical_works(
     """
     await channel.send(embed=technical_works_embed())
     regular_commands_logger.info(
-        f'Команда "Технические работы" вызвана в {channel}'
+        f'Команда "/technical_works" вызвана пользователем '
+        f'"{ctx.user.display_name}" в канал "{channel}"!'
     )
     await ctx.respond(
         f'_Сообщение о тех работах отправлено в канал {channel.mention}!_',
@@ -104,13 +122,17 @@ async def attention(
 ):
     """
     Команда для отправки сообщения с пометкой 'Внимание!'.
-    
+
     :param ctx: контекст вызова команды
     :param channel: канал, в который нужно отправить сообщение
     :param value: текст сообщения
     :return: None
     """
     await channel.send(embed=attention_embed(value=value))
+    regular_commands_logger.info(
+        f'Команда "/attention" вызвана пользователем '
+        f'"{ctx.user.display_name}" в канал "{channel}"!'
+    )
     await ctx.respond(
         f'_Сообщение отправлено в канал {channel.mention}!_',
         ephemeral=True,
@@ -151,6 +173,10 @@ async def random(
     :return: None
     """
     await channel.send(view=ApplicationButton())
+    regular_commands_logger.info(
+        f'Команда "/random" вызвана пользователем'
+        f'"{ctx.user.display_name}" в канал "{channel}"!'
+    )
     await ctx.respond(
         f'_Кнопка рандомайзера отправлена в канал {channel.mention}!_',
         ephemeral=True,
@@ -190,7 +216,13 @@ async def greet(
     :param channel: канал, в который нужно отправить кнопку
     :return: None
     """
-    await ctx.respond(f'Ну привет {ctx.user.mention}!\n{value} - что означает?')
+    await ctx.respond(
+        f'Ну привет {ctx.user.mention}!\n{value} - что означает?'
+    )
+    regular_commands_logger.info(
+        f'Команда "/attention" вызвана пользователем '
+        f'"{ctx.user.display_name}"!'
+    )
 
 
 @greet.error
@@ -236,6 +268,10 @@ async def clear_all(
     await channel.purge(
         limit=limit,
         bulk=True
+    )
+    regular_commands_logger.info(
+        f'Команда "/clear_all" вызвана пользователем '
+        f'"{ctx.user.display_name}" в канале "{channel}"!'
     )
     await ctx.respond(
         f'_Сообщения удалены в канале {channel.mention}!_',

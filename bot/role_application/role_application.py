@@ -1,4 +1,6 @@
 import discord
+import logging
+# from logging.handlers import RotatingFileHandler
 
 from discord.ext import commands
 from discord.ui import Modal, InputText, View, button
@@ -8,7 +10,6 @@ from variables import (
     ANSWER_IF_DUPLICATE_NICK,
     ANSWER_IF_CHEAT,
     ANSWER_IF_CLICKED_THE_SAME_TIME,
-    CATCH_BUG_MESSAGE,
     LEADER_ROLE,
     OFICER_ROLE,
     TREASURER_ROLE
@@ -18,6 +19,14 @@ from .embeds import (
 )
 from .functions import character_lookup, has_required_role, answer_if_no_role
 
+
+role_application_logger = logging.getLogger('role_application_logger')
+# handler = RotatingFileHandler(
+#     'main.log', maxBytes=50000000,
+#     backupCount=5, encoding='utf-8', errors='backslashreplace'
+# )
+# role_application_logger.addHandler(handler)
+# role_application_logger.setLevel(logging.INFO)
 
 app_list: list = []
 
@@ -54,14 +63,12 @@ class RoleButton(View):
         """Кнопка выдачи роли 'Старшина'."""
         if not has_required_role(interaction.user):
             await answer_if_no_role(interaction)
-
         role_sergeant = discord.utils.get(
             interaction.guild.roles, name='Старшина'
         )
         role_guest = discord.utils.get(
             interaction.guild.roles, name='Гость'
         )
-
         # try для попытки отловить пока непонятную для меня ошибку
         try:
             # Защита от одновременного нажатия
@@ -92,13 +99,17 @@ class RoleButton(View):
                 )
                 await self.user.send(embed=access_embed())
                 app_list.remove(self.nickname)
+                role_application_logger.info(
+                    f'Пользователь {interaction.user.display_name} '
+                    f'выдал роль пользователю "{self.nickname}"!'
+                )
         # та самая ошибка, появлялась неожиданно и редко (причина не ясна)
-        except discord.errors.NotFound:
-            await interaction.respond(
-                CATCH_BUG_MESSAGE,
-                ephemeral=True,
-                delete_after=10
-            )
+        except Exception as error:
+            role_application_logger.error(
+                    f'При попытке выдать роль '
+                    f'пользователю "{self.nickname}" возникла ошибка '
+                    f'"{error}"'
+                )
 
     @button(
         label='Отправить в ЛС, что не подходит',
@@ -112,19 +123,20 @@ class RoleButton(View):
         """Кнопка отказа в выдаче выдачи роли 'Старшина'."""
         if not has_required_role(interaction.user):
             await answer_if_no_role(interaction)
-        try:
-            await interaction.response.send_modal(DeniedRoleModal(
-                nickname=self.nickname,
-                view=self,
-                user=self.user,
-                embed=self.embed
-            ))
-        except discord.errors.NotFound:
-            await interaction.respond(
-                CATCH_BUG_MESSAGE,
-                ephemeral=True,
-                delete_after=10
-            )
+        else:
+            try:
+                await interaction.response.send_modal(DeniedRoleModal(
+                    nickname=self.nickname,
+                    view=self,
+                    user=self.user,
+                    embed=self.embed
+                ))
+            except Exception as error:
+                role_application_logger.error(
+                    f'При попытке вызвать модальное окно нажатием на кнопку '
+                    f'"{button.label}" возникла ошибка "{error}"'
+                )
+
 
 
 class DeniedRoleModal(Modal):
@@ -179,11 +191,22 @@ class DeniedRoleModal(Modal):
                 delete_after=15
             )
         else:
-            app_list.remove(self.nickname)
-            await self.user.send(embed=denied_embed(user, value))
-            self.view.disable_all_items()
-            self.view.clear_items()
-            await interaction.response.edit_message(embed=self.embed, view=self.view)
+            try:
+                app_list.remove(self.nickname)
+                await self.user.send(embed=denied_embed(user, value))
+                self.view.disable_all_items()
+                self.view.clear_items()
+                await interaction.response.edit_message(embed=self.embed, view=self.view)
+                role_application_logger.info(
+                    f'Пользователь {interaction.user.display_name} отказал в доступе '
+                    f'пользователю "{self.nickname}"!'
+                )
+            except Exception as error:
+                role_application_logger.error(
+                    f'При попытке отправить форму после нажатия на кнопку в '
+                    f'модальном окне "Отказ в заявке" возникла ошибка "{error}"'
+                )
+
 
 
 class RoleApplication(Modal):
@@ -233,39 +256,46 @@ class RoleApplication(Modal):
                     ephemeral=True,
                     delete_after=10
                 )
-
         description = (
             f'Профиль Discord: {user.mention}\n'
             f'Гильдия: {player_parms['guild']}'
         )
-
         if 'dragon_emblem' in player_parms:
             description += f'\nДраконий амулет: {player_parms['dragon_emblem']['name']}'
-
-        await interaction.respond(
-            '👍\n_Твой запрос принят! Дождись выдачи роли_',
-            ephemeral=True,
-            delete_after=10
-        )
-        await self.channel.send(
-            view=RoleButton(
-                nickname=nickname,
-                user=user,
+        try:
+            await self.channel.send(
+                view=RoleButton(
+                    nickname=nickname,
+                    user=user,
+                    embed=application_embed(
+                        description, nickname, member, player_parms
+                    )
+                ),
                 embed=application_embed(
                     description, nickname, member, player_parms
                 )
-            ),
-            embed=application_embed(
-                description, nickname, member, player_parms
             )
-        )
-        app_list.append(nickname)
+            app_list.append(nickname)
+            await interaction.respond(
+                '👍\n_Твой запрос принят! Дождись выдачи роли_',
+                ephemeral=True,
+                delete_after=10
+            )
+            role_application_logger.info(
+                    f'Пользователь {interaction.user.display_name} заполнил форму, '
+                    f'она была отправлена в канал "{self.channel}"'
+                )
+        except Exception as error:
+            role_application_logger.error(
+                    f'При попытке отказать пользователю в выдаче роли '
+                    f'пользователю "{nickname}" возникла ошибка '
+                    f'"{error}"'
+                )
 
 
 class ApplicationButton(View):
     """Класс кнопки роли для взаимодействия с пользователем в Discord.
-    Создаёт 2 кнопки. Первая для выдачи роли,
-    вторая для отказа в выдаче роли 'Старшина'
+    Вызывает модальное окно для заполнения формы.'
 
     Attributes:
         channel: Объект discord.TextChannel.
@@ -285,9 +315,15 @@ class ApplicationButton(View):
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await interaction.response.send_modal(RoleApplication(
-            channel=self.channel
-        ))
+        try:
+            await interaction.response.send_modal(RoleApplication(
+                channel=self.channel
+            ))
+        except Exception as error:
+            role_application_logger.error(
+                f'При попытке вызвать модальное окно нажатием на кнопку '
+                f'"{button.label}" возникла ошибка "{error}"'
+            )
 
 
 @commands.slash_command()
@@ -306,10 +342,22 @@ async def role_application(
         ctx: Контекст из discord.ApplicationContext.
         channel: Объект discord.TextChannel.
     """
-    await ctx.respond(
-        embed=start_app_embed(),
-        view=ApplicationButton(channel=channel)
-    )
+    try:
+        await ctx.respond(
+            embed=start_app_embed(),
+            view=ApplicationButton(channel=channel)
+        )
+        role_application_logger.info(
+            f'Команда "/role_application" вызвана пользователем '
+            f'"{ctx.user.display_name}"! Кнопка была отправлена в канал '
+            f'"{channel}"!'
+        )
+    except Exception as error:
+        role_application_logger.error(
+            f'При попытке вызвать команду /role_application'
+            f'возникла ошибка "{error}". Команду попытался вызвать пользователь '
+            f'"{ctx.user.display_name}". Канал для обработки заявок "{channel}"'
+        )
 
 
 # Обработка ошибок и вывод сообщения
