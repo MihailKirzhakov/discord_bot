@@ -1,8 +1,6 @@
 import discord
-import os
 import logging
-# from logging.handlers import RotatingFileHandler
-
+import os
 from dotenv import load_dotenv
 
 from role_application.role_application import (
@@ -11,27 +9,22 @@ from role_application.role_application import (
 
 load_dotenv()
 
-logging.basicConfig(
-    level=logging.INFO,
-    filename='main.log',
-    filemode='a',
-    encoding='utf-8',
-    format=(
-        '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
-    ),
+log_file_path = os.path.join(os.getcwd(), 'discord_bot.log')
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+log_file_handler = logging.FileHandler(
+    filename=log_file_path, mode='w',
+    encoding='utf-8', errors='backslashreplace'
 )
 
-main_logger = logging.getLogger('main')
-# main_logger.setLevel(logging.INFO)
-# format = (
-#         '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
-#     )
-# handler = RotatingFileHandler(
-#     'main.log', maxBytes=50000000,
-#     backupCount=5, encoding='utf-8', errors='backslashreplace'
-# )
-# handler.setFormatter(logging.Formatter(format))
-# main_logger.addHandler(handler)
+formatter = logging.Formatter(
+    '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
+)
+log_file_handler.setFormatter(formatter)
+
+logger.addHandler(log_file_handler)
 
 bot = discord.Bot()
 if os.getenv('DEBUG_SERVER_ID'):
@@ -41,7 +34,7 @@ if os.getenv('DEBUG_SERVER_ID'):
 @bot.event
 async def on_ready():
     """Событие запуска бота"""
-    main_logger.info('Бот запущен и готов к работе!')
+    logger.info('Бот запущен и готов к работе!')
 
 
 @bot.command()
@@ -62,10 +55,10 @@ async def reload_extentions(ctx: discord.ApplicationContext):
             ephemeral=True,
             delete_after=10
         )
-        main_logger.info('Расширения перезагружены')
+        logger.info('Расширения перезагружены')
     else:
         await answer_if_no_role(ctx)
-        main_logger.error(
+        logger.error(
             f'{ctx.user.display_name} попытался '
             'использовать команду /reload_extentions!'
         )
@@ -74,7 +67,7 @@ async def reload_extentions(ctx: discord.ApplicationContext):
 bot.load_extension('regular_commands.regular_commands')
 bot.load_extension('auc_buttons.auc_buttons')
 bot.load_extension('role_application.role_application')
-main_logger.info('Приложения запущены')
+logger.info('Приложения запущены')
 
 
 if __name__ == '__main__':

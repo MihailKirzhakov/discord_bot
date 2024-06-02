@@ -1,7 +1,5 @@
 import discord
 import logging
-# from logging.handlers import RotatingFileHandler
-
 from discord.ext import commands
 from discord.ui import Modal, InputText, View, button
 
@@ -20,13 +18,20 @@ from .embeds import (
 from .functions import character_lookup, has_required_role, answer_if_no_role
 
 
-role_application_logger = logging.getLogger('role_application_logger')
-# handler = RotatingFileHandler(
-#     'main.log', maxBytes=50000000,
-#     backupCount=5, encoding='utf-8', errors='backslashreplace'
-# )
-# role_application_logger.addHandler(handler)
-# role_application_logger.setLevel(logging.INFO)
+logger = logging.getLogger('role_application')
+logger.setLevel(logging.DEBUG)
+
+log_file_handler = logging.FileHandler(
+    filename='discord_bot.log', mode='a',
+    encoding='utf-8', errors='backslashreplace'
+)
+
+formatter = logging.Formatter(
+    '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
+)
+log_file_handler.setFormatter(formatter)
+
+logger.addHandler(log_file_handler)
 
 app_list: list = []
 

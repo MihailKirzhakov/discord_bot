@@ -1,8 +1,8 @@
+from decimal import Decimal
+
 import discord
 import logging
 import random
-
-from decimal import Decimal
 from discord.ext import commands
 from discord.ui import View, Button
 
@@ -18,7 +18,21 @@ from variables import (
     MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD
 )
 
-auc_logger = logging.getLogger('auc_logger')
+logger = logging.getLogger('auc_buttons')
+logger.setLevel(logging.DEBUG)
+
+log_file_handler = logging.FileHandler(
+    filename='discord_bot.log', mode='a',
+    encoding='utf-8', errors='backslashreplace'
+)
+
+formatter = logging.Formatter(
+    '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
+)
+log_file_handler.setFormatter(formatter)
+
+logger.addHandler(log_file_handler)
+
 
 button_mentions = dict()
 
@@ -87,11 +101,11 @@ async def go_auc(
             ),
             view=button_manager
         )
-        auc_logger.info(
+        logger.info(
             f'Команда /go_auc запущена пользователем "{ctx.user.display_name}"'
         )
     except Exception as error:
-        auc_logger.error(
+        logger.error(
             f'При попытке запустить аукцион командой /go_auc '
             f'возникло исключение "{error}"'
         )
@@ -149,7 +163,7 @@ def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid: int):
             button_mentions[name] = mention
             await interaction.response.edit_message(view=view)
         except Exception as error:
-            auc_logger.error(
+            logger.error(
                 f'При обработке нажатия на кнопку ставки '
                 f'возникла ошибка "{error}"'
             )
@@ -200,11 +214,11 @@ def stop_callback(view: discord.ui.View, amount):
                 await interaction.followup.send(
                     embed=results_embed(message)
                 )
-                auc_logger.info(
+                logger.info(
                     f'Аукцион успешно завершён пользователем "{interaction.user.display_name}"'
                 )
             except Exception as error:
-                auc_logger.error(
+                logger.error(
                     f'При завершении аукциона пользователем '
                     f'"{interaction.user.display_name}" возникла ошибка '
                     f'"{error}"'

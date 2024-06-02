@@ -1,7 +1,5 @@
 import discord
 import logging
-# from logging.handlers import RotatingFileHandler
-
 from discord.ext import commands
 
 from .embeds import technical_works_embed, attention_embed
@@ -9,13 +7,20 @@ from .randomaizer import ApplicationButton
 
 from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
 
-regular_commands_logger = logging.getLogger('regular_commands')
-# handler = RotatingFileHandler(
-#     'main.log', maxBytes=50000000,
-#     backupCount=5, encoding='utf-8', errors='backslashreplace'
-# )
-# regular_commands_logger.addHandler(handler)
-# regular_commands_logger.setLevel(logging.INFO)
+logger = logging.getLogger('regular_commands')
+logger.setLevel(logging.DEBUG)
+
+log_file_handler = logging.FileHandler(
+    filename='discord_bot.log', mode='a',
+    encoding='utf-8', errors='backslashreplace'
+)
+
+formatter = logging.Formatter(
+    '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
+)
+log_file_handler.setFormatter(formatter)
+
+logger.addHandler(log_file_handler)
 
 
 async def command_error(
@@ -36,7 +41,7 @@ async def command_error(
             ephemeral=True,
             delete_after=10
         )
-        regular_commands_logger.info(
+        logger.info(
             f'Пользователь "{ctx.user.display_name}" '
             f'пытался вызвать команду "{command_name}"! '
             f'В результате возникло исключение "{error}"!'
@@ -47,13 +52,13 @@ async def command_error(
             ephemeral=True,
             delete_after=10
         )
-        regular_commands_logger.info(
+        logger.info(
             f'Пользователь "{ctx.user.display_name}" '
             f'пытался вызвать команду "{command_name}" в лс! '
             f'В результате возникло исключение "{error}"!'
         )
     else:
-        regular_commands_logger.error(
+        logger.error(
             f'Пользователь "{ctx.user.display_name}" '
             f'пытался вызвать команду "{command_name}"! '
             f'В результате возникло исключение "{error}"!'
@@ -79,7 +84,7 @@ async def technical_works(
     :return: None
     """
     await channel.send(embed=technical_works_embed())
-    regular_commands_logger.info(
+    logger.info(
         f'Команда "/technical_works" вызвана пользователем '
         f'"{ctx.user.display_name}" в канал "{channel}"!'
     )
@@ -129,7 +134,7 @@ async def attention(
     :return: None
     """
     await channel.send(embed=attention_embed(value=value))
-    regular_commands_logger.info(
+    logger.info(
         f'Команда "/attention" вызвана пользователем '
         f'"{ctx.user.display_name}" в канал "{channel}"!'
     )
@@ -173,7 +178,7 @@ async def random(
     :return: None
     """
     await channel.send(view=ApplicationButton())
-    regular_commands_logger.info(
+    logger.info(
         f'Команда "/random" вызвана пользователем'
         f'"{ctx.user.display_name}" в канал "{channel}"!'
     )
@@ -219,7 +224,7 @@ async def greet(
     await ctx.respond(
         f'Ну привет {ctx.user.mention}!\n{value} - что означает?'
     )
-    regular_commands_logger.info(
+    logger.info(
         f'Команда "/attention" вызвана пользователем '
         f'"{ctx.user.display_name}"!'
     )
@@ -269,7 +274,7 @@ async def clear_all(
         limit=limit,
         bulk=True
     )
-    regular_commands_logger.info(
+    logger.info(
         f'Команда "/clear_all" вызвана пользователем '
         f'"{ctx.user.display_name}" в канале "{channel}"!'
     )
