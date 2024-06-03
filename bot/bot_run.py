@@ -1,7 +1,8 @@
-import discord
-import logging
 import os
+
+import discord
 from dotenv import load_dotenv
+from loguru import logger
 
 from role_application.role_application import (
      has_required_role, answer_if_no_role
@@ -9,22 +10,15 @@ from role_application.role_application import (
 
 load_dotenv()
 
-log_file_path = os.path.join(os.getcwd(), 'discord_bot.log')
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-log_file_handler = logging.FileHandler(
-    filename=log_file_path, mode='w',
-    encoding='utf-8', errors='backslashreplace'
+logger.remove()
+logger.add(
+    sink='discord_bot.log', format=(
+        '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | '
+        '<level>{level: <8}</level> | '
+        '<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - '
+        '<level>{message}</level>'
+    ), rotation='5 MB', mode='a'
 )
-
-formatter = logging.Formatter(
-    '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
-)
-log_file_handler.setFormatter(formatter)
-
-logger.addHandler(log_file_handler)
 
 bot = discord.Bot()
 if os.getenv('DEBUG_SERVER_ID'):

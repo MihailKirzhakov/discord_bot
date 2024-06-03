@@ -1,26 +1,11 @@
 import discord
-import logging
 from discord.ext import commands
+from loguru import logger
 
 from .embeds import technical_works_embed, attention_embed
 from .randomaizer import ApplicationButton
 
 from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
-
-logger = logging.getLogger('regular_commands')
-logger.setLevel(logging.DEBUG)
-
-log_file_handler = logging.FileHandler(
-    filename='discord_bot.log', mode='a',
-    encoding='utf-8', errors='backslashreplace'
-)
-
-formatter = logging.Formatter(
-    '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
-)
-log_file_handler.setFormatter(formatter)
-
-logger.addHandler(log_file_handler)
 
 
 async def command_error(

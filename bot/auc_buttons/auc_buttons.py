@@ -1,10 +1,10 @@
 from decimal import Decimal
 
 import discord
-import logging
 import random
 from discord.ext import commands
 from discord.ui import View, Button
+from loguru import logger
 
 from .embeds import attention_embed, results_embed
 from .functions import (
@@ -18,27 +18,11 @@ from variables import (
     MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD
 )
 
-logger = logging.getLogger('auc_buttons')
-logger.setLevel(logging.DEBUG)
-
-log_file_handler = logging.FileHandler(
-    filename='discord_bot.log', mode='a',
-    encoding='utf-8', errors='backslashreplace'
-)
-
-formatter = logging.Formatter(
-    '%(asctime)s | [%(filename)s:%(name)s:%(lineno)d] | %(levelname)s = %(message)s'
-)
-log_file_handler.setFormatter(formatter)
-
-logger.addHandler(log_file_handler)
-
 
 button_mentions = dict()
 
 
 @commands.slash_command()
-# Проверка роли по названию
 @commands.has_role('Аукцион')
 async def go_auc(
     ctx: discord.ApplicationContext,
@@ -76,7 +60,6 @@ async def go_auc(
     :return: None
     """
     button_manager = View(timeout=None)
-    # Создаём кнопки для каждго лота
     for _ in range(count):
         auc_button: discord.ui.Button = Button(
             label=str(convert_bid(start_bid)),
@@ -84,7 +67,6 @@ async def go_auc(
         )
         button_manager.add_item(auc_button)
         auc_button.callback = bid_callback(auc_button, button_manager, bid)
-    # Создаём кнопку для завершения аукциона
     stop_button:  discord.ui.Button = Button(
         label='Завершить аукцион', style=discord.ButtonStyle.red
     )
@@ -111,8 +93,6 @@ async def go_auc(
         )
 
 
-# Обработка ошибок и вывод сообщения
-# о запрете вызова команды без указанной роли
 @go_auc.error
 async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
     """
@@ -170,7 +150,6 @@ def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid: int):
     return inner
 
 
-# Callback для обработки кнопки остановки аукциона
 def stop_callback(view: discord.ui.View, amount):
     """
     Функция для обработки нажатия на кнопку завершения аукциона
