@@ -140,8 +140,12 @@ def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid: int):
             mention = interaction.user.mention
             original_label = Decimal(button.label.split()[0][:-1])
             label_count(button, original_label, name, bid)
+            logger.debug(
+                f'Кнопка изменилась, функция "label_count" отработала, результат "{button.label}"'
+            )
             button_mentions[name] = mention
             await interaction.response.edit_message(view=view)
+            logger.debug(f'Пользователь "{interaction.user.display_name}" сделал ставку')
         except Exception as error:
             logger.error(
                 f'При обработке нажатия на кнопку ставки '

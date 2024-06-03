@@ -12,12 +12,7 @@ load_dotenv()
 
 logger.remove()
 logger.add(
-    sink='discord_bot.log', format=(
-        '<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | '
-        '<level>{level: <8}</level> | '
-        '<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - '
-        '<level>{message}</level>'
-    ), rotation='5 MB', mode='a'
+    sink='discord_bot.log', level=10, rotation='5 MB', mode='w'
 )
 
 bot = discord.Bot()
