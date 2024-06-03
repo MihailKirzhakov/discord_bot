@@ -12,7 +12,7 @@ load_dotenv()
 
 logger.remove()
 logger.add(
-    sink='discord_bot.log', level=10, rotation='5 MB', mode='w'
+    sink='discord_bot.log', level=10, rotation='5 MB', mode='a'
 )
 
 bot = discord.Bot()
