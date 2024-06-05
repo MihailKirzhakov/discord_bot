@@ -59,6 +59,7 @@ async def go_auc(
     :param bid: Шаг ставки
     :return: None
     """
+    start_auc_user = ctx.user
     button_manager = View(timeout=None)
     for _ in range(count):
         auc_button: discord.ui.Button = Button(
@@ -66,7 +67,7 @@ async def go_auc(
             style=discord.ButtonStyle.green
         )
         button_manager.add_item(auc_button)
-        auc_button.callback = bid_callback(auc_button, button_manager, bid)
+        auc_button.callback = bid_callback(auc_button, button_manager, bid, start_auc_user)
     stop_button:  discord.ui.Button = Button(
         label='Завершить аукцион', style=discord.ButtonStyle.red
     )
@@ -118,13 +119,19 @@ async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
         raise error
 
 
-def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid: int):
+def bid_callback(
+        button: discord.ui.Button,
+        view: discord.ui.View,
+        bid: int,
+        start_auc_user: discord.ApplicationContext.user
+):
     """
     Функция для обработки нажатия на кнопку ставки
 
     :param button: Объект класса discord.ui.Button
     :param view: Объект класса discord.ui.View
     :param bid: Шаг ставки
+    :param start_auc_user: Пользователь, начавший аукцион discord.ApplicationContext.user
     :return: inner() функция
     """
     async def inner(interaction: discord.Interaction):
@@ -134,18 +141,41 @@ def bid_callback(button: discord.ui.Button, view: discord.ui.View, bid: int):
         :param interaction: Объект класса discord.Interaction
         :return: None
         """
+        reserve_view = view
+        button.style = discord.ButtonStyle.blurple
+        name = interaction.user.display_name
+        mention = interaction.user.mention
+        original_label = Decimal(button.label.split()[0][:-1])
         try:
-            button.style = discord.ButtonStyle.blurple
-            name = interaction.user.display_name
-            mention = interaction.user.mention
-            original_label = Decimal(button.label.split()[0][:-1])
             label_count(button, original_label, name, bid)
             logger.debug(
-                f'Кнопка изменилась, функция "label_count" отработала, результат "{button.label}"'
+                f'Кнопка изменилась, функция "label_count" отработала, '
+                f'результат "{button.label}"'
             )
             button_mentions[name] = mention
-            await interaction.response.edit_message(view=view)
-            logger.debug(f'Пользователь "{interaction.user.display_name}" сделал ставку')
+            if len(view.children) == 0:
+                await interaction.response.edit_message(view=reserve_view)
+                await interaction.followup.send(
+                    'В момент обработки, сделанной ставки возникла ошибка!'
+                    'Бот не сломался, попробуй сделать ставку снова. Если '
+                    'данное сообщение появляется снова, обратись к '
+                    'СтопарьВоды, для скорейшего решения проблемы!',
+                    ephemeral=True,
+                    delete_after=10
+                )
+                await start_auc_user.send(
+                    f'Сигнал об ошибке во время аукциона! '
+                    f'При попытке пользователя "{interaction.user.display_name}" '
+                    f'сделать ставку, произошла неизвестная ошибка! '
+                    f'Отработала резервная view.'
+                )
+                logger.error(
+                    f'При попытке сделать ставку пользователем '
+                    f'"{interaction.user.mention}" возникла неизвестная ошибка, '
+                    f'которая сносит кнопки. Во "view" сложили резервную копию.'
+                )
+            else:
+                await interaction.response.edit_message(view=view)
         except Exception as error:
             logger.error(
                 f'При обработке нажатия на кнопку ставки '
@@ -213,7 +243,6 @@ def stop_callback(view: discord.ui.View, amount):
                 ephemeral=True,
                 delete_after=10
             )
-            return inner
     return inner
 
 
