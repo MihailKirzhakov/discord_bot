@@ -1,10 +1,12 @@
+from datetime import datetime
+
 import discord
 from discord.ext import commands
 from loguru import logger
 
-from .embeds import technical_works_embed, attention_embed
+from .functions import remind_message
+from .embeds import technical_works_embed, attention_embed, remind_embed
 from .randomaizer import ApplicationButton
-
 from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
 
 
@@ -285,9 +287,69 @@ async def clear_all_error(
     await command_error(ctx, error, "clear_all")
 
 
+@commands.slash_command()
+async def remind(
+    ctx: discord.ApplicationContext,
+    day: discord.Option(
+        int,
+        min_value=1,
+        max_value=31,
+        description='Укажи число дня',
+        name_localizations={'ru': 'число'}
+    ),  # type: ignore
+    month: discord.Option(
+        int,
+        min_value=1,
+        max_value=12,
+        description='Укажи число месяца',
+        name_localizations={'ru': 'месяц'}
+    ),  # type: ignore
+    hour: discord.Option(
+        int,
+        min_value=0,
+        max_value=24,
+        description='Укажи часы',
+        name_localizations={'ru': 'часы'}
+    ),  # type: ignore
+    minute: discord.Option(
+        int,
+        min_value=0,
+        max_value=60,
+        description='Укажи минуты',
+        name_localizations={'ru': 'минуты'}
+    ),  # type: ignore
+    message: discord.Option(
+        str,
+        description='Укажи текст сообщения',
+        name_localizations={'ru': 'сообщение'}
+    ),  # type: ignore
+):
+    """
+    Команда для отправки сообщения с напоминанием.
+
+    :param ctx: Контекст команды discord.ApplicationContext.
+    :param day: День в числовом формате int.
+    :param month: Месяц в числовом формате int.
+    :param hour: Часы в числовом формате int.
+    :param minute: Минуты в числовом формате int.
+    :param message: Сообщение в формате строки str.
+    :return: None
+    """
+    remind_date = datetime(datetime.now().year, month, day, hour, minute)
+    convert_remind_date = discord.utils.format_dt(remind_date, style="F")
+    await ctx.respond(
+        remind_message(convert_remind_date, message),
+        ephemeral=True,
+        delete_after=10
+    )
+    await discord.utils.sleep_until(remind_date)
+    await ctx.user.send(embed=remind_embed(convert_remind_date, message))
+
+
 def setup(bot: discord.Bot):
     bot.add_application_command(technical_works)
     bot.add_application_command(attention)
     bot.add_application_command(greet)
     bot.add_application_command(random)
     bot.add_application_command(clear_all)
+    bot.add_application_command(remind)

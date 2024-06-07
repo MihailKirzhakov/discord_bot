@@ -27,3 +27,11 @@ def rand_choice(nicknames):
             f'Победитель: **{choice(values)}**_'
         )
         return message
+
+
+def remind_message(date, message):
+    return (
+        f'👋\n_Сообщение будет отправлено в {date} '
+        f'__**тебе в ЛС**__✅.\n'
+        f'Содержание сообщения: "{message}"._',
+    )

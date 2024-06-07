@@ -7,6 +7,7 @@ from variables import (
     SMALL_GUILD_ICON_URL,
     TEСHNICAL_WORKS,
     WRENCH_IMAGE_URL,
+    REMIND
 )
 
 
@@ -82,6 +83,22 @@ def attention_embed(value):
     embed = discord.Embed(
         title=ATTENTION,
         description=f'_**{value}!**_',
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
+    return embed
+
+
+def remind_embed(date, message):
+    """
+    Функция для создания вложения с предупреждением.
+
+    :param value: текст предупреждения
+    :return: вложение с предупреждением
+    """
+    embed = discord.Embed(
+        title=REMIND,
+        description=f'_Ты просил в {date} тебе чиркануть!\nТекст напоминания: **"{message}"**!_',
         color=0xfffb00
     )
     embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)

@@ -71,6 +71,8 @@ TREASURER_ROLE = '📣Казначей📣'
 
 NOT_SOLD = 'Лот не был выкуплен'
 
+REMIND = '【Н】【А】【П】【О】【М】【Н】【Ю】'
+
 
 # URLS
 ACCESS_IMAGE_URL = 'https://media.discordapp.net/attachments/1182584501147279491/1230181776870346802/Green-Check-PNG.png?ex=6632630f&is=661fee0f&hm=6cf4321094865e1b393274b680eadfc6c92fd283b16bb54d367047525751439c&=&format=webp&quality=lossless&width=350&height=350'
