@@ -288,6 +288,7 @@ async def clear_all_error(
 
 
 @commands.slash_command()
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def remind(
     ctx: discord.ApplicationContext,
     day: discord.Option(
@@ -344,6 +345,21 @@ async def remind(
     )
     await discord.utils.sleep_until(remind_date)
     await ctx.user.send(embed=remind_embed(convert_remind_date, message))
+
+
+@remind.error
+async def remind_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+):
+    """
+    Обработчик ошибок для команды remind.
+
+    :param ctx: Контекст команды.
+    :param error: Исключение, возникшее при выполнении команды.
+    :return: None
+    """
+    await command_error(ctx, error, "remind")
 
 
 def setup(bot: discord.Bot):

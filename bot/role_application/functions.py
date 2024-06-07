@@ -129,7 +129,7 @@ def has_required_role(user):
 
 def answer_if_no_role(interaction):
     """Ответ на запрос, если у пользователя нет требуемых ролей"""
-    return interaction.response.send_message(
+    return interaction.respond(
                 f'{ANSWERS_IF_NO_ROLE[str(random.randint(1, 3))]}',
                 ephemeral=True,
                 delete_after=15
