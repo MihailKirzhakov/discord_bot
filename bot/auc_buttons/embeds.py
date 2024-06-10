@@ -4,7 +4,10 @@ import discord
 from variables import ATTENTION, AUCTION_IMAGE_URL
 
 
-def attention_embed(user_mention, name_auc, lot_count, first_bid, next_bid):
+def start_auc_embed(
+        user_mention, name_auc, stop_time_str,
+        lot_count, first_bid, next_bid
+):
     """
     Создает встраиваемое сообщение об открытии аукциона.
 
@@ -19,6 +22,7 @@ def attention_embed(user_mention, name_auc, lot_count, first_bid, next_bid):
         title=ATTENTION,
         description=(
             f'_**{user_mention} начал аукцион "{name_auc}"!**\n\n'
+            f'**Дата и время окончания аукциона {stop_time_str} (по МСК)!**\n\n'
             f'Количество лотов: {lot_count}.\n'
             f'Начальная ставка: {first_bid}.\n'
             f'Шаг ставки: {next_bid}._'

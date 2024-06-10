@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord.ui import View, Button
 from loguru import logger
 
-from .embeds import attention_embed, results_embed
+from .embeds import start_auc_embed, results_embed
 from .functions import (
     convert_bid,
     label_count,
@@ -47,6 +47,11 @@ async def go_auc(
         int,
         description='Укажи шаг ставки',
         name_localizations={'ru': 'шаг_ставки'}
+    ),  # type: ignore
+    stop_time_str: discord.Option(
+        str,
+        description='Укажи дату и время окончания аука',
+        name_localizations={'ru': 'дата_время'}
     )  # type: ignore
 ):
     """
@@ -75,9 +80,10 @@ async def go_auc(
     stop_button.callback = stop_callback(button_manager, count)
     try:
         await ctx.respond(
-            embed=attention_embed(
+            embed=start_auc_embed(
                 user_mention=ctx.user.mention,
                 name_auc=name,
+                stop_time_str=stop_time_str,
                 lot_count=count,
                 first_bid=convert_bid(start_bid),
                 next_bid=convert_bid(bid)
