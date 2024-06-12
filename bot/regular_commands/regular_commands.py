@@ -257,19 +257,29 @@ async def clear_all(
     :param limit: кол-во сообщений, для удаления с конца
     :return: None
     """
-    await channel.purge(
-        limit=limit,
-        bulk=True
-    )
-    logger.info(
-        f'Команда "/clear_all" вызвана пользователем '
-        f'"{ctx.user.display_name}" в канале "{channel}"!'
-    )
-    await ctx.respond(
-        f'_Сообщения удалены в канале {channel.mention}!_',
-        ephemeral=True,
-        delete_after=10
-    )
+    try:
+        await channel.purge(
+            limit=limit,
+            bulk=True
+        )
+        logger.info(
+            f'Команда "/clear_all" вызвана пользователем '
+            f'"{ctx.user.display_name}" в канале "{channel}"!'
+        )
+        await ctx.respond(
+            f'_Сообщения удалены в канале {channel.mention}!_',
+            ephemeral=True,
+            delete_after=10
+        )
+    except Exception as error:
+        await ctx.respond(
+            f'_При использовании команды "clear_all" в канале '
+            f'{channel} возникла ошибка: "{error}"!_'
+        )
+        logger.error(
+            f'_При использовании команды "clear_all" в канале '
+            f'{channel} возникла ошибка: "{error}"!_'
+        )
 
 
 @clear_all.error
