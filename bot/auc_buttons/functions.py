@@ -1,5 +1,8 @@
+from datetime import datetime
 from decimal import Decimal
+import time
 
+import discord
 
 from variables import NOT_SOLD
 
@@ -173,3 +176,21 @@ def convert_sorted_message(values):
     )
     cost = float(cost[:-1]) * cost_mult
     return cost
+
+
+def minutes_until_date(target_date_time: str,):
+    """
+    Calculate the number of minutes until the specified date and time.
+
+    Args:
+        target_date (str): The target date in YYYY-MM-DD format.
+        target_time (str): The target time in HH:MM format.
+
+    Returns:
+        int: The number of minutes until the specified date and time.
+    """
+    target_datetime = datetime.strptime(f"{target_date_time}", "%Y-%m-%d %H:%M")
+    now = datetime.now()
+    time_diff = target_datetime - now
+    minutes_until = time_diff.total_seconds() / 60
+    return int(minutes_until)

@@ -1,3 +1,5 @@
+import asyncio
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 import discord
@@ -11,7 +13,8 @@ from .functions import (
     convert_bid,
     label_count,
     convert_to_mention,
-    convert_sorted_message
+    convert_sorted_message,
+    minutes_until_date
 )
 from variables import (
     ANSWERS_IF_NO_ROLE,
@@ -26,7 +29,7 @@ button_mentions = dict()
 @commands.has_role('Аукцион')
 async def go_auc(
     ctx: discord.ApplicationContext,
-    name: discord.Option(
+    name_auc: discord.Option(
         str,
         description='Что разыгрываем?',
         name_localizations={'ru': 'название_лотов'}
@@ -48,9 +51,9 @@ async def go_auc(
         description='Укажи шаг ставки',
         name_localizations={'ru': 'шаг_ставки'}
     ),  # type: ignore
-    stop_time_str: discord.Option(
+    target_date_time: discord.Option(
         str,
-        description='Укажи дату и время окончания аука',
+        description='Укажи дату и время в формате ГГГГ-ММ-ДД ЧЧ:ММ',
         name_localizations={'ru': 'дата_время'}
     )  # type: ignore
 ):
@@ -62,9 +65,15 @@ async def go_auc(
     :param count: Количество лотов
     :param start_bid: Начальная ставка
     :param bid: Шаг ставки
+    :param stop_time_str: Дата и время окончания аукциона. Формат "2022-07-25 14:30:00"
     :return: None
     """
+    final_time: list = []
+    today = datetime.now()
+    stop_time = today + timedelta(minutes=minutes_until_date(target_date_time))
+    final_time.append(stop_time)
     start_auc_user = ctx.user
+    user_mention = ctx.user.mention
     button_manager = View(timeout=None)
     for _ in range(count):
         auc_button: discord.ui.Button = Button(
@@ -72,18 +81,31 @@ async def go_auc(
             style=discord.ButtonStyle.green
         )
         button_manager.add_item(auc_button)
-        auc_button.callback = bid_callback(auc_button, button_manager, bid, start_auc_user)
+        auc_button.callback = bid_callback(
+            button=auc_button,
+            view=button_manager,
+            start_bid=start_bid,
+            bid=bid,
+            start_auc_user=start_auc_user,
+            stop_time=stop_time,
+            user_mention=user_mention,
+            count=count,
+            name_auc=name_auc,
+            final_time=final_time
+        )
     stop_button:  discord.ui.Button = Button(
         label='Завершить аукцион', style=discord.ButtonStyle.red
     )
     button_manager.add_item(stop_button)
-    stop_button.callback = stop_callback(button_manager, count)
+    stop_button.callback = stop_callback(
+        final_time=final_time
+    )
     try:
         await ctx.respond(
             embed=start_auc_embed(
-                user_mention=ctx.user.mention,
-                name_auc=name,
-                stop_time_str=stop_time_str,
+                user_mention=user_mention,
+                name_auc=name_auc,
+                stop_time=stop_time,
                 lot_count=count,
                 first_bid=convert_bid(start_bid),
                 next_bid=convert_bid(bid)
@@ -93,7 +115,19 @@ async def go_auc(
         logger.info(
             f'Команда /go_auc запущена пользователем "{ctx.user.display_name}"'
         )
+        await check_timer(
+            ctx=ctx,
+            view=button_manager,
+            user_mention=user_mention,
+            name_auc=name_auc,
+            count=count,
+            final_time=final_time
+        )
     except Exception as error:
+        await ctx.respond(
+            f'Не вышло, вот ошибка: {error}',
+            ephemeral=True
+        )
         logger.error(
             f'При попытке запустить аукцион командой /go_auc '
             f'возникло исключение "{error}"'
@@ -125,11 +159,26 @@ async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
         raise error
 
 
+async def check_timer(ctx, view, user_mention, name_auc, count, final_time):
+    while True:
+        if final_time[0] > datetime.now():
+            await asyncio.sleep(1)
+        else:
+            await auto_stop_auc(ctx, view, user_mention, name_auc, count)
+            break
+
+
 def bid_callback(
         button: discord.ui.Button,
         view: discord.ui.View,
+        start_bid: int,
         bid: int,
-        start_auc_user: discord.ApplicationContext.user
+        start_auc_user: discord.ApplicationContext.user,
+        stop_time: datetime,
+        user_mention: discord.abc.User.mention,
+        count: int,
+        name_auc: str,
+        final_time: list,
 ):
     """
     Функция для обработки нажатия на кнопку ставки
@@ -147,6 +196,9 @@ def bid_callback(
         :param interaction: Объект класса discord.Interaction
         :return: None
         """
+        nowtime = datetime.now()
+        minutetime = timedelta(minutes=1)
+        plus_minute = nowtime + minutetime
         reserve_view = view
         button.style = discord.ButtonStyle.blurple
         name = interaction.user.display_name
@@ -181,7 +233,21 @@ def bid_callback(
                     f'которая сносит кнопки. Во "view" сложили резервную копию.'
                 )
             else:
-                await interaction.response.edit_message(view=view)
+                if (stop_time - nowtime) < minutetime:
+                    await interaction.response.edit_message(
+                        view=view,
+                        embed=start_auc_embed(
+                            user_mention=user_mention,
+                            name_auc=name_auc,
+                            stop_time=plus_minute,
+                            lot_count=count,
+                            first_bid=convert_bid(start_bid),
+                            next_bid=convert_bid(bid)
+                        )
+                    )
+                    final_time[0] = plus_minute
+                else:
+                    await interaction.response.edit_message(view=view)
         except Exception as error:
             logger.error(
                 f'При обработке нажатия на кнопку ставки '
@@ -190,7 +256,9 @@ def bid_callback(
     return inner
 
 
-def stop_callback(view: discord.ui.View, amount):
+def stop_callback(
+        final_time: list
+):
     """
     Функция для обработки нажатия на кнопку завершения аукциона
 
@@ -206,42 +274,7 @@ def stop_callback(view: discord.ui.View, amount):
         :return: None
         """
         if discord.utils.get(interaction.user.roles, name='Аукцион'):
-            view.disable_all_items()
-            label_values = [btn.label for btn in view.children[:amount]]
-            convert_label_values = convert_to_mention(
-                label_values, button_mentions
-            )
-            count_not_bid = convert_label_values.count(NOT_SOLD)
-            removed_not_bid = []
-            for i in convert_label_values:
-                if i != NOT_SOLD:
-                    removed_not_bid.append(i)
-            sorted_list = sorted(
-                removed_not_bid,
-                key=convert_sorted_message,
-                reverse=True
-            )
-            for _ in range(count_not_bid):
-                sorted_list.append(NOT_SOLD)
-            message = (
-                '\n'.join([f'{i+1}. {val}' for i, val in enumerate(
-                    sorted_list
-                )])
-            )
-            try:
-                await interaction.response.edit_message(view=view)
-                await interaction.followup.send(
-                    embed=results_embed(message)
-                )
-                logger.info(
-                    f'Аукцион успешно завершён пользователем "{interaction.user.display_name}"'
-                )
-            except Exception as error:
-                logger.error(
-                    f'При завершении аукциона пользователем '
-                    f'"{interaction.user.display_name}" возникла ошибка '
-                    f'"{error}"'
-                )
+            final_time[0] = datetime.now()
         else:
             random_amount = random.randint(1, 3)
             await interaction.response.send_message(
@@ -250,6 +283,62 @@ def stop_callback(view: discord.ui.View, amount):
                 delete_after=10
             )
     return inner
+
+
+async def auto_stop_auc(
+        ctx: discord.ApplicationContext,
+        view: discord.ui.View,
+        user_mention: discord.abc.User.mention,
+        name_auc: str,
+        count: int
+):
+    """
+    Внутренняя функция, помощник
+
+    :param interaction: Объект класса discord.Interaction
+    :return: None
+    """
+    view.disable_all_items()
+    label_values = [btn.label for btn in view.children[:count]]
+    convert_label_values = convert_to_mention(
+        label_values, button_mentions
+    )
+    count_not_bid = convert_label_values.count(NOT_SOLD)
+    removed_not_bid = []
+    for i in convert_label_values:
+        if i != NOT_SOLD:
+            removed_not_bid.append(i)
+    sorted_list = sorted(
+        removed_not_bid,
+        key=convert_sorted_message,
+        reverse=True
+    )
+    for _ in range(count_not_bid):
+        sorted_list.append(NOT_SOLD)
+    message = (
+        '\n'.join([f'{i+1}. {val}' for i, val in enumerate(
+            sorted_list
+        )])
+    )
+    view.clear_items()
+    try:
+        await ctx.edit(
+            view=view,
+            embed=results_embed(
+                results_message=message,
+                user_mention=user_mention,
+                name_auc=name_auc,
+                count=count
+            )
+        )
+        logger.info(
+            'Аукцион успешно завершён автоматически!'
+        )
+    except Exception as error:
+        logger.error(
+            f'При автоматическом завершении аукциона возникла ошибка '
+            f'"{error}"'
+        )
 
 
 def setup(bot: discord.Bot):

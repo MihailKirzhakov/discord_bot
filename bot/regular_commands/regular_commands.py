@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import discord
 from discord.ext import commands
@@ -301,52 +301,34 @@ async def clear_all_error(
 @commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def remind(
     ctx: discord.ApplicationContext,
-    day: discord.Option(
-        int,
-        min_value=1,
-        max_value=31,
-        description='Укажи число дня',
-        name_localizations={'ru': 'число'}
-    ),  # type: ignore
-    month: discord.Option(
-        int,
-        min_value=1,
-        max_value=12,
-        description='Укажи число месяца',
-        name_localizations={'ru': 'месяц'}
-    ),  # type: ignore
-    hour: discord.Option(
-        int,
-        min_value=0,
-        max_value=24,
-        description='Укажи часы',
-        name_localizations={'ru': 'часы'}
-    ),  # type: ignore
-    minute: discord.Option(
-        int,
-        min_value=0,
-        max_value=60,
-        description='Укажи минуты',
-        name_localizations={'ru': 'минуты'}
-    ),  # type: ignore
     message: discord.Option(
         str,
-        description='Укажи текст сообщения',
-        name_localizations={'ru': 'сообщение'}
+        description='Укажи сообщение',
+        name_localizations={'ru': 'строка'}
+    ),  # type: ignore
+    date_time_time_str: discord.Option(
+        str,
+        description='Укажи дату и время "ГГГГ-ММ-ДД ЧЧ:ММ"',
+        name_localizations={'ru': 'дата_время'}
     ),  # type: ignore
 ):
     """
     Команда для отправки сообщения с напоминанием.
 
     :param ctx: Контекст команды discord.ApplicationContext.
-    :param day: День в числовом формате int.
-    :param month: Месяц в числовом формате int.
-    :param hour: Часы в числовом формате int.
-    :param minute: Минуты в числовом формате int.
-    :param message: Сообщение в формате строки str.
+    :param date_time_time_str: str в формате "ГГГГ-ММ-ДД ЧЧ:ММ".
     :return: None
     """
-    remind_date = datetime(datetime.now().year, month, day, hour, minute)
+    date_time_time_str_split = date_time_time_str.replace(
+        '-', ' '
+    ).replace('_', ' ').replace(':', ' ').split()
+    remind_date = datetime(
+        year=int(date_time_time_str_split[0]),
+        month=int(date_time_time_str_split[1]),
+        day=int(date_time_time_str_split[2]),
+        hour=int(date_time_time_str_split[3]),
+        minute=int(date_time_time_str_split[4]),
+    )
     convert_remind_date = discord.utils.format_dt(remind_date, style="F")
     await ctx.respond(
         remind_message(convert_remind_date, message),
@@ -372,6 +354,29 @@ async def remind_error(
     await command_error(ctx, error, "remind")
 
 
+@commands.slash_command()
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
+async def timer_set(ctx: discord.ApplicationContext, time: float):
+    today = datetime.now()
+    stop_time = today + timedelta(minutes=time)
+    await ctx.respond(f"Вот: <t:{int(stop_time.timestamp())}:R>")
+
+
+@timer_set.error
+async def timer_set_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+):
+    """
+    Обработчик ошибок для команды timer.
+
+    :param ctx: Контекст команды.
+    :param error: Исключение, возникшее при выполнении команды.
+    :return: None
+    """
+    await command_error(ctx, error, "timer_set")
+
+
 def setup(bot: discord.Bot):
     bot.add_application_command(technical_works)
     bot.add_application_command(attention)
@@ -379,3 +384,4 @@ def setup(bot: discord.Bot):
     bot.add_application_command(random)
     bot.add_application_command(clear_all)
     bot.add_application_command(remind)
+    bot.add_application_command(timer_set)
