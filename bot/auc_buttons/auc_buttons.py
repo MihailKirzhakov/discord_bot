@@ -374,6 +374,10 @@ def stop_callback(final_time: dict) -> Callable:
     async def inner(interaction: discord.Interaction):
         if discord.utils.get(interaction.user.roles, name='Аукцион'):
             final_time['stop_time'] = datetime.now()
+            logger.info(
+                f'Пользователь {interaction.user.display_name} '
+                f'досрочно завершил аукцион!'
+            )
         else:
             random_amount = random.randint(1, 3)
             await interaction.response.send_message(
@@ -450,7 +454,7 @@ async def auto_stop_auc(
             )
         )
         logger.info(
-            'Аукцион успешно завершён автоматически!'
+            'Аукцион успешно завершён!'
         )
     except Exception as error:
         logger.error(
