@@ -1,20 +1,19 @@
-from datetime import datetime
+import datetime
 from decimal import Decimal
-import time
 
 import discord
 
 from variables import NOT_SOLD
 
 
-def convert_bid(bid) -> str:
+def convert_bid(bid: int) -> str:
     """
     Функция для конвертирования стартовой стоимости лота
     в вид к примеру "800K" или "1.2M" в десятичную систему.
 
     Parameters
     ----------
-    bid: 'str'
+    bid: 'int'
         Ставка, параметр берется из slash-функции /go_auc.
 
     Returns
@@ -30,7 +29,10 @@ def convert_bid(bid) -> str:
     return result
 
 
-def thousand_summ(original_label, bid):
+def thousand_summ(
+    original_label: Decimal,
+    bid: int
+):
     """
     Функция считает суммы ставки с текущим значением на кнопке.
 
@@ -39,7 +41,7 @@ def thousand_summ(original_label, bid):
     original_label: 'Decimal(float | int)'
         Число, взятое с кнопки.
 
-    bid: 'str'
+    bid: 'int'
         Ставка, параметр берется из slash-функции /go_auc.
 
     Returns
@@ -78,7 +80,12 @@ def million_summ(original_label, bid):
     return result
 
 
-def label_count(button, original_label, name, bid):
+def label_count(
+    button: discord.ui.Button,
+    original_label: Decimal,
+    name: discord.abc.User.display_name,
+    bid: int
+) -> str:
     """
     Функция считает результат вычисления числа после сделанной ставки.
 
@@ -93,7 +100,7 @@ def label_count(button, original_label, name, bid):
     name: 'interaction.user.display_name'
         Имя пользователя, который взаимодействовал с кнопкой.
 
-    bid: 'str'
+    bid: 'int'
         Ставка, параметр берется из slash-функции /go_auc.
 
     Returns
@@ -123,7 +130,10 @@ def label_count(button, original_label, name, bid):
     return button.label
 
 
-def convert_to_mention(label_values, button_mentions):
+def convert_to_mention(
+    label_values: list,
+    button_mentions: dict
+) -> list:
     """
     Функция преобразует никнейм игрока на кнопке в тэг,
     для вывода списка победителей.
@@ -152,7 +162,7 @@ def convert_to_mention(label_values, button_mentions):
     return result
 
 
-def convert_sorted_message(values):
+def convert_sorted_message(values: list) -> str:
     """
     Функция преобразует список строк, в нумерованный,
     отсортированный список победителей.
@@ -178,19 +188,32 @@ def convert_sorted_message(values):
     return cost
 
 
-def minutes_until_date(target_date_time: str,):
+def seconds_until_date(target_date_time: str) -> int:
     """
-    Calculate the number of minutes until the specified date and time.
+    Функция считает количество секунд до определенной даты и времени.
 
-    Args:
-        target_date (str): The target date in YYYY-MM-DD format.
-        target_time (str): The target time in HH:MM format.
+    Parameters
+    ----------
+    target_date_time: str
+        Дата и время в ДД-ММ ЧЧ:ММ:СС формате.
 
-    Returns:
-        int: The number of minutes until the specified date and time.
+    Returns
+    -------
+    minutes_until: int
+        Количество секунд до определенной даты и времени.
     """
-    target_datetime = datetime.strptime(f"{target_date_time}", "%Y-%m-%d %H:%M")
-    now = datetime.now()
+    if len(target_date_time) == 11:
+        target_date_time += ':00'
+    parts = target_date_time.split()
+    if len(parts) != 2:
+        raise ValueError("Неверный формат. Ожидался ДД-ММ ЧЧ:ММ:СС")
+    day, month = parts[0].split('-')
+    hour, minute, second = parts[1].split(':')
+    target_datetime = datetime.datetime(
+        datetime.date.today().year,
+        int(month), int(day), int(hour), int(minute), int(second)
+    )
+    now = datetime.datetime.now()
     time_diff = target_datetime - now
-    minutes_until = time_diff.total_seconds() / 60
-    return int(minutes_until)
+    seconds_until = time_diff.total_seconds()
+    return int(seconds_until)

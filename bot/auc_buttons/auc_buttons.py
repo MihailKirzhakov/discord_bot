@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Callable
 
 import discord
 import random
@@ -14,15 +15,12 @@ from .functions import (
     label_count,
     convert_to_mention,
     convert_sorted_message,
-    minutes_until_date
+    seconds_until_date
 )
 from variables import (
     ANSWERS_IF_NO_ROLE,
     MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD
 )
-
-
-button_mentions = dict()
 
 
 @commands.slash_command()
@@ -53,25 +51,46 @@ async def go_auc(
     ),  # type: ignore
     target_date_time: discord.Option(
         str,
-        description='Укажи дату и время в формате ГГГГ-ММ-ДД ЧЧ:ММ',
+        description='Укажи дату и время в формате ДД-ММ ЧЧ:ММ:СС',
         name_localizations={'ru': 'дата_время'}
     )  # type: ignore
-):
+) -> None:
     """
     Команда для запуска аукциона.
 
-    :param ctx: Контекст команды
-    :param name: Название лотов
-    :param count: Количество лотов
-    :param start_bid: Начальная ставка
-    :param bid: Шаг ставки
-    :param stop_time_str: Дата и время окончания аукциона. Формат "2022-07-25 14:30:00"
-    :return: None
+    Parametrs:
+    ----------
+        ctx: discord.ApplicationContext
+            Контекст команды.
+
+        name_auc: str
+            Название лотов.
+
+        count: int
+            Количество лотов.
+
+        start_bid: int
+            Начальная ставка.
+
+        bid: int
+            Шаг ставки.
+
+        target_date_time: str
+            Дата и время окончания аукциона. Формат "ДД-ММ ЧЧ:ММ:СС".
+
+    Returns:
+    --------
+        None.
     """
-    final_time: list = []
-    today = datetime.now()
-    stop_time = today + timedelta(minutes=minutes_until_date(target_date_time))
-    final_time.append(stop_time)
+    button_mentions: dict[
+        discord.abc.User.display_name, discord.abc.User.mention
+    ] = {}
+    final_time: dict[str, datetime] = {}
+    today: datetime = datetime.now()
+    stop_time: datetime = today + timedelta(
+        seconds=seconds_until_date(target_date_time)
+    )
+    final_time['stop_time'] = stop_time
     start_auc_user = ctx.user
     user_mention = ctx.user.mention
     button_manager = View(timeout=None)
@@ -91,7 +110,8 @@ async def go_auc(
             user_mention=user_mention,
             count=count,
             name_auc=name_auc,
-            final_time=final_time
+            final_time=final_time,
+            button_mentions=button_mentions
         )
     stop_button:  discord.ui.Button = Button(
         label='Завершить аукцион', style=discord.ButtonStyle.red
@@ -121,7 +141,8 @@ async def go_auc(
             user_mention=user_mention,
             name_auc=name_auc,
             count=count,
-            final_time=final_time
+            final_time=final_time,
+            button_mentions=button_mentions
         )
     except Exception as error:
         await ctx.respond(
@@ -135,13 +156,23 @@ async def go_auc(
 
 
 @go_auc.error
-async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
+async def go_auc_error(
+    ctx: discord.ApplicationContext, error: Exception
+) -> None:
     """
-    Обработчик ошибок для команды go_auc
+    Обработчик ошибок для команды go_auc.
 
-    :param ctx: Контекст команды.
-    :param error: Исключение, возникшее при выполнении команды.
-    :return: None
+    Parametrs:
+    ----------
+        ctx: discord.ApplicationContext
+            Контекст команды.
+
+        error: error
+            Исключение, возникшее при выполнении команды.
+
+    Returns:
+    --------
+        None.
     """
     if isinstance(error, commands.errors.MissingRole):
         await ctx.respond(
@@ -159,12 +190,57 @@ async def go_auc_error(ctx: discord.ApplicationContext, error: Exception):
         raise error
 
 
-async def check_timer(ctx, view, user_mention, name_auc, count, final_time):
+async def check_timer(
+    ctx: discord.ApplicationContext,
+    view: discord.ui.View,
+    user_mention: discord.abc.User.mention,
+    name_auc: str,
+    count: int,
+    final_time: dict,
+    button_mentions: dict
+) -> None:
+    """
+    Функция для полинга таймера, которая автоматически завершает аукцион.
+
+    Parametrs:
+    ----------
+        ctx: discord.ApplicationContext
+            Контекст команды.
+
+        view: discord.ui.View
+            Объект класса View.
+
+        user_mention: discord.abc.User.mention
+            Тэг юзера.
+
+        name_auc: str
+            Название аукциона.
+
+        count: int
+            Количество лотов.
+
+        final_time: dict
+            Словарь с временем завершения аукциона.
+
+        button_mentions: discord.abc.User.mention
+            Тэги юзеров в кнопках.
+
+    Returns:
+    --------
+        None.
+    """
     while True:
-        if final_time[0] > datetime.now():
+        if final_time['stop_time'] > datetime.now():
             await asyncio.sleep(1)
         else:
-            await auto_stop_auc(ctx, view, user_mention, name_auc, count)
+            await auto_stop_auc(
+                ctx=ctx,
+                view=view,
+                user_mention=user_mention,
+                name_auc=name_auc,
+                count=count,
+                button_mentions=button_mentions
+            )
             break
 
 
@@ -178,32 +254,57 @@ def bid_callback(
         user_mention: discord.abc.User.mention,
         count: int,
         name_auc: str,
-        final_time: list,
-):
+        final_time: dict,
+        button_mentions: dict
+) -> Callable:
     """
-    Функция для обработки нажатия на кнопку ставки
+    Функция для обработки нажатия на кнопку ставки.
 
-    :param button: Объект класса discord.ui.Button
-    :param view: Объект класса discord.ui.View
-    :param bid: Шаг ставки
-    :param start_auc_user: Пользователь, начавший аукцион discord.ApplicationContext.user
-    :return: inner() функция
+    Parametrs:
+    ----------
+        button: discord.ui.Button
+            Кнопка.
+
+        view: discord.ui.View
+            Объект класса View.
+
+        bid: int Шаг ставки.
+
+        start_auc_user: discord.ApplicationContext.user
+            Никнейм пользователя, начавшего аукцион.
+
+        stop_time: datetime
+            Время завершения аукциона.
+
+        user_mention: discord.abc.User.mention
+            Тэг юзера.
+
+        count: int
+            Количество лотов.
+
+        name_auc: str
+            Название аукциона.
+
+        final_time: dict
+            Словарь с временем завершения аукциона.
+
+        button_mentions: discord.abc.User
+            Тэги юзеров в кнопках.
+
+    Returns:
+    --------
+        inner: Callable
+            Вспомогательная функция inner().
     """
     async def inner(interaction: discord.Interaction):
-        """
-        Внутренняя функция, помощник
-
-        :param interaction: Объект класса discord.Interaction
-        :return: None
-        """
-        nowtime = datetime.now()
-        minutetime = timedelta(minutes=1)
-        plus_minute = nowtime + minutetime
-        reserve_view = view
+        nowtime: datetime = datetime.now()
+        minutetime: timedelta = timedelta(minutes=1)
+        plus_minute: datetime = nowtime + minutetime
+        reserve_view: discord.ui.View = view
         button.style = discord.ButtonStyle.blurple
         name = interaction.user.display_name
         mention = interaction.user.mention
-        original_label = Decimal(button.label.split()[0][:-1])
+        original_label: Decimal = Decimal(button.label.split()[0][:-1])
         try:
             label_count(button, original_label, name, bid)
             logger.debug(
@@ -245,7 +346,7 @@ def bid_callback(
                             next_bid=convert_bid(bid)
                         )
                     )
-                    final_time[0] = plus_minute
+                    final_time['stop_time'] = plus_minute
                 else:
                     await interaction.response.edit_message(view=view)
         except Exception as error:
@@ -256,25 +357,23 @@ def bid_callback(
     return inner
 
 
-def stop_callback(
-        final_time: list
-):
+def stop_callback(final_time: dict) -> Callable:
     """
-    Функция для обработки нажатия на кнопку завершения аукциона
+    Функция для обработки нажатия на кнопку завершения аукциона.
 
-    :param view: Объект класса discord.ui.View
-    :param amount: Количество объектов внутри менеджера кнопок
-    :return: inner() функция
+    Parametrs:
+    ----------
+        final_time: dict
+            Словарь с временем завершения аукциона.
+
+    Returns:
+    --------
+        inner: Callable
+            Вспомогательная функция inner().
     """
     async def inner(interaction: discord.Interaction):
-        """
-        Внутренняя функция, помощник
-
-        :param interaction: Объект класса discord.Interaction
-        :return: None
-        """
         if discord.utils.get(interaction.user.roles, name='Аукцион'):
-            final_time[0] = datetime.now()
+            final_time['stop_time'] = datetime.now()
         else:
             random_amount = random.randint(1, 3)
             await interaction.response.send_message(
@@ -290,13 +389,32 @@ async def auto_stop_auc(
         view: discord.ui.View,
         user_mention: discord.abc.User.mention,
         name_auc: str,
-        count: int
-):
+        count: int,
+        button_mentions: dict
+) -> None:
     """
-    Внутренняя функция, помощник
+    Функция для автозавершения аукциона.
 
-    :param interaction: Объект класса discord.Interaction
-    :return: None
+    Parametrs:
+    ----------
+        ctx: discord.ApplicationContext
+            Контекст команды
+
+        view: discord.ui.View
+            Объект класса View
+
+        user_mention: discord.abc.User.mention
+            Тэг юзера
+
+        name_auc: str
+            Название аукциона
+
+        count: int
+            Количество лотов
+
+    Returns:
+    --------
+        None.
     """
     view.disable_all_items()
     label_values = [btn.label for btn in view.children[:count]]
@@ -304,7 +422,7 @@ async def auto_stop_auc(
         label_values, button_mentions
     )
     count_not_bid = convert_label_values.count(NOT_SOLD)
-    removed_not_bid = []
+    removed_not_bid: list = []
     for i in convert_label_values:
         if i != NOT_SOLD:
             removed_not_bid.append(i)

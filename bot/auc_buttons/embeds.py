@@ -2,23 +2,44 @@ from datetime import datetime
 
 import discord
 
-
 from variables import ATTENTION, AUCTION_IMAGE_URL
 
 
 def start_auc_embed(
-        user_mention, name_auc, stop_time,
-        lot_count, first_bid, next_bid
-):
+    user_mention: discord.abc.User.mention,
+    name_auc: str,
+    stop_time: datetime,
+    lot_count: int,
+    first_bid: str,
+    next_bid: str
+) -> discord.Embed:
     """
     Создает встраиваемое сообщение об открытии аукциона.
 
-    :param user_mention: упоминание пользователя, открывшего аукцион
-    :param name_auc: название аукциона
-    :param lot_count: количество лотов в аукционе
-    :param first_bid: начальная ставка
-    :param next_bid: шаг ставки
-    :return: встраиваемое сообщение
+    Parametrs:
+    ----------
+        user_mention: discord.abc.User.mention
+            Упоминание пользователя, открывшего аукцион
+
+        name_auc: str
+            Название аукциона
+
+        stop_time: datetime
+            Время окончания аукциона
+
+        lot_count: int
+            Количество лотов в аукционе
+
+        first_bid: str
+            Начальная ставка
+
+        next_bid: str
+            Шаг ставки
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение об открытии аукциона
     """
     embed = discord.Embed(
         title=ATTENTION,
@@ -38,12 +59,33 @@ def start_auc_embed(
     return embed
 
 
-def results_embed(results_message, user_mention, name_auc, count):
+def results_embed(
+        results_message: str,
+        user_mention: discord.abc.User.mention,
+        name_auc: str,
+        count: int
+) -> discord.Embed:
     """
     Создает встраиваемое сообщение с результатами аукциона.
 
-    :param results_message: результаты аукциона в виде строки
-    :return: встраиваемое сообщение
+    Parametrs:
+    ----------
+        results_message: str
+            Результаты аукциона в виде строки.
+
+        user_mention: discord.abc.User.mention
+            Упоминание пользователя, открывшего аукцион.
+
+        name_auc: str
+            Название аукциона.
+
+        count: int
+            Количество лотов в аукционе.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение о результатах аукциона
     """
     embed = discord.Embed(
         title=ATTENTION,
