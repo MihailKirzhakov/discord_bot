@@ -51,7 +51,7 @@ async def go_auc(
     ),  # type: ignore
     target_date_time: discord.Option(
         str,
-        description='Укажи дату и время в формате ДД-ММ ЧЧ:ММ:СС',
+        description='Укажи дату и время в формате ДД.ММ ЧЧ:ММ:СС',
         name_localizations={'ru': 'дата_время'}
     )  # type: ignore
 ) -> None:

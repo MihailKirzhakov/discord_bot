@@ -206,8 +206,8 @@ def seconds_until_date(target_date_time: str) -> int:
         target_date_time += ':00'
     parts = target_date_time.split()
     if len(parts) != 2:
-        raise ValueError("Неверный формат. Ожидался ДД-ММ ЧЧ:ММ:СС")
-    day, month = parts[0].split('-')
+        raise ValueError("Неверный формат. Ожидался ДД.ММ ЧЧ:ММ:СС")
+    day, month = parts[0].split('.')
     hour, minute, second = parts[1].split(':')
     target_datetime = datetime.datetime(
         datetime.date.today().year,
