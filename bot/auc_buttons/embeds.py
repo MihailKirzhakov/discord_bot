@@ -47,13 +47,11 @@ def start_auc_embed(
             f'_**{user_mention} начал аукцион "{name_auc}"!**\n\n'
             f'Количество лотов: {lot_count}.\n'
             f'Начальная ставка: {first_bid}.\n'
-            f'Шаг ставки: {next_bid}._'
+            f'Шаг ставки: {next_bid}.\n\n'
+            f'**Аукцион закончится\n'
+            f'<t:{int(stop_time.timestamp())}:R>!**_'
         ),
         color=0xfffb00
-    )
-    embed.add_field(
-        name='_**Аукцион закончится**_',
-        value=f'_**<t:{int(stop_time.timestamp())}:R>!**_'
     )
     embed.set_thumbnail(url=AUCTION_IMAGE_URL)
     return embed
@@ -102,13 +100,16 @@ def results_embed(
     return embed
 
 
-def outbid_embed(url: str) -> discord.Embed:
+def outbid_embed(url: str, stop_time: datetime) -> discord.Embed:
     """
     Создает встраиваемое сообщение с результатами аукциона.
 
     Parametrs:
     ----------
         url: str
+            Ссылка на сообщение.
+
+        stop_auk: datetime
             Ссылка на сообщение.
 
     Returns:
@@ -119,7 +120,8 @@ def outbid_embed(url: str) -> discord.Embed:
     embed = discord.Embed(
         title=ATTENTION,
         description=(
-            f'_**Твоя ставка на аукционе была перебита!\n\n'
+            f'_**Твоя ставка на аукционе была перебита!\n'
+            f'Аукцион закончится <t:{int(stop_time.timestamp())}:R>\n\n'
             f'{url}**_'
         ),
         color=0xfffb00

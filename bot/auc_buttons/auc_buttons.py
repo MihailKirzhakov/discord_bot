@@ -316,14 +316,8 @@ def bid_callback(
         name = interaction.user.display_name
         mention = interaction.user.mention
         original_label: Decimal = Decimal(button.label.split()[0][:-1])
+        befor_button_label = button.label
         try:
-            # if (
-            #     'K' != button.label[-1] and 'M' != button.label[-1]
-            # ) and (interaction.user.display_name not in button.label):
-            #     url = interaction.message.jump_url
-            #     take_nick = button.label.split()
-            #     member = discord.utils.get(interaction.guild.members, nick=take_nick[1])
-            #     await member.send(embed=outbid_embed(url=url))
             label_count(button, original_label, name, bid)
             logger.debug(
                 f'Кнопка изменилась, функция "label_count" отработала, '
@@ -364,10 +358,19 @@ def bid_callback(
                             next_bid=convert_bid(bid)
                         )
                     )
-                    if (datetime.now() + timedelta(seconds=60)) > final_time['stop_time'] > datetime.now():
-                        final_time['stop_time'] = plus_minute
+                    final_time['stop_time'] = plus_minute
                 else:
                     await interaction.response.edit_message(view=view)
+                    if 'K' != befor_button_label[-1] and 'M' != befor_button_label[-1] and interaction.user.display_name not in befor_button_label:
+                        time_of_bid = None
+                        url = interaction.message.jump_url
+                        take_nick = befor_button_label.split()
+                        member = discord.utils.get(interaction.guild.members, nick=take_nick[1])
+                        if (datetime.now() + timedelta(seconds=60)) > final_time['stop_time'] > datetime.now():
+                            time_of_bid = plus_minute
+                        else:
+                            time_of_bid = stop_time
+                        await member.send(embed=outbid_embed(url=url, stop_time=time_of_bid))
         except Exception as error:
             logger.error(
                 f'При обработке нажатия на кнопку ставки '
