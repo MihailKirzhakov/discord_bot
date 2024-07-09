@@ -118,7 +118,13 @@ async def go_auc(
     )
     button_manager.add_item(stop_button)
     stop_button.callback = stop_callback(
-        final_time=final_time
+        ctx=ctx,
+        view=button_manager,
+        user_mention=user_mention,
+        name_auc=name_auc,
+        count=count,
+        final_time=final_time,
+        button_mentions=button_mentions
     )
     try:
         await ctx.respond(
@@ -142,7 +148,8 @@ async def go_auc(
             name_auc=name_auc,
             count=count,
             final_time=final_time,
-            button_mentions=button_mentions
+            button_mentions=button_mentions,
+            stop_time=stop_time
         )
     except Exception as error:
         await ctx.respond(
@@ -197,7 +204,8 @@ async def check_timer(
     name_auc: str,
     count: int,
     final_time: dict,
-    button_mentions: dict
+    button_mentions: dict,
+    stop_time: datetime
 ) -> None:
     """
     Функция для полинга таймера, которая автоматически завершает аукцион.
@@ -222,16 +230,22 @@ async def check_timer(
         final_time: dict
             Словарь с временем завершения аукциона.
 
-        button_mentions: discord.abc.User.mention
-            Тэги юзеров в кнопках.
+        button_mentions: dict
+            Словарь с тэгами юзеров в кнопках.
 
     Returns:
     --------
         None.
     """
     while True:
-        if final_time['stop_time'] > datetime.now():
+        if not final_time['stop_time']:
+            break
+        elif (datetime.now() + timedelta(seconds=60)) > final_time['stop_time'] > datetime.now():
             await asyncio.sleep(1)
+        elif final_time['stop_time'] == stop_time:
+            time_to_long_sleep = stop_time - datetime.now() - timedelta(seconds=50)
+            total_seconds_dif = time_to_long_sleep.total_seconds()
+            await asyncio.sleep(int(total_seconds_dif))
         else:
             await auto_stop_auc(
                 ctx=ctx,
@@ -268,7 +282,8 @@ def bid_callback(
         view: discord.ui.View
             Объект класса View.
 
-        bid: int Шаг ставки.
+        bid: int
+            Шаг ставки.
 
         start_auc_user: discord.ApplicationContext.user
             Никнейм пользователя, начавшего аукцион.
@@ -288,8 +303,8 @@ def bid_callback(
         final_time: dict
             Словарь с временем завершения аукциона.
 
-        button_mentions: discord.abc.User
-            Тэги юзеров в кнопках.
+        button_mentions: dict
+            Словарь с тэгами юзеров в кнопках.
 
     Returns:
     --------
@@ -298,8 +313,8 @@ def bid_callback(
     """
     async def inner(interaction: discord.Interaction):
         nowtime: datetime = datetime.now()
-        minutetime: timedelta = timedelta(minutes=1)
-        plus_minute: datetime = nowtime + minutetime
+        secondstime: timedelta = timedelta(seconds=60)
+        plus_minute: datetime = nowtime + secondstime
         reserve_view: discord.ui.View = view
         button.style = discord.ButtonStyle.blurple
         name = interaction.user.display_name
@@ -334,7 +349,7 @@ def bid_callback(
                     f'которая сносит кнопки. Во "view" сложили резервную копию.'
                 )
             else:
-                if (stop_time - nowtime) < minutetime:
+                if (stop_time - nowtime) < secondstime:
                     await interaction.response.edit_message(
                         view=view,
                         embed=start_auc_embed(
@@ -346,7 +361,8 @@ def bid_callback(
                             next_bid=convert_bid(bid)
                         )
                     )
-                    final_time['stop_time'] = plus_minute
+                    if (datetime.now() + timedelta(seconds=60)) > final_time['stop_time'] > datetime.now():
+                        final_time['stop_time'] = plus_minute
                 else:
                     await interaction.response.edit_message(view=view)
         except Exception as error:
@@ -357,12 +373,38 @@ def bid_callback(
     return inner
 
 
-def stop_callback(final_time: dict) -> Callable:
+def stop_callback(
+    ctx: discord.ApplicationContext,
+    view: discord.ui.View,
+    user_mention: discord.abc.User.mention,
+    name_auc: str,
+    count: int,
+    button_mentions: dict,
+    final_time: dict
+) -> Callable:
     """
     Функция для обработки нажатия на кнопку завершения аукциона.
 
     Parametrs:
     ----------
+        ctx: discord.ApplicationContext
+            Контекст команды.
+
+        view: discord.ui.View
+            Объект класса View.
+
+        user_mention: discord.abc.User.mention
+            Тэг юзера.
+
+        name_auc: str
+            Название аукциона.
+
+        count: int
+            Количество лотов.
+
+        button_mentions: dict
+            Словарь с тэгами юзеров в кнопках.
+
         final_time: dict
             Словарь с временем завершения аукциона.
 
@@ -373,7 +415,15 @@ def stop_callback(final_time: dict) -> Callable:
     """
     async def inner(interaction: discord.Interaction):
         if discord.utils.get(interaction.user.roles, name='Аукцион'):
-            final_time['stop_time'] = datetime.now()
+            final_time['stop_time'] = False
+            await auto_stop_auc(
+                ctx=ctx,
+                view=view,
+                user_mention=user_mention,
+                name_auc=name_auc,
+                count=count,
+                button_mentions=button_mentions
+            )
             logger.info(
                 f'Пользователь {interaction.user.display_name} '
                 f'досрочно завершил аукцион!'
