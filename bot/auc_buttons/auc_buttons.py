@@ -241,7 +241,7 @@ async def check_timer(
         if not final_time['stop_time']:
             break
         if final_time['stop_time'] > datetime.now():
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.5)
         else:
             await auto_stop_auc(
                 ctx=ctx,
