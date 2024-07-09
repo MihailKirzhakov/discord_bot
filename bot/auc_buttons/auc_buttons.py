@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord.ui import View, Button
 from loguru import logger
 
-from .embeds import start_auc_embed, results_embed
+from .embeds import start_auc_embed, results_embed, outbid_embed
 from .functions import (
     convert_bid,
     label_count,
@@ -317,6 +317,13 @@ def bid_callback(
         mention = interaction.user.mention
         original_label: Decimal = Decimal(button.label.split()[0][:-1])
         try:
+            # if (
+            #     'K' != button.label[-1] and 'M' != button.label[-1]
+            # ) and (interaction.user.display_name not in button.label):
+            #     url = interaction.message.jump_url
+            #     take_nick = button.label.split()
+            #     member = discord.utils.get(interaction.guild.members, nick=take_nick[1])
+            #     await member.send(embed=outbid_embed(url=url))
             label_count(button, original_label, name, bid)
             logger.debug(
                 f'Кнопка изменилась, функция "label_count" отработала, '

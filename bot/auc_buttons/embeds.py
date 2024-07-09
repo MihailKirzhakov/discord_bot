@@ -100,3 +100,29 @@ def results_embed(
     )
     embed.set_thumbnail(url=AUCTION_IMAGE_URL)
     return embed
+
+
+def outbid_embed(url: str) -> discord.Embed:
+    """
+    Создает встраиваемое сообщение с результатами аукциона.
+
+    Parametrs:
+    ----------
+        url: str
+            Ссылка на сообщение.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение о результатах аукциона
+    """
+    embed = discord.Embed(
+        title=ATTENTION,
+        description=(
+            f'_**Твоя ставка на аукционе была перебита!\n\n'
+            f'{url}**_'
+        ),
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=AUCTION_IMAGE_URL)
+    return embed
