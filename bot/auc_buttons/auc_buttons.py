@@ -141,16 +141,17 @@ async def go_auc(
         logger.info(
             f'Команда /go_auc запущена пользователем "{ctx.user.display_name}"'
         )
-        await check_timer(
-            ctx=ctx,
-            view=button_manager,
-            user_mention=user_mention,
-            name_auc=name_auc,
-            count=count,
-            final_time=final_time,
-            button_mentions=button_mentions,
-            stop_time=stop_time
-        )
+        await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
+        if final_time['stop_time']:
+            await check_timer(
+                ctx=ctx,
+                view=button_manager,
+                user_mention=user_mention,
+                name_auc=name_auc,
+                count=count,
+                final_time=final_time,
+                button_mentions=button_mentions
+            )
     except Exception as error:
         await ctx.respond(
             f'Не вышло, вот ошибка: {error}',
@@ -204,8 +205,7 @@ async def check_timer(
     name_auc: str,
     count: int,
     final_time: dict,
-    button_mentions: dict,
-    stop_time: datetime
+    button_mentions: dict
 ) -> None:
     """
     Функция для полинга таймера, которая автоматически завершает аукцион.
@@ -240,12 +240,8 @@ async def check_timer(
     while True:
         if not final_time['stop_time']:
             break
-        elif (datetime.now() + timedelta(seconds=60)) > final_time['stop_time'] > datetime.now():
+        if final_time['stop_time'] > datetime.now():
             await asyncio.sleep(1)
-        elif final_time['stop_time'] == stop_time:
-            time_to_long_sleep = stop_time - datetime.now() - timedelta(seconds=50)
-            total_seconds_dif = time_to_long_sleep.total_seconds()
-            await asyncio.sleep(int(total_seconds_dif))
         else:
             await auto_stop_auc(
                 ctx=ctx,
