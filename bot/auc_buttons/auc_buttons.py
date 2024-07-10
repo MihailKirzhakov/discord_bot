@@ -372,7 +372,7 @@ def bid_callback(
                         time_of_bid = stop_time
                     await member.send(
                         embed=outbid_embed(url=url, stop_time=time_of_bid),
-                        delete_after=3600
+                        delete_after=1800
                     )
         except Exception as error:
             logger.error(
