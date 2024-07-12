@@ -155,6 +155,12 @@ async def random(
         discord.TextChannel,
         description='Куда отправить кнопку?',
         name_localizations={'ru':'текстовый_канал'},
+    ), # type: ignore
+    message_id: discord.Option(
+        str,
+        description='ID сообщения, в котором есть кнопка кнопка',
+        name_localizations={'ru':'id_сообщения'},
+        required=False
     )  # type: ignore
 ):
     """
@@ -164,7 +170,11 @@ async def random(
     :param channel: канал, в который нужно отправить кнопку
     :return: None
     """
-    await channel.send(view=ApplicationButton())
+    if message_id:
+        message = ctx.channel.get_partial_message(int(message_id))
+        await message.edit(view=ApplicationButton())
+    else:
+        await channel.send(view=ApplicationButton())
     logger.info(
         f'Команда "/random" вызвана пользователем'
         f'"{ctx.user.display_name}" в канал "{channel}"!'

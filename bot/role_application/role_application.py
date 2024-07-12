@@ -315,7 +315,13 @@ async def role_application(
         discord.TextChannel,
         description='Выбери канал в который будут отправляться заявки',
         name_localizations={'ru': 'название_канала'}
-    )  # type: ignore
+    ),  # type: ignore
+    message_id: discord.Option(
+        str,
+        description='ID сообщения, в котором есть кнопка кнопка',
+        name_localizations={'ru':'id_сообщения'},
+        required=False
+    ),  # type: ignore
 ):
     """Команда для вызова кнопки, которая обрабатывает запросы на доступ.
 
@@ -324,10 +330,23 @@ async def role_application(
         channel: Объект discord.TextChannel.
     """
     try:
-        await ctx.respond(
-            embed=start_app_embed(),
-            view=ApplicationButton(channel=channel)
-        )
+        if message_id:
+            message = ctx.channel.get_partial_message(int(message_id))
+            await message.edit(
+                embed=start_app_embed(),
+                view=ApplicationButton(channel=channel)
+            )
+            await ctx.respond(
+                '_Кнопка подачи заявок обновлена, заявки снова работают!_',
+                ephemeral=True,
+                delete_after=10
+            )
+        else:
+            await ctx.respond(
+                '_Кнопка подачи заявок запущена!_',
+                embed=start_app_embed(),
+                view=ApplicationButton(channel=channel)
+            )
         logger.info(
             f'Команда "/role_application" вызвана пользователем '
             f'"{ctx.user.display_name}"! Кнопка была отправлена в канал '
