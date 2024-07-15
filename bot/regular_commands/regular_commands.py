@@ -173,6 +173,11 @@ async def random(
     if message_id:
         message = ctx.channel.get_partial_message(int(message_id))
         await message.edit(view=ApplicationButton())
+        await ctx.respond(
+            f'_Кнопка рандомайзера обновлена и снова работает в канале {channel.mention}!_',
+            ephemeral=True,
+            delete_after=10
+        )
     else:
         await channel.send(view=ApplicationButton())
         await ctx.respond(

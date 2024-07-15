@@ -343,9 +343,13 @@ async def role_application(
             )
         else:
             await ctx.respond(
-                '_Кнопка подачи заявок запущена!_',
                 embed=start_app_embed(),
                 view=ApplicationButton(channel=channel)
+            )
+            await ctx.respond(
+                '_Кнопка подачи заявок запущена!_',
+                ephemeral=True,
+                delete_after=10
             )
         logger.info(
             f'Команда "/role_application" вызвана пользователем '
