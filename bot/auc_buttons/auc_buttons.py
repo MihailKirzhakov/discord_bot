@@ -316,7 +316,7 @@ def bid_callback(
         name = interaction.user.display_name
         mention = interaction.user.mention
         original_label: Decimal = Decimal(button.label.split()[0][:-1])
-        befor_button_label = button.label
+        before_button_label = button.label
         try:
             label_count(button, original_label, name, bid)
             logger.debug(
@@ -361,10 +361,10 @@ def bid_callback(
                     final_time['stop_time'] = plus_minute
                 else:
                     await interaction.response.edit_message(view=view)
-                if 'K' != befor_button_label[-1] and 'M' != befor_button_label[-1] and interaction.user.display_name not in befor_button_label:
+                if 'K' != before_button_label[-1] and 'M' != before_button_label[-1] and interaction.user.display_name not in before_button_label:
                     time_of_bid = None
                     url = interaction.message.jump_url
-                    take_nick = befor_button_label.split()
+                    take_nick = before_button_label.split()
                     member = discord.utils.get(interaction.guild.members, nick=take_nick[1])
                     if (datetime.now() + timedelta(seconds=60)) > final_time['stop_time'] > datetime.now():
                         time_of_bid = plus_minute
@@ -372,7 +372,7 @@ def bid_callback(
                         time_of_bid = stop_time
                     await member.send(
                         embed=outbid_embed(url=url, stop_time=time_of_bid),
-                        delete_after=1800
+                        delete_after=60
                     )
         except Exception as error:
             logger.error(

@@ -122,7 +122,8 @@ def outbid_embed(url: str, stop_time: datetime) -> discord.Embed:
         description=(
             f'_**Твоя ставка на аукционе была перебита!\n'
             f'Аукцион закончится <t:{int(stop_time.timestamp())}:R>\n\n'
-            f'{url}**_'
+            f'{url}**\n\n'
+            f'данное сообщение автоматически удалится через 1 минуту._'
         ),
         color=0xfffb00
     )
