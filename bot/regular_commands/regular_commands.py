@@ -175,14 +175,14 @@ async def random(
         await message.edit(view=ApplicationButton())
     else:
         await channel.send(view=ApplicationButton())
+        await ctx.respond(
+            f'_Кнопка рандомайзера отправлена в канал {channel.mention}!_',
+            ephemeral=True,
+            delete_after=10
+        )
     logger.info(
         f'Команда "/random" вызвана пользователем'
         f'"{ctx.user.display_name}" в канал "{channel}"!'
-    )
-    await ctx.respond(
-        f'_Кнопка рандомайзера отправлена в канал {channel.mention}!_',
-        ephemeral=True,
-        delete_after=10
     )
 
 
