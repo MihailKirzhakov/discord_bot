@@ -4,7 +4,6 @@ from decimal import Decimal
 from typing import Callable
 
 import discord
-import random
 from discord.ext import commands
 from discord.ui import View, Button
 from loguru import logger
@@ -18,15 +17,19 @@ from .functions import (
     seconds_until_date
 )
 from variables import (
-    ANSWERS_IF_NO_ROLE,
     MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD
 )
+
+
+final_time: dict[str, datetime] = {}
+channel_last_message: dict[str, discord.Message] = {}
 
 
 @commands.slash_command()
 @commands.has_role('Аукцион')
 async def go_auc(
     ctx: discord.ApplicationContext,
+    channel: discord.TextChannel,
     name_auc: discord.Option(
         str,
         description='Что разыгрываем?',
@@ -82,15 +85,16 @@ async def go_auc(
     --------
         None.
     """
+    if final_time.get(name_auc) or channel_last_message.get(name_auc):
+        name_auc += '😊'
     button_mentions: dict[
         discord.abc.User.display_name, discord.abc.User.mention
     ] = {}
-    final_time: dict[str, datetime] = {}
     today: datetime = datetime.now()
     stop_time: datetime = today + timedelta(
         seconds=seconds_until_date(target_date_time)
     )
-    final_time['stop_time'] = stop_time
+    final_time[name_auc] = stop_time
     start_auc_user = ctx.user
     user_mention = ctx.user.mention
     button_manager = View(timeout=None)
@@ -113,21 +117,8 @@ async def go_auc(
             final_time=final_time,
             button_mentions=button_mentions
         )
-    stop_button:  discord.ui.Button = Button(
-        label='Завершить аукцион', style=discord.ButtonStyle.red
-    )
-    button_manager.add_item(stop_button)
-    stop_button.callback = stop_callback(
-        ctx=ctx,
-        view=button_manager,
-        user_mention=user_mention,
-        name_auc=name_auc,
-        count=count,
-        final_time=final_time,
-        button_mentions=button_mentions
-    )
     try:
-        await ctx.respond(
+        await channel.send(
             embed=start_auc_embed(
                 user_mention=user_mention,
                 name_auc=name_auc,
@@ -138,13 +129,19 @@ async def go_auc(
             ),
             view=button_manager
         )
+        channel_last_message[name_auc] = channel.last_message
+        await ctx.respond(
+            f'_Аукцион запущен в канале {channel.mention}_',
+            ephemeral=True,
+            delete_after=10
+        )
         logger.info(
             f'Команда /go_auc запущена пользователем "{ctx.user.display_name}"'
         )
         await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
-        if final_time['stop_time']:
+        if final_time.get(name_auc):
             await check_timer(
-                ctx=ctx,
+                channel_last_message=channel_last_message.get(name_auc),
                 view=button_manager,
                 user_mention=user_mention,
                 name_auc=name_auc,
@@ -199,7 +196,7 @@ async def go_auc_error(
 
 
 async def check_timer(
-    ctx: discord.ApplicationContext,
+    channel_last_message: discord.Message,
     view: discord.ui.View,
     user_mention: discord.abc.User.mention,
     name_auc: str,
@@ -238,13 +235,13 @@ async def check_timer(
         None.
     """
     while True:
-        if not final_time['stop_time']:
+        if not final_time.get(name_auc):
             break
-        if final_time['stop_time'] > datetime.now():
+        if final_time.get(name_auc) > datetime.now():
             await asyncio.sleep(0.5)
         else:
             await auto_stop_auc(
-                ctx=ctx,
+                channel_last_message=channel_last_message,
                 view=view,
                 user_mention=user_mention,
                 name_auc=name_auc,
@@ -358,7 +355,7 @@ def bid_callback(
                             next_bid=convert_bid(bid)
                         )
                     )
-                    final_time['stop_time'] = plus_minute
+                    final_time[name_auc] = plus_minute
                 else:
                     await interaction.response.edit_message(view=view)
                 if 'K' != before_button_label[-1] and 'M' != before_button_label[-1] and interaction.user.display_name not in before_button_label:
@@ -366,13 +363,21 @@ def bid_callback(
                     url = interaction.message.jump_url
                     take_nick = before_button_label.split()
                     member = discord.utils.get(interaction.guild.members, nick=take_nick[1])
-                    if (datetime.now() + timedelta(seconds=60)) > final_time['stop_time'] > datetime.now():
+                    if (datetime.now() + timedelta(seconds=60)) > final_time.get(name_auc) > datetime.now():
                         time_of_bid = plus_minute
+                        delete_after = 60
                     else:
                         time_of_bid = stop_time
+                        delete_after = 1800
                     await member.send(
-                        embed=outbid_embed(url=url, stop_time=time_of_bid),
-                        delete_after=60
+                        embed=outbid_embed(
+                            url=url, stop_time=time_of_bid,
+                            delete_after=delete_after
+                        ),
+                        delete_after=delete_after
+                    )
+                    logger.info(
+                        f'Ставку "{member.display_name}" перебил "{interaction.user.display_name}"!'
                     )
         except Exception as error:
             logger.error(
@@ -382,73 +387,8 @@ def bid_callback(
     return inner
 
 
-def stop_callback(
-    ctx: discord.ApplicationContext,
-    view: discord.ui.View,
-    user_mention: discord.abc.User.mention,
-    name_auc: str,
-    count: int,
-    button_mentions: dict,
-    final_time: dict
-) -> Callable:
-    """
-    Функция для обработки нажатия на кнопку завершения аукциона.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        view: discord.ui.View
-            Объект класса View.
-
-        user_mention: discord.abc.User.mention
-            Тэг юзера.
-
-        name_auc: str
-            Название аукциона.
-
-        count: int
-            Количество лотов.
-
-        button_mentions: dict
-            Словарь с тэгами юзеров в кнопках.
-
-        final_time: dict
-            Словарь с временем завершения аукциона.
-
-    Returns:
-    --------
-        inner: Callable
-            Вспомогательная функция inner().
-    """
-    async def inner(interaction: discord.Interaction):
-        if discord.utils.get(interaction.user.roles, name='Аукцион'):
-            final_time['stop_time'] = False
-            await auto_stop_auc(
-                ctx=ctx,
-                view=view,
-                user_mention=user_mention,
-                name_auc=name_auc,
-                count=count,
-                button_mentions=button_mentions
-            )
-            logger.info(
-                f'Пользователь {interaction.user.display_name} '
-                f'досрочно завершил аукцион!'
-            )
-        else:
-            random_amount = random.randint(1, 3)
-            await interaction.response.send_message(
-                f'{ANSWERS_IF_NO_ROLE[str(random_amount)]}',
-                ephemeral=True,
-                delete_after=10
-            )
-    return inner
-
-
 async def auto_stop_auc(
-        ctx: discord.ApplicationContext,
+        channel_last_message: discord.Message,
         view: discord.ui.View,
         user_mention: discord.abc.User.mention,
         name_auc: str,
@@ -480,7 +420,7 @@ async def auto_stop_auc(
         None.
     """
     view.disable_all_items()
-    label_values = [btn.label for btn in view.children[:count]]
+    label_values = [btn.label for btn in view.children]
     convert_label_values = convert_to_mention(
         label_values, button_mentions
     )
@@ -503,7 +443,7 @@ async def auto_stop_auc(
     )
     view.clear_items()
     try:
-        await ctx.edit(
+        await channel_last_message.edit(
             view=view,
             embed=results_embed(
                 results_message=message,

@@ -100,7 +100,7 @@ def results_embed(
     return embed
 
 
-def outbid_embed(url: str, stop_time: datetime) -> discord.Embed:
+def outbid_embed(url: str, stop_time: datetime, delete_after: int) -> discord.Embed:
     """
     Создает встраиваемое сообщение с результатами аукциона.
 
@@ -123,7 +123,8 @@ def outbid_embed(url: str, stop_time: datetime) -> discord.Embed:
             f'_**Твоя ставка на аукционе была перебита!\n'
             f'Аукцион закончится <t:{int(stop_time.timestamp())}:R>\n\n'
             f'{url}**\n\n'
-            f'данное сообщение автоматически удалится через 1 минуту._'
+            f'данное сообщение автоматически удалится через '
+            f'{"минуту" if delete_after == 60 else "30 минут"}._'
         ),
         color=0xfffb00
     )
