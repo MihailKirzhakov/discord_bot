@@ -21,10 +21,6 @@ from variables import (
 )
 
 
-final_time: dict[str, datetime] = {}
-channel_last_message: dict[str, discord.Message] = {}
-
-
 @commands.slash_command()
 @commands.has_role('Аукцион')
 async def go_auc(
@@ -85,8 +81,10 @@ async def go_auc(
     --------
         None.
     """
+    final_time: dict[str, datetime] = {}
+    channel_last_message: dict[str, discord.Message] = {}
     if final_time.get(name_auc) or channel_last_message.get(name_auc):
-        name_auc += '😊'
+        name_auc += ' 😊'
     button_mentions: dict[
         discord.abc.User.display_name, discord.abc.User.mention
     ] = {}
