@@ -10,7 +10,7 @@ loguru==0.7.2
 multidict==6.0.5
 natsort==8.4.0
 pillow==10.3.0
-py-cord==2.5.0
+py-cord==2.6.0
 python-dotenv==1.0.1
 requests==2.31.0
 urllib3==2.2.1
