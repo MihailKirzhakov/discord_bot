@@ -85,7 +85,7 @@ async def go_auc(
     --------
         None.
     """
-    if final_time.get(name_auc) or channel_last_message.get(name_auc):
+    if name_auc in final_time or name_auc in channel_last_message:
         name_auc += '😊'
     button_mentions: dict[
         discord.abc.User.display_name, discord.abc.User.mention
@@ -139,16 +139,15 @@ async def go_auc(
             f'Команда /go_auc запущена пользователем "{ctx.user.display_name}"'
         )
         await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
-        if final_time.get(name_auc):
-            await check_timer(
-                channel_last_message=channel_last_message.get(name_auc),
-                view=button_manager,
-                user_mention=user_mention,
-                name_auc=name_auc,
-                count=count,
-                final_time=final_time,
-                button_mentions=button_mentions
-            )
+        await check_timer(
+            channel_last_message=channel_last_message.get(name_auc),
+            view=button_manager,
+            user_mention=user_mention,
+            name_auc=name_auc,
+            count=count,
+            final_time=final_time,
+            button_mentions=button_mentions
+        )
     except Exception as error:
         await ctx.respond(
             f'Не вышло, вот ошибка: {error}',
@@ -235,8 +234,6 @@ async def check_timer(
         None.
     """
     while True:
-        if not final_time.get(name_auc):
-            break
         if final_time.get(name_auc) > datetime.now():
             await asyncio.sleep(0.5)
         else:

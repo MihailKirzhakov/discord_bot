@@ -7,7 +7,7 @@ from .functions import rand_choice
 from variables import DEAFAULT_RANDOMISE_VALUE, WRONG_PARMS
 
 
-class RoleApplication(Modal):
+class RandomModal(Modal):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, title='Рандомайзер')
@@ -58,7 +58,7 @@ class RoleApplication(Modal):
             )
 
 
-class ApplicationButton(View):
+class RandomButton(View):
 
     def __init__(
             self,
@@ -72,4 +72,4 @@ class ApplicationButton(View):
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await interaction.response.send_modal(RoleApplication())
+        await interaction.response.send_modal(RandomModal())

@@ -69,6 +69,16 @@ OFICER_ROLE = '🛡️Офицер🛡️'
 
 TREASURER_ROLE = '📣Казначей📣'
 
+CLOSED_JMURENSKAYA = 'Закрытая Жмуренская комната'
+
+CLOSED_ORTHODOX = 'Закрытая Православные'
+
+CLOSED_GOOSE_HOME = 'Закрытая Гусиный дом'
+
+CLOSED_ON_THE_MIND_ASPECT = 'Закрытая На аспекте ума'
+
+CLOSED_TEAM_TAYP = 'Закрытая Team Tayp'
+
 NOT_SOLD = 'Лот не был выкуплен'
 
 REMIND = '【Н】【А】【П】【О】【М】【Н】【Ю】'
