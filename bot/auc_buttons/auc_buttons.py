@@ -85,8 +85,8 @@ async def go_auc(
     --------
         None.
     """
-    if name_auc in final_time or name_auc in channel_last_message:
-        name_auc += '😊'
+    if final_time.get(name_auc) or channel_last_message.get(name_auc):
+        name_auc += ' 😊'
     button_mentions: dict[
         discord.abc.User.display_name, discord.abc.User.mention
     ] = {}
