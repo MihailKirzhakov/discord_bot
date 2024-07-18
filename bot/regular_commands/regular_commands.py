@@ -11,7 +11,8 @@ from .rename_request import RenameButton
 from variables import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
     CLOSED_JMURENSKAYA, CLOSED_ORTHODOX, CLOSED_TEAM_TAYP,
-    CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT
+    CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT,
+    BUHLOID_ID, IDOL_ID, TAYP_ID, KVAPA_ID, GOOSE_ID
 )
 
 
@@ -213,47 +214,6 @@ async def random_error(
 
 @commands.slash_command()
 @commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
-async def greet(
-    ctx: discord.ApplicationContext,
-    value: discord.Option(
-        str,
-        description='Впиши любое слово',
-        name_localizations={'ru':'что_угодно'},
-    )  # type: ignore
-):
-    """
-    Команда для тестирования отправки сообщений и тэгов.
-
-    :param ctx: контекст вызова команды
-    :param channel: канал, в который нужно отправить кнопку
-    :return: None
-    """
-    await ctx.respond(
-        f'Ну привет {ctx.user.mention}!\n{value} - что означает?'
-    )
-    logger.info(
-        f'Команда "/attention" вызвана пользователем '
-        f'"{ctx.user.display_name}"!'
-    )
-
-
-@greet.error
-async def greet_error(
-    ctx: discord.ApplicationContext,
-    error: Exception
-):
-    """
-    Обработчик ошибок для команды greet.
-
-    :param ctx: Контекст команды.
-    :param error: Исключение, возникшее при выполнении команды.
-    :return: None
-    """
-    await command_error(ctx, error, "greet")
-
-
-@commands.slash_command()
-@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def clear_all(
     ctx: discord.ApplicationContext,
     channel: discord.Option(
@@ -428,11 +388,11 @@ async def give_role_to(
     closed_on_the_mind_aspect = discord.utils.get(
             ctx.guild.roles, name=CLOSED_ON_THE_MIND_ASPECT)
     check_group_leaders = {
-        '896481846949445663': closed_jmurenskaya,
-        '341543573159936005': closed_orthodox,
-        '849649863309131846': closed_team_tayp,
-        '709371735992172557': closed_goose_home,
-        '356014672450945034': closed_on_the_mind_aspect
+        BUHLOID_ID: closed_jmurenskaya,
+        IDOL_ID: closed_orthodox,
+        TAYP_ID: closed_team_tayp,
+        GOOSE_ID: closed_goose_home,
+        KVAPA_ID: closed_on_the_mind_aspect
     }
     try:
         if str(ctx.user.id) in check_group_leaders:
@@ -534,7 +494,6 @@ async def rename_error(
 def setup(bot: discord.Bot):
     bot.add_application_command(technical_works)
     bot.add_application_command(attention)
-    bot.add_application_command(greet)
     bot.add_application_command(random)
     bot.add_application_command(clear_all)
     bot.add_application_command(remind)
