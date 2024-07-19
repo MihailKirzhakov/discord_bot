@@ -8,6 +8,9 @@ from .embeds import (
 )
 
 
+que_request: dict = {}
+
+
 class AccessDeniedButton(View):
     def __init__(
             self,
@@ -39,6 +42,7 @@ class AccessDeniedButton(View):
                 f'Никнейм пользователя {self.user.display_name} изменён '
                 f'на {self.new_nickname}'
             )
+            que_request[self.user] = False
         except Exception as error:
             logger.error(
                 f'При попытке изменить никнейм возникла ошибка {error}'
@@ -63,6 +67,7 @@ class AccessDeniedButton(View):
                 embed=denied_rename_embed(user=self.user.display_name),
                 view=self
             )
+            que_request[self.user] = False
             logger.info(f'Никнейм пользователя {self.user.display_name} НЕ изменён')
         except Exception as error:
             logger.error(
@@ -92,18 +97,26 @@ class RenameModal(Modal):
         new_nickname: str = self.children[0].value
         user: discord.abc.User = interaction.user
         try:
-            await self.channel.send(
-                embed=rename_embed(user=user.display_name, nickname=new_nickname),
-                view=AccessDeniedButton(user=user, new_nickname=new_nickname)
-            )
-            await interaction.response.send_message(
-                '_Запрос отправлен, погоди чутка!_',
-                ephemeral=True,
-                delete_after=10
-            )
-            logger.info(
-                f'Отправлен запрос на смену ника пользователем {user.display_name}'
-            )
+            if que_request.get(user):
+                await interaction.respond(
+                    '_Ты уже отправил запрос на смену ника, ожидай! 👌_',
+                    ephemeral=True,
+                    delete_after=10
+                )
+            else:
+                await self.channel.send(
+                    embed=rename_embed(user=user.display_name, nickname=new_nickname),
+                    view=AccessDeniedButton(user=user, new_nickname=new_nickname)
+                    )
+                await interaction.response.send_message(
+                    '_Запрос отправлен, погоди чутка! ✅_',
+                    ephemeral=True,
+                    delete_after=10
+                )
+                que_request[user] = True
+                logger.info(
+                    f'Отправлен запрос на смену ника пользователем {user.display_name}'
+                )
         except Exception as error:
             logger.error(
                 f'При попытке отправить запрос на смену ника возникла ошибка {error}'
