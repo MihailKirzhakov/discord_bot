@@ -17,7 +17,7 @@ from .functions import (
     seconds_until_date
 )
 from variables import (
-    MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD
+    MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD, LEADER_NICKNAME
 )
 
 
@@ -321,10 +321,10 @@ def bid_callback(
             if len(view.children) == 0:
                 await interaction.response.edit_message(view=reserve_view)
                 await interaction.followup.send(
-                    'В момент обработки, сделанной ставки возникла ошибка!'
-                    'Бот не сломался, попробуй сделать ставку снова. Если '
-                    'данное сообщение появляется снова, обратись к '
-                    'СтопарьВоды, для скорейшего решения проблемы!',
+                    f'В момент обработки, сделанной ставки возникла ошибка!'
+                    f'Бот не сломался, попробуй сделать ставку снова. Если '
+                    f'данное сообщение появляется снова, обратись к '
+                    f'{LEADER_NICKNAME}, для скорейшего решения проблемы!',
                     ephemeral=True,
                     delete_after=10
                 )
