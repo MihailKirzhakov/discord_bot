@@ -459,14 +459,14 @@ async def rename(
         message = ctx.channel.get_partial_message(int(message_id))
         await message.edit(view=RenameButton(channel=channel))
         await ctx.respond(
-            f'_Кнопка ренеймера обновлена и снова работает!_',
+            '_Кнопка ренеймера обновлена и снова работает!_',
             ephemeral=True,
             delete_after=10
         )
     else:
         await ctx.respond(view=RenameButton(channel=channel))
         await ctx.respond(
-            f'_Кнопка ренеймера запущена!_',
+            '_Кнопка ренеймера запущена!_',
             ephemeral=True,
             delete_after=10
         )
