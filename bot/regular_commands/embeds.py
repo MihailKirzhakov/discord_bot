@@ -174,4 +174,5 @@ def denied_send_embed():
         ),
         color=0xfffb00
     )
+    embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
     return embed
