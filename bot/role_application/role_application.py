@@ -141,7 +141,9 @@ class DeniedRoleModal(Modal):
         *args,
         **kwargs
     ):
-        super().__init__(*args, **kwargs, title='Комментарий к отказу')
+        super().__init__(
+            *args, **kwargs, title='Комментарий к отказу', timeout=None
+        )
         self.nickname = nickname
         self.user = user
         self.view = view
@@ -199,7 +201,9 @@ class RoleApplication(Modal):
     """
 
     def __init__(self, channel: discord.TextChannel, *args, **kwargs):
-        super().__init__(*args, **kwargs, title='Заявка на выдачу роли')
+        super().__init__(
+            *args, **kwargs, title='Заявка на выдачу роли', timeout=None
+        )
         self.channel = channel
 
         self.add_item(

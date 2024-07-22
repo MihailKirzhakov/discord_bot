@@ -10,7 +10,7 @@ from variables import DEAFAULT_RANDOMISE_VALUE, WRONG_PARMS
 class RandomModal(Modal):
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs, title='Рандомайзер')
+        super().__init__(*args, **kwargs, title='Рандомайзер', timeout=None)
 
         self.add_item(
             InputText(

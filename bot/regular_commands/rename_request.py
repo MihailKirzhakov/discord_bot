@@ -76,13 +76,14 @@ class RenameModal(Modal):
             self,
             channel: discord.TextChannel
     ):
-        super().__init__(title='Ренеймер')
+        super().__init__(title='Ренеймер', timeout=None)
         self.channel = channel
 
         self.add_item(
             InputText(
                 style=discord.InputTextStyle.short,
                 label='Впиши новый игровой никнейм',
+                placeholder='Длина никнейма как в игре 3-14 символов',
                 min_length=3,
                 max_length=14
             )
