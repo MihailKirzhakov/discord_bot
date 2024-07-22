@@ -7,7 +7,10 @@ from variables import (
     SMALL_GUILD_ICON_URL,
     TEСHNICAL_WORKS,
     WRENCH_IMAGE_URL,
-    REMIND
+    REMIND,
+    DENIED_IMAGE_URL,
+    ACCESS_IMAGE_URL,
+    RENAME_IMAGE_URL
 )
 
 
@@ -121,6 +124,7 @@ def rename_embed(user, nickname):
         ),
         color=0xfffb00
     )
+    embed.set_thumbnail(url=RENAME_IMAGE_URL)
     return embed
 
 
@@ -138,6 +142,7 @@ def changed_rename_embed(user, nickname):
         ),
         color=0xfffb00
     )
+    embed.set_thumbnail(url=ACCESS_IMAGE_URL)
     return embed
 
 
@@ -155,6 +160,7 @@ def denied_rename_embed(user):
         ),
         color=0xfffb00
     )
+    embed.set_thumbnail(url=DENIED_IMAGE_URL)
     return embed
 
 
@@ -170,9 +176,9 @@ def denied_send_embed():
         description=(
             '_Тебе отказали в смене ника, скорее всего ты попытался'
             ' сменить ник в дискорде, не изменив его в самой игре!\n'
-            'Как поменяешь ник в игре, чиркани запрос снова 👌'
+            'Как поменяешь ник в игре, чиркани запрос снова_ 👌'
         ),
         color=0xfffb00
     )
-    embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
+    embed.set_thumbnail(url=DENIED_IMAGE_URL)
     return embed
