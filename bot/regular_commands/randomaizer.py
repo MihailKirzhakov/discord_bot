@@ -8,7 +8,14 @@ from variables import DEAFAULT_RANDOMISE_VALUE, WRONG_PARMS
 
 
 class RandomModal(Modal):
+    """
+    Модальное окно для ввода значения,
+    диапазон чисел или никнеймы через разделитель.
 
+    Returns:
+    --------
+        None
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, title='Рандомайзер', timeout=None)
 
@@ -24,7 +31,7 @@ class RandomModal(Modal):
 
     async def callback(self, interaction: discord.Interaction):
         if len(self.children[0].value) == 0:
-            if rand_choice(DEAFAULT_RANDOMISE_VALUE) is None:
+            if not rand_choice(DEAFAULT_RANDOMISE_VALUE):
                 return await interaction.respond(
                     WRONG_PARMS,
                     ephemeral=True,
@@ -38,7 +45,7 @@ class RandomModal(Modal):
                 delete_after=30
             )
         else:
-            if rand_choice(self.children[0].value) is None:
+            if not rand_choice(self.children[0].value):
                 return await interaction.respond(
                     WRONG_PARMS,
                     ephemeral=True,
@@ -59,7 +66,13 @@ class RandomModal(Modal):
 
 
 class RandomButton(View):
+    """
+    Кнопка для запуска модального окна рандомайзера.
 
+    Returns:
+    --------
+        None
+    """
     def __init__(
             self,
             timeout: float | None = None

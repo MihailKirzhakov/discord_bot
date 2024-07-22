@@ -14,13 +14,22 @@ from variables import (
 )
 
 
-def number_range(value, ranje):
+def number_range(value: str, ranje: str) -> discord.Embed:
     """
     Функция для создания вложения с рандомным числом в заданном диапазоне.
 
-    :param value: рандомное число
-    :param ranje: диапазон чисел
-    :return: вложение с рандомным числом
+    Parametrs:
+    ----------
+        value: str
+            Значение, которое будет возвращено в вложении.
+
+        ranje: str
+            Диапазон чисел в виде строки через дефис.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title='_Рандомайзер!_',
@@ -36,12 +45,19 @@ def number_range(value, ranje):
     return embed
 
 
-def nickname_range(value):
+def nickname_range(value: str) -> discord.Embed:
     """
     Функция для создания вложения с рандомным участником.
 
-    :param value: рандомный участник
-    :return: вложение с рандомным участником
+    Parametrs:
+    ----------
+        value: str
+            Значение, которое будет возвращено в вложении.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title='_Рандомайзер!_',
@@ -56,11 +72,14 @@ def nickname_range(value):
     return embed
 
 
-def technical_works_embed():
+def technical_works_embed() -> discord.Embed:
     """
     Функция для создания вложения с информацией о технических работах.
 
-    :return: вложение с информацией о технических работах
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title='_Kavo4avoBot_',
@@ -76,12 +95,19 @@ def technical_works_embed():
     return embed
 
 
-def attention_embed(value):
+def attention_embed(value: str) -> discord.Embed:
     """
     Функция для создания вложения с предупреждением.
 
-    :param value: текст предупреждения
-    :return: вложение с предупреждением
+    Parametrs:
+    ----------
+        value: str
+            Значение, которое будет возвращено в вложении.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title=ATTENTION,
@@ -92,12 +118,22 @@ def attention_embed(value):
     return embed
 
 
-def remind_embed(date, message):
+def remind_embed(date: str, message: str) -> discord.Embed:
     """
     Функция для создания вложения с предупреждением.
 
-    :param value: текст предупреждения
-    :return: вложение с предупреждением
+    Parametrs:
+    ----------
+        date: str
+            Отформатированная строка даты и времени.
+
+        message: str
+            Значение, которое будет возвращено в вложении.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title=REMIND,
@@ -108,12 +144,22 @@ def remind_embed(date, message):
     return embed
 
 
-def rename_embed(user, nickname):
+def rename_embed(user: str, nickname: str) -> discord.Embed:
     """
     Функция для создания вложения с предупреждением.
 
-    :param value: текст предупреждения
-    :return: вложение с предупреждением
+    Parametrs:
+    ----------
+        user: str
+            Никнейм юзера, котоырй делает запрос.
+
+        nickname: str
+            Никнейм в который планирует ренеймнуться.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title='_**ЗАПРОС НА СМЕНУ НИКА**_',
@@ -128,12 +174,22 @@ def rename_embed(user, nickname):
     return embed
 
 
-def changed_rename_embed(user, nickname):
+def changed_rename_embed(user, nickname) -> discord.Embed:
     """
     Функция для создания вложения с предупреждением.
 
-    :param value: текст предупреждения
-    :return: вложение с предупреждением
+    Parametrs:
+    ----------
+        user: str
+            Отформатированная строка даты и времени.
+
+        nickname: str
+            Значение, которое будет возвращено в вложении.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title='_**Никнейм ИЗМЁНЕН**_',
@@ -146,12 +202,19 @@ def changed_rename_embed(user, nickname):
     return embed
 
 
-def denied_rename_embed(user):
+def denied_rename_embed(user: str) -> discord.Embed:
     """
     Функция для создания вложения с предупреждением.
 
-    :param value: текст предупреждения
-    :return: вложение с предупреждением
+    Parametrs:
+    ----------
+        user: str
+            Отформатированная строка даты и времени.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title='_**Никнейм НЕ ИЗМЁНЕН**_',
@@ -164,12 +227,14 @@ def denied_rename_embed(user):
     return embed
 
 
-def denied_send_embed():
+def denied_send_embed() -> discord.Embed:
     """
     Функция для создания вложения с предупреждением.
 
-    :param value: текст предупреждения
-    :return: вложение с предупреждением
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title='_**Никнейм НЕ ИЗМЁНЕН**_',

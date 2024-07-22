@@ -18,25 +18,32 @@ from .embeds import (
 from .functions import character_lookup, has_required_role, answer_if_no_role
 
 
-app_list: list = []
+app_list: list = []  # Список для контроля дублирующих заявок
 
 
 class RoleButton(View):
-    """Класс кнопки роли для взаимодействия с пользователем в Discord.
+    """
+    Класс кнопки роли для взаимодействия с пользователем в Discord.
     Создаёт 2 кнопки. Первая для выдачи роли,
     вторая для отказа в выдаче роли 'Старшина'
 
     Attributes:
-        nickname: Discord - псевдоним пользователя.
-        embed: Embed объект, связанный с взаимодействием с пользователем.
-        user: User объект из discord.Interaction.
+    -----------
+        nickname: str
+            Discord - псевдоним пользователя.
+
+        embed: discord.Embed
+            Embed объект, связанный с взаимодействием с пользователем.
+
+        user: discord.Member | discord.User
+            Пользователь, который взаимодействовал с модалкой.
     """
 
     def __init__(
             self,
             nickname: str,
             embed: discord.Embed,
-            user: discord.Interaction.user,
+            user: discord.Member | discord.User,
             timeout: float | None = None
     ):
         super().__init__(timeout=timeout)
@@ -122,20 +129,30 @@ class RoleButton(View):
 
 
 class DeniedRoleModal(Modal):
-    """Класс модального окна для взаимодействия с пользователем в Discord.
+    """
+    Класс модального окна для взаимодействия с пользователем в Discord.
     В данном случае, модальное окно используется для отказа в выдаче роли 'Старшина'.
 
     Attributes:
-        nickname: Discord нинкнейм пользователя.
-        user: User объект из discord.Interaction.
-        view: View объект из discord.ui.Button.
-        embed: Embed объект, связанный с взаимодействием с пользователем.
+    -----------
+        nickname: str
+            Discord нинкнейм пользователя.
+
+        user: discord.Member | discord.User
+            Пользователь, провзаимодействоваший с кнопкой отказа в доступе.
+
+        view: discord.ui.Button
+            Кнопка.
+
+        embed: discord.Embed
+            Embed объект, связанный с взаимодействием с пользователем.
+
     """
 
     def __init__(
         self,
         nickname: str,
-        user: discord.Interaction.user,
+        user: discord.Member | discord.User,
         view: discord.ui.Button,
         embed: discord.Embed,
         *args,
@@ -193,11 +210,14 @@ class DeniedRoleModal(Modal):
 
 
 class RoleApplication(Modal):
-    """Класс модального окна для взаимодействия с пользователем в Discord.
+    """
+    Класс модального окна для взаимодействия с пользователем в Discord.
     Используется для создания модального окна с полем для ввода никнейма.
 
     Attributes:
-        channel: Объект discord.TextChannel.
+    -----------
+        channel: discord.TextChannel
+            Канал, в котором будет создано модальное окно.
     """
 
     def __init__(self, channel: discord.TextChannel, *args, **kwargs):
@@ -279,11 +299,14 @@ class RoleApplication(Modal):
 
 
 class ApplicationButton(View):
-    """Класс кнопки роли для взаимодействия с пользователем в Discord.
+    """
+    Класс кнопки роли для взаимодействия с пользователем в Discord.
     Вызывает модальное окно для заполнения формы.'
 
     Attributes:
-        channel: Объект discord.TextChannel.
+    -----------
+        channel: discord.TextChannel.
+            Канал, в котором будет создано модальное окно.
     """
 
     def __init__(
@@ -326,12 +349,21 @@ async def role_application(
         name_localizations={'ru':'id_сообщения'},
         required=False
     ),  # type: ignore
-):
-    """Команда для вызова кнопки, которая обрабатывает запросы на доступ.
+) -> None:
+    """
+    Команда для вызова кнопки, которая обрабатывает запросы на доступ.
 
-    Args:
-        ctx: Контекст из discord.ApplicationContext.
-        channel: Объект discord.TextChannel.
+    Parameters
+    ----------
+        ctx: discord.ApplicationContext.
+            Контекст.
+
+        channel: discord.TextChannel.
+            Канал, в котором будет размещена кнопка.
+
+    Returns
+    -------
+        None
     """
     try:
         if message_id:
@@ -372,13 +404,22 @@ async def role_application(
 async def role_application_error(
     ctx: discord.ApplicationContext,
     error: Exception
-):
-    """Обрабатывать ошибки, возникающие
+) -> None:
+    """
+    Обрабатывать ошибки, возникающие
     при выполнении команды запросов на выдачу доступа.
 
-    Args:
-        ctx: Контекст из discord.ApplicationContext.
-        error: Выбрасываемая ошибка.
+    Parameters
+    ----------
+        ctx: discord.ApplicationContext.
+            Контекст.
+
+        error: Exception
+            Выбрасываемая ошибка.
+
+    Returns
+    -------
+        None
     """
     if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(

@@ -29,7 +29,11 @@ channel_last_message: dict[str, discord.Message] = {}
 @commands.has_role('Аукцион')
 async def go_auc(
     ctx: discord.ApplicationContext,
-    channel: discord.TextChannel,
+    channel: discord.Option(
+        discord.TextChannel,
+        description='Текстовый канал в котором будет аукцион',
+        name_localizations={'ru': 'канал'}
+    ),  # type: ignore
     name_auc: discord.Option(
         str,
         description='Что разыгрываем?',
@@ -66,6 +70,9 @@ async def go_auc(
         ctx: discord.ApplicationContext
             Контекст команды.
 
+        channel: discord.TextChannel
+            Канал, в котором лежит сообщение для редактирования Embed'а
+
         name_auc: str
             Название лотов.
 
@@ -87,9 +94,7 @@ async def go_auc(
     """
     if final_time.get(name_auc) or channel_last_message.get(name_auc):
         name_auc += ' 😊'
-    button_mentions: dict[
-        discord.abc.User.display_name, discord.abc.User.mention
-    ] = {}
+    button_mentions: dict[str, str] = {}
     today: datetime = datetime.now()
     stop_time: datetime = today + timedelta(
         seconds=seconds_until_date(target_date_time)
@@ -197,7 +202,7 @@ async def go_auc_error(
 async def check_timer(
     channel_last_message: discord.Message,
     view: discord.ui.View,
-    user_mention: discord.abc.User.mention,
+    user_mention: str,
     name_auc: str,
     count: int,
     final_time: dict,
@@ -208,13 +213,13 @@ async def check_timer(
 
     Parametrs:
     ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
+        channel_last_message: discord.Message
+            Последнее сообщение в текстовом канале.
 
         view: discord.ui.View
             Объект класса View.
 
-        user_mention: discord.abc.User.mention
+        user_mention: str
             Тэг юзера.
 
         name_auc: str
@@ -253,9 +258,9 @@ def bid_callback(
         view: discord.ui.View,
         start_bid: int,
         bid: int,
-        start_auc_user: discord.ApplicationContext.user,
+        start_auc_user: discord.Member | discord.User,
         stop_time: datetime,
-        user_mention: discord.abc.User.mention,
+        user_mention: str,
         count: int,
         name_auc: str,
         final_time: dict,
@@ -272,16 +277,19 @@ def bid_callback(
         view: discord.ui.View
             Объект класса View.
 
+        start_bid: int
+            Начальная ставка.
+
         bid: int
             Шаг ставки.
 
-        start_auc_user: discord.ApplicationContext.user
+        start_auc_user: discord.Member | discord.User
             Никнейм пользователя, начавшего аукцион.
 
         stop_time: datetime
             Время завершения аукциона.
 
-        user_mention: discord.abc.User.mention
+        user_mention: str
             Тэг юзера.
 
         count: int
@@ -387,7 +395,7 @@ def bid_callback(
 async def auto_stop_auc(
         channel_last_message: discord.Message,
         view: discord.ui.View,
-        user_mention: discord.abc.User.mention,
+        user_mention: str,
         name_auc: str,
         count: int,
         button_mentions: dict
@@ -397,13 +405,13 @@ async def auto_stop_auc(
 
     Parametrs:
     ----------
-        ctx: discord.ApplicationContext
-            Контекст команды
+        channel_last_message: discord.Message
+            Последнее сообщение в текстовом канале.
 
         view: discord.ui.View
             Объект класса View
 
-        user_mention: discord.abc.User.mention
+        user_mention: str
             Тэг юзера
 
         name_auc: str

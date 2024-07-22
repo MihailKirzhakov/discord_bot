@@ -10,7 +10,7 @@ from variables import (
 )
 
 
-def character_lookup(server: int, name: str):
+def character_lookup(server: int, name: str) -> dict | None:
     """
     Функция для получения информации об игроке через оружейку.
 
@@ -118,8 +118,18 @@ def character_lookup(server: int, name: str):
     return player_parms
 
 
-def has_required_role(user):
-    """Проверка на наличие требуемых ролей у пользователя"""
+def has_required_role(user: discord.Member):
+    """Проверка на наличие требуемых ролей у пользователя
+
+    Parameters
+    ----------
+        user: discord.abc.Member
+            Пользователь, чьи роли проверяем.
+
+    Returns
+    -------
+        None
+    """
     return (
         discord.utils.get(user.roles, name=LEADER_ROLE) or
         discord.utils.get(user.roles, name=TREASURER_ROLE) or
@@ -127,10 +137,21 @@ def has_required_role(user):
     )
 
 
-def answer_if_no_role(interaction):
-    """Ответ на запрос, если у пользователя нет требуемых ролей"""
+def answer_if_no_role(interaction: discord.Interaction):
+    """
+    Ответ на запрос, если у пользователя нет требуемых ролей
+
+    Parameters
+    ----------
+        interaction: discord.Interaction
+            Взаимодействие пользователя.
+
+    Returns
+    -------
+        None
+    """
     return interaction.respond(
-                f'{ANSWERS_IF_NO_ROLE[str(random.randint(1, 3))]}',
-                ephemeral=True,
-                delete_after=15
-            )
+        f'{ANSWERS_IF_NO_ROLE[str(random.randint(1, 3))]}',
+        ephemeral=True,
+        delete_after=15
+    )

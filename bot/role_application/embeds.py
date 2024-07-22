@@ -10,11 +10,14 @@ from variables import (
 )
 
 
-def access_embed():
+def access_embed() -> discord.Embed:
     """
     Функция для создания вложения с информацией о выдаче доступа.
 
-    :return: вложение с информацией о выдаче доступа
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title='_Приветствую!_',
@@ -31,13 +34,22 @@ def access_embed():
     return embed
 
 
-def denied_embed(user, reason):
+def denied_embed(user: discord.abc.User, reason: str) -> discord.Embed:
     """
     Функция для создания вложения с информацией об отказе в доступе.
 
-    :param user: Пользователь из discord.Interaction.user
-    :param reason: Причина отказа в доступе
-    :return: вложение с информацией об отказе
+    Parametrs:
+    ----------
+        user: discord.abc.User
+            Класс юзера, который взаимодействует с кнопкой.
+
+        reason: str
+            Причина отказа в доступе.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title='_Приветствую!_',
@@ -58,15 +70,33 @@ def denied_embed(user, reason):
     return embed
 
 
-def application_embed(description, nickname, member, player_parms):
+def application_embed(
+        description: str,
+        nickname: str,
+        member: discord.abc.User,
+        player_parms: dict | None
+) -> discord.Embed:
     """
     Функция для создания вложения с информацией об игроке.
 
-    :param description: Пользователь из discord.Interaction.user
-    :param nickname: Причина отказа в доступе
-    :param member: Объект из discord.utils.get()
-    :param player_parms: Параметры игрока
-    :return: вложение с информацией об игроке
+    Parametrs:
+    ----------
+        description: str
+            Информация о профиле и гильдии.
+
+        nickname: str
+            Никнейм пользователя из модального окна.
+
+        member: discord.abc.User
+            Пользователь из discord.utils.get()
+
+        player_parms: dict | None
+            Параметры игрока.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title='Заявка на доступ',
@@ -92,11 +122,14 @@ def application_embed(description, nickname, member, player_parms):
     return embed
 
 
-def start_app_embed():
+def start_app_embed() -> discord.Embed:
     """
     Функция для создания вложения с просьбой заполнить форму.
 
-    :return: вложение с просьбой заполнить форму
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title='_**Привет, друг! 👋**_',

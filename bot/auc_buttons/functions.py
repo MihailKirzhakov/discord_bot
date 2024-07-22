@@ -13,14 +13,14 @@ def convert_bid(bid: int) -> str:
 
     Parameters
     ----------
-    bid: 'int'
-        Ставка, параметр берется из slash-функции /go_auc.
+        bid: int
+            Ставка, параметр берется из slash-функции /go_auc.
 
     Returns
     -------
-    'str'
-        Сконвертированная строка с объемом ставки и
-        отображением единицы измерения.
+        'str'
+            Сконвертированная строка с объемом ставки и
+            отображением единицы измерения.
     """
     result = (
         f'{Decimal(bid) / Decimal('1000')}K' if 100000 <= bid
@@ -32,23 +32,23 @@ def convert_bid(bid: int) -> str:
 def thousand_summ(
     original_label: Decimal,
     bid: int
-):
+) -> Decimal:
     """
     Функция считает суммы ставки с текущим значением на кнопке.
 
     Parameters
     ----------
-    original_label: 'Decimal(float | int)'
+    original_label: 'Decimal(float | int
         Число, взятое с кнопки.
 
-    bid: 'int'
+    bid: int
         Ставка, параметр берется из slash-функции /go_auc.
 
     Returns
     -------
-    'Decimal(float | int)'
-        Число, полученное в результате прибавления ставки
-        для отображения в тысячах.
+        'Decimal(float | int)'
+            Число, полученное в результате прибавления ставки
+            для отображения в тысячах.
     """
     result = (
         original_label + (Decimal(bid) / Decimal('1000'))
@@ -56,23 +56,23 @@ def thousand_summ(
     return result
 
 
-def million_summ(original_label, bid):
+def million_summ(original_label, bid) -> Decimal:
     """
     Функция считает суммы ставки с текущим значением на кнопке.
 
     Parameters
     ----------
-    original_label: 'Decimal(int | float)'
-        Число, взятое с кнопки.
+        original_label: Decimal(int | float)
+            Число, взятое с кнопки.
 
-    bid: 'str'
-        Ставка, параметр берется из slash-функции /go_auc.
+        bid: str
+            Ставка, параметр берется из slash-функции /go_auc.
 
     Returns
     -------
-    'Decimal(float | int)'
-        Число, полученное в результате прибавления ставки
-        для отображения в миллионах.
+        'Decimal(float | int)'
+            Число, полученное в результате прибавления ставки
+            для отображения в миллионах.
     """
     result = (
         original_label + (Decimal(bid) / Decimal('1000000'))
@@ -91,22 +91,22 @@ def label_count(
 
     Parameters
     ----------
-    button: 'discord.ui.Button'
-        Отображающаяся кнопка.
+        button: discord.ui.Button
+            Отображающаяся кнопка.
 
-    original_label: 'Decimal(int | float)'
-        Число, взятое с кнопки.
+        original_label: Decimal(int | float)
+            Число, взятое с кнопки.
 
-    name: 'interaction.user.display_name'
-        Имя пользователя, который взаимодействовал с кнопкой.
+        name: interaction.user.display_name
+            Имя пользователя, который взаимодействовал с кнопкой.
 
-    bid: 'int'
-        Ставка, параметр берется из slash-функции /go_auc.
+        bid: int
+            Ставка, параметр берется из slash-функции /go_auc.
 
     Returns
     -------
-    button.label: str
-        Строка, отображающаяся на кнопке.
+        button.label: str
+            Строка, отображающаяся на кнопке.
     """
     if len(button.label.split()) == 1:
         if 'K' in button.label:
@@ -140,16 +140,16 @@ def convert_to_mention(
 
     Parameters
     ----------
-    label_values: list
-        Список строк, которые содержат ставку и никнейм игрока.
+        label_values: list
+            Список строк, которые содержат ставку и никнейм игрока.
 
-    button_mentions: dict
-        Словарь, в котором ключи это 'display_nmame', а значения это 'mention'.
+        button_mentions: dict
+            Словарь, в котором ключи это 'display_nmame', а значения это 'mention'.
 
     Returns
     -------
-    result: list
-        Результирующий список строк с тэгами ников.
+        result: list
+            Результирующий список строк с тэгами ников.
     """
     result = list()
     for value in label_values:
@@ -169,14 +169,14 @@ def convert_sorted_message(values: list) -> str:
 
     Parameters
     ----------
-    values: list
-        Список строк с содержимым кнопок (ставка + тэг ника).
+        values: list
+            Список строк с содержимым кнопок (ставка + тэг ника).
 
     Returns
     -------
-    message: str
-        Результирующая, отсортированная, пронумерованная строка
-        с переносами на новую строку с тэгами ников.
+        message: str
+            Результирующая, отсортированная, пронумерованная строка
+            с переносами на новую строку с тэгами ников.
     """
     if values == NOT_SOLD:
         return values
@@ -194,13 +194,13 @@ def seconds_until_date(target_date_time: str) -> int:
 
     Parameters
     ----------
-    target_date_time: str
-        Дата и время в ДД-ММ ЧЧ:ММ:СС формате.
+        target_date_time: str
+            Дата и время в ДД-ММ ЧЧ:ММ:СС формате.
 
     Returns
     -------
-    minutes_until: int
-        Количество секунд до определенной даты и времени.
+        minutes_until: int
+            Количество секунд до определенной даты и времени.
     """
     if len(target_date_time) == 11:
         target_date_time += ':00'

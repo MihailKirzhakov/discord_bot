@@ -39,7 +39,7 @@ def start_auc_embed(
     Returns:
     --------
         embed: discord.Embed
-            Встраиваемое сообщение об открытии аукциона
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title=ATTENTION,
@@ -83,7 +83,7 @@ def results_embed(
     Returns:
     --------
         embed: discord.Embed
-            Встраиваемое сообщение о результатах аукциона
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title=ATTENTION,
@@ -109,13 +109,16 @@ def outbid_embed(url: str, stop_time: datetime, delete_after: int) -> discord.Em
         url: str
             Ссылка на сообщение.
 
-        stop_auk: datetime
+        stop_time: datetime
             Ссылка на сообщение.
+
+        delete_after: int
+            Время жизни сообщения.
 
     Returns:
     --------
         embed: discord.Embed
-            Встраиваемое сообщение о результатах аукциона
+            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title=ATTENTION,

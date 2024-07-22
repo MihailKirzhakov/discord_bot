@@ -8,10 +8,25 @@ from .embeds import (
 )
 
 
-que_request: dict = {}
+que_request: dict = {}  # Словарь для отслеживания уже поданных заявок
 
 
 class AccessDeniedButton(View):
+    """
+    Кнопки для одобрения или отказа в ренейме.
+
+    Parametrs:
+    ----------
+        new_nickname: str
+            Новый никнейм, в который выполняется ренейм.
+
+        user: discord.abc.User
+            Класс юзера, который делает запрос на ренейм.
+
+    Returns:
+    --------
+        None
+    """
     def __init__(
             self,
             new_nickname: str,
@@ -76,7 +91,18 @@ class AccessDeniedButton(View):
 
 
 class RenameModal(Modal):
+    """
+    Модальное окно для ввода нового никнейма.
 
+    Parametrs:
+    ----------
+        channel: discord.TextChannel
+            Текстовый канал, в который отправляется запрос.
+
+    Returns:
+    --------
+        None
+    """
     def __init__(
             self,
             channel: discord.TextChannel
@@ -125,7 +151,18 @@ class RenameModal(Modal):
 
 
 class RenameButton(View):
+    """
+    Кнопка для запуска модального окна для ввода нового никнейма.
 
+    Parametrs:
+    ----------
+        channel: discord.TextChannel
+            Текстовый канал, в который отправляется запрос.
+
+    Returns:
+    --------
+        None
+    """
     def __init__(
             self,
             channel: discord.TextChannel,
