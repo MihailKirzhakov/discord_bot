@@ -19,28 +19,32 @@ bot = discord.Bot()
 if os.getenv('DEBUG_SERVER_ID'):
     bot = discord.Bot(debug_guilds=[int(os.getenv('DEBUG_SERVER_ID'))])
 
-
 @bot.event
-async def on_ready():
+async def on_ready() -> None:
     """Событие запуска бота"""
     logger.info('Бот запущен и готов к работе!')
 
 
 @bot.command()
-async def reload_extentions(ctx: discord.ApplicationContext):
+async def reload_extentions(ctx: discord.ApplicationContext) -> None:
     """
     Команда для перезагрузки расширений.
 
-    :param ctx: Контекст команды.
-    :param channel: Текстовый канал, в который нужно отправить сообщение.
-    :return: None
+    Parameters
+    ----------
+        ctx: discord.ApplicationContext
+            Контекст команды.
+
+    Returns
+    -------
+        None
     """
     if has_required_role(ctx.user):
         bot.reload_extension('regular_commands.regular_commands')
         bot.reload_extension('auc_buttons.auc_buttons')
         bot.reload_extension('role_application.role_application')
         await ctx.respond(
-            'Расширения перезагружены',
+            '_Расширения перезагружены!_',
             ephemeral=True,
             delete_after=10
         )
@@ -48,8 +52,8 @@ async def reload_extentions(ctx: discord.ApplicationContext):
     else:
         await answer_if_no_role(ctx)
         logger.error(
-            f'{ctx.user.display_name} попытался '
-            'использовать команду /reload_extentions!'
+            f'_{ctx.user.display_name} попытался '
+            'использовать команду /reload_extentions!_'
         )
 
 

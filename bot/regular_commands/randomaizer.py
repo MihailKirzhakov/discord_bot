@@ -1,5 +1,4 @@
 import discord
-
 from discord.ui import Modal, InputText, View, button
 
 from .embeds import number_range, nickname_range

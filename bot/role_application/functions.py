@@ -137,7 +137,9 @@ def has_required_role(user: discord.Member):
     )
 
 
-def answer_if_no_role(interaction: discord.Interaction):
+def answer_if_no_role(
+        interaction: discord.Interaction | discord.ApplicationContext
+):
     """
     Ответ на запрос, если у пользователя нет требуемых ролей
 
