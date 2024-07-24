@@ -19,6 +19,7 @@ bot = discord.Bot()
 if os.getenv('DEBUG_SERVER_ID'):
     bot = discord.Bot(debug_guilds=[int(os.getenv('DEBUG_SERVER_ID'))])
 
+
 @bot.event
 async def on_ready() -> None:
     """Событие запуска бота"""
