@@ -78,7 +78,10 @@ class RandomButton(View):
     ):
         super().__init__(timeout=timeout)
 
-    @button(label='Рандомайзер', style=discord.ButtonStyle.green, emoji='🎲')
+    @button(
+        label='Рандомайзер', style=discord.ButtonStyle.green
+        emoji='🎲', custom_id='Рандомайзер'
+    )
     async def callback(
         self,
         button: discord.ui.Button,

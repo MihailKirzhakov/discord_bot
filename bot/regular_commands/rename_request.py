@@ -171,7 +171,10 @@ class RenameButton(View):
         super().__init__(timeout=timeout)
         self.channel = channel
 
-    @button(label='Запрос на смену ника', style=discord.ButtonStyle.green, emoji='👋')
+    @button(
+            label='Запрос на смену ника', style=discord.ButtonStyle.green,
+            emoji='👋', custom_id='Ренеймер'
+    )
     async def callback(
         self,
         button: discord.ui.Button,

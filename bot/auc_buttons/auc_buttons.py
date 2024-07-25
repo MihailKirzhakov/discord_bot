@@ -5,7 +5,7 @@ from typing import Callable
 
 import discord
 from discord.ext import commands
-from discord.ui import View, Button
+from discord.ui import View, Button, Modal, InputText
 from loguru import logger
 
 from .embeds import start_auc_embed, results_embed, outbid_embed
@@ -25,6 +25,145 @@ final_time: dict[str, datetime] = {}
 channel_last_message: dict[str, discord.Message] = {}
 
 
+class StartAucModal(Modal):
+    """
+    Модальное окно для ввода данных для старта аукциона.
+
+    Parametrs:
+    ----------
+        channel: discord.TextChannel
+            Текстовый канал, в который отправляется запрос.
+
+    Returns:
+    --------
+        None
+    """
+    def __init__(
+            self,
+            channel: discord.TextChannel
+    ):
+        super().__init__(title='Параметры аукциона', timeout=None)
+        self.channel = channel
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.short,
+                label='Укажи название аукциона',
+                placeholder='название лотов для розыгрыша'
+            )
+        )
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.short,
+                label='Укажи количество разыгрываемых лотов',
+                placeholder='число',
+                min_length=1,
+                max_length=MAX_BUTTON_VALUE
+            )
+        )
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.short,
+                label='Укажи начальную ставку',
+                placeholder=f'минимальная ставка {MIN_BID_VALUE}',
+            )
+        )
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.short,
+                label='Укажи шаг ставки',
+                placeholder='рекомендовано по дефолту 100000'
+            )
+        )
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.short,
+                label='Укажи дату и время в формате ДД.ММ ЧЧ:ММ:СС',
+                placeholder='ДД.ММ ЧЧ:ММ:СС'
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        name_auc: str = self.children[0].value
+        count: int = int(self.children[1].value)
+        start_bid: int = int(self.children[2].value)
+        bid: int = int(self.children[3].value)
+        target_date_time: str = self.children[4].value
+        if final_time.get(name_auc) or channel_last_message.get(name_auc):
+            name_auc += ' 😊'
+        button_mentions: dict[str, str] = {}
+        today: datetime = datetime.now()
+        stop_time: datetime = today + timedelta(
+            seconds=seconds_until_date(target_date_time)
+        )
+        final_time[name_auc] = stop_time
+        start_auc_user = interaction.user
+        user_mention = interaction.user.mention
+        button_manager = View(timeout=None)
+        for _ in range(count):
+            auc_button: discord.ui.Button = Button(
+                label=str(convert_bid(start_bid)),
+                style=discord.ButtonStyle.green
+            )
+            button_manager.add_item(auc_button)
+            auc_button.callback = bid_callback(
+                button=auc_button,
+                view=button_manager,
+                start_bid=start_bid,
+                bid=bid,
+                start_auc_user=start_auc_user,
+                stop_time=stop_time,
+                user_mention=user_mention,
+                count=count,
+                name_auc=name_auc,
+                final_time=final_time,
+                button_mentions=button_mentions
+            )
+        try:
+            await self.channel.send(
+                embed=start_auc_embed(
+                    user_mention=user_mention,
+                    name_auc=name_auc,
+                    stop_time=stop_time,
+                    lot_count=count,
+                    first_bid=convert_bid(start_bid),
+                    next_bid=convert_bid(bid)
+                ),
+                view=button_manager
+            )
+            channel_last_message[name_auc] = self.channel.last_message
+            await interaction.respond(
+                f'_Аукцион запущен в канале {self.channel.mention}_',
+                ephemeral=True,
+                delete_after=10
+            )
+            logger.info(
+                f'Команда /go_auc запущена пользователем "{interaction.user.display_name}"'
+            )
+            await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
+            await check_timer(
+                channel_last_message=channel_last_message.get(name_auc),
+                view=button_manager,
+                user_mention=user_mention,
+                name_auc=name_auc,
+                count=count,
+                final_time=final_time,
+                button_mentions=button_mentions
+            )
+        except Exception as error:
+            await interaction.respond(
+                f'Не вышло, вот ошибка: {error}',
+                ephemeral=True
+            )
+            logger.error(
+                f'При попытке запустить аукцион модальным окном '
+                f'возникло исключение "{error}"'
+            )
+
 @commands.slash_command()
 @commands.has_role('Аукцион')
 async def go_auc(
@@ -34,33 +173,6 @@ async def go_auc(
         description='Текстовый канал в котором будет аукцион',
         name_localizations={'ru': 'канал'}
     ),  # type: ignore
-    name_auc: discord.Option(
-        str,
-        description='Что разыгрываем?',
-        name_localizations={'ru': 'название_лотов'}
-    ),  # type: ignore
-    count: discord.Option(
-        int,
-        max_value=MAX_BUTTON_VALUE,
-        description='Сколько кнопок с лотами будет запущено',
-        name_localizations={'ru': 'количество_лотов'}
-    ),  # type: ignore
-    start_bid: discord.Option(
-        int,
-        min_value=MIN_BID_VALUE,
-        description='Укажи начальную ставку',
-        name_localizations={'ru': 'начальная_ставка'}
-    ),  # type: ignore
-    bid: discord.Option(
-        int,
-        description='Укажи шаг ставки',
-        name_localizations={'ru': 'шаг_ставки'}
-    ),  # type: ignore
-    target_date_time: discord.Option(
-        str,
-        description='Укажи дату и время в формате ДД.ММ ЧЧ:ММ:СС',
-        name_localizations={'ru': 'дата_время'}
-    )  # type: ignore
 ) -> None:
     """
     Команда для запуска аукциона.
@@ -73,95 +185,17 @@ async def go_auc(
         channel: discord.TextChannel
             Канал, в котором лежит сообщение для редактирования Embed'а
 
-        name_auc: str
-            Название лотов.
-
-        count: int
-            Количество лотов.
-
-        start_bid: int
-            Начальная ставка.
-
-        bid: int
-            Шаг ставки.
-
-        target_date_time: str
-            Дата и время окончания аукциона. Формат "ДД-ММ ЧЧ:ММ:СС".
-
     Returns:
     --------
         None.
     """
-    if final_time.get(name_auc) or channel_last_message.get(name_auc):
-        name_auc += ' 😊'
-    button_mentions: dict[str, str] = {}
-    today: datetime = datetime.now()
-    stop_time: datetime = today + timedelta(
-        seconds=seconds_until_date(target_date_time)
-    )
-    final_time[name_auc] = stop_time
-    start_auc_user = ctx.user
-    user_mention = ctx.user.mention
-    button_manager = View(timeout=None)
-    for _ in range(count):
-        auc_button: discord.ui.Button = Button(
-            label=str(convert_bid(start_bid)),
-            style=discord.ButtonStyle.green
-        )
-        button_manager.add_item(auc_button)
-        auc_button.callback = bid_callback(
-            button=auc_button,
-            view=button_manager,
-            start_bid=start_bid,
-            bid=bid,
-            start_auc_user=start_auc_user,
-            stop_time=stop_time,
-            user_mention=user_mention,
-            count=count,
-            name_auc=name_auc,
-            final_time=final_time,
-            button_mentions=button_mentions
-        )
     try:
-        await channel.send(
-            embed=start_auc_embed(
-                user_mention=user_mention,
-                name_auc=name_auc,
-                stop_time=stop_time,
-                lot_count=count,
-                first_bid=convert_bid(start_bid),
-                next_bid=convert_bid(bid)
-            ),
-            view=button_manager
-        )
-        channel_last_message[name_auc] = channel.last_message
-        await ctx.respond(
-            f'_Аукцион запущен в канале {channel.mention}_',
-            ephemeral=True,
-            delete_after=10
-        )
-        logger.info(
-            f'Команда /go_auc запущена пользователем "{ctx.user.display_name}"'
-        )
-        await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
-        await check_timer(
-            channel_last_message=channel_last_message.get(name_auc),
-            view=button_manager,
-            user_mention=user_mention,
-            name_auc=name_auc,
-            count=count,
-            final_time=final_time,
-            button_mentions=button_mentions
-        )
+        await ctx.response.send_modal(StartAucModal(channel=channel))
     except Exception as error:
-        await ctx.respond(
-            f'Не вышло, вот ошибка: {error}',
-            ephemeral=True
-        )
         logger.error(
-            f'При попытке запустить аукцион командой /go_auc '
-            f'возникло исключение "{error}"'
-        )
+                f'При попытке запустить аукцион командой /go_auc '
+                f'возникло исключение "{error}"'
+            )
 
 
 @go_auc.error

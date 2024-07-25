@@ -7,6 +7,7 @@ from loguru import logger
 from role_application.role_application import (
      has_required_role, answer_if_no_role
 )
+from regular_commands.randomaizer import RandomButton
 
 load_dotenv()
 
@@ -23,6 +24,7 @@ if os.getenv('DEBUG_SERVER_ID'):
 @bot.event
 async def on_ready() -> None:
     """Событие запуска бота"""
+    bot.add_view(RandomButton())
     logger.info('Бот запущен и готов к работе!')
 
 

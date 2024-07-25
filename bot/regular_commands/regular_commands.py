@@ -205,6 +205,7 @@ async def random(
         discord.TextChannel,
         description='Куда отправить кнопку?',
         name_localizations={'ru':'текстовый_канал'},
+        default=1231602394584973395
     ), # type: ignore
     message_id: discord.Option(
         str,
@@ -228,25 +229,39 @@ async def random(
     --------
         None
     """
-    if message_id:
-        message = ctx.channel.get_partial_message(int(message_id))
-        await message.edit(view=RandomButton())
+    try:
+        if message_id:
+            message = ctx.channel.get_partial_message(int(message_id))
+            await message.edit(view=RandomButton())
+            await ctx.respond(
+                f'_Кнопка рандомайзера обновлена и снова работает в '
+                f'канале {channel.mention}!_',
+                ephemeral=True,
+                delete_after=10
+            )
+        else:
+            send_channel = discord.utils.get(ctx.guild.text_channels, id=channel)
+            await send_channel.send(view=RandomButton())
+            await ctx.respond(
+                f'_Кнопка рандомайзера отправлена в канал '
+                f'{send_channel.mention}!_',
+                ephemeral=True,
+                delete_after=10
+            )
+        logger.info(
+            f'Команда "/random" вызвана пользователем'
+            f'"{ctx.user.display_name}" в канал "{send_channel}"!'
+        )
+    except Exception as error:
         await ctx.respond(
-            f'_Кнопка рандомайзера обновлена и снова работает в канале {channel.mention}!_',
+            'Неверные данные, попробуй снова!',
             ephemeral=True,
             delete_after=10
         )
-    else:
-        await channel.send(view=RandomButton())
-        await ctx.respond(
-            f'_Кнопка рандомайзера отправлена в канал {channel.mention}!_',
-            ephemeral=True,
-            delete_after=10
+        logger.error(
+            f'При запуске команды /random возникла ошибка '
+            f'"{error}"!'
         )
-    logger.info(
-        f'Команда "/random" вызвана пользователем'
-        f'"{ctx.user.display_name}" в канал "{channel}"!'
-    )
 
 
 @random.error
