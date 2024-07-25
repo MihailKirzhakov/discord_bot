@@ -5,9 +5,11 @@ from dotenv import load_dotenv
 from loguru import logger
 
 from role_application.role_application import (
-     has_required_role, answer_if_no_role
+    ApplicationButton, has_required_role, answer_if_no_role
 )
 from regular_commands.randomaizer import RandomButton
+from regular_commands.rename_request import RenameButton
+from variables import APPLICATION_CHANNEL_ID
 
 load_dotenv()
 
@@ -24,7 +26,10 @@ if os.getenv('DEBUG_SERVER_ID'):
 @bot.event
 async def on_ready() -> None:
     """Событие запуска бота"""
+    get_channel_object = await bot.fetch_channel(APPLICATION_CHANNEL_ID)
     bot.add_view(RandomButton())
+    bot.add_view(RenameButton(channel=get_channel_object))
+    bot.add_view(ApplicationButton(channel=get_channel_object))
     logger.info('Бот запущен и готов к работе!')
 
 

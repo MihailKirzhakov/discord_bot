@@ -204,8 +204,7 @@ async def random(
     channel: discord.Option(
         discord.TextChannel,
         description='Куда отправить кнопку?',
-        name_localizations={'ru':'текстовый_канал'},
-        default=1231602394584973395
+        name_localizations={'ru':'текстовый_канал'}
     ), # type: ignore
     message_id: discord.Option(
         str,
@@ -240,17 +239,16 @@ async def random(
                 delete_after=10
             )
         else:
-            send_channel = discord.utils.get(ctx.guild.text_channels, id=channel)
-            await send_channel.send(view=RandomButton())
+            await channel.send(view=RandomButton())
             await ctx.respond(
                 f'_Кнопка рандомайзера отправлена в канал '
-                f'{send_channel.mention}!_',
+                f'{channel.mention}!_',
                 ephemeral=True,
                 delete_after=10
             )
         logger.info(
             f'Команда "/random" вызвана пользователем'
-            f'"{ctx.user.display_name}" в канал "{send_channel}"!'
+            f'"{ctx.user.display_name}" в канал "{channel}"!'
         )
     except Exception as error:
         await ctx.respond(
@@ -541,7 +539,7 @@ async def rename(
     channel: discord.Option(
         discord.TextChannel,
         description='Куда отправить кнопку?',
-        name_localizations={'ru':'текстовый_канал'},
+        name_localizations={'ru':'текстовый_канал'}
     ), # type: ignore
     message_id: discord.Option(
         str,

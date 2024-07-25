@@ -317,7 +317,10 @@ class ApplicationButton(View):
         super().__init__(timeout=timeout)
         self.channel = channel
 
-    @button(label='Заполни форму', style=discord.ButtonStyle.green, emoji='📋')
+    @button(
+        label='Заполни форму', style=discord.ButtonStyle.green,
+        emoji='📋', custom_id='Заявки'
+    )
     async def callback(
         self,
         button: discord.ui.Button,
