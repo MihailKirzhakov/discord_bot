@@ -88,11 +88,11 @@ class StartAucModal(Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        name_auc: str = self.children[0].value
+        name_auc: str = str(self.children[0].value)
         count: int = int(self.children[1].value)
         start_bid: int = int(self.children[2].value)
         bid: int = int(self.children[3].value)
-        target_date_time: str = self.children[4].value
+        target_date_time: str = str(self.children[4].value)
         if final_time.get(name_auc) or channel_last_message.get(name_auc):
             name_auc += ' 😊'
         button_mentions: dict[str, str] = {}
