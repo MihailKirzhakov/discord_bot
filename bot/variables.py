@@ -74,6 +74,10 @@ OFICER_ROLE = '🛡️Офицер🛡️'
 
 TREASURER_ROLE = '📣Казначей📣'
 
+SERGEANT_ROLE = 'Старшина'
+
+VETERAN_ROLE = 'Ветеран'
+
 CLOSED_JMURENSKAYA = 'Закрытая Жмуренская комната'
 
 BUHLOID_ID = '896481846949445663'
@@ -115,3 +119,5 @@ SMALL_GUILD_ICON_URL = 'https://media.discordapp.net/attachments/118258450114727
 WRENCH_IMAGE_URL = 'https://media.discordapp.net/attachments/1182584501147279491/1235611311896002600/1672451474_flomaster-club-p-gaechnii-klyuch-risunok-dlya-detei-vkontak-16.png?ex=66350035&is=6633aeb5&hm=0055b69a7b0ba64d904bc8e2b1fb4057ae3ee781312920e5b6508b036b707d35&=&format=webp&quality=lossless&width=960&height=480'
 
 RENAME_IMAGE_URL = 'https://media.discordapp.net/attachments/1182584501147279491/1263864947536953364/img_179340.png?ex=669bc974&is=669a77f4&hm=fe1145063b7db4d0a9800f58a89b8f6e346147cfb505ac2667723ddf340340c4&=&format=webp&quality=lossless&width=640&height=640'
+
+REMIND_IMAGE_URL = 'https://media.discordapp.net/attachments/1182584501147279491/1266431727836860488/df8268919bba5efe.png?ex=66a51ff5&is=66a3ce75&hm=5110d6065800ed7f1683eb012cab960a65dfed4da164376a036d24f203bfe8f5&=&format=webp&quality=lossless&width=640&height=640'

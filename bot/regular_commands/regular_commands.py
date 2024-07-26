@@ -5,15 +5,16 @@ from discord.ext import commands
 from discord.ui import InputText, Modal
 from loguru import logger
 
-from .functions import remind_message, add_remind_to_db, delete_remind_from_db
-from .embeds import technical_works_embed, attention_embed, remind_embed
+from .functions import add_remind_to_db, delete_remind_from_db
+from .embeds import technical_works_embed, attention_embed, remind_embed, remind_send_embed
 from .randomaizer import RandomButton
 from .rename_request import RenameButton
 from variables import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
     CLOSED_JMURENSKAYA, CLOSED_ORTHODOX, CLOSED_TEAM_TAYP,
     CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT,
-    BUHLOID_ID, IDOL_ID, TAYP_ID, KVAPA_ID, GOOSE_ID
+    BUHLOID_ID, IDOL_ID, TAYP_ID, KVAPA_ID, GOOSE_ID,
+    SERGEANT_ROLE, VETERAN_ROLE
 )
 
 
@@ -74,12 +75,15 @@ class StartRemindModal(Modal):
             convert_remind_date = discord.utils.format_dt(remind_date, style="F")
             add_remind_to_db(interaction.user.id, message, remind_date)
             await interaction.respond(
-                remind_message(convert_remind_date, message),
+                embed=remind_embed(convert_remind_date, message),
                 ephemeral=True,
-                delete_after=10
+                delete_after=20
             )
             await discord.utils.sleep_until(remind_date)
-            await interaction.user.send(embed=remind_embed(convert_remind_date, message))
+            await interaction.user.send(
+                embed=remind_send_embed(convert_remind_date, message),
+                delete_after=300
+            )
             delete_remind_from_db(interaction.user.id, remind_date)
         except (IndexError, ValueError):
             await interaction.respond(
@@ -443,7 +447,9 @@ async def clear_all_error(
 
 
 @commands.slash_command()
-@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
+@commands.has_any_role(
+    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE, SERGEANT_ROLE, VETERAN_ROLE
+)
 async def remind(ctx: discord.ApplicationContext) -> None:
     """
     Команда для отправки сообщения с напоминанием.

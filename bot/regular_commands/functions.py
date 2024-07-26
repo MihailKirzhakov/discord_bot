@@ -35,36 +35,8 @@ def rand_choice(nicknames: str) -> str | None:
         return message
 
 
-def remind_message(date: str, message: str) -> str:
-    """
-    Функция выдает сообщение о напоминании.
-
-    Parameters
-    ----------
-        date: str
-            Отформатированная строка даты и времени.
-
-        message: str
-            Сообщение, которое будет отправлено.
-
-    Returns
-    -------
-        'str'
-            Результирующая строка никнеймом и числом рандомайзера.
-    """
-    return (
-        f'👋\n_Сообщение будет отправлено в {date}.\n'
-        f'__**Тебе в ЛС**__✅.\n'
-        f'Содержание сообщения: "{message}"._'
-    )
-
-
 def add_remind_to_db(user_id, message, remind_date):
     """Добавляет напоминание в базу данных"""
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS reminds
-        (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, message TEXT, remind_date TEXT)
-    ''')
     cursor.execute(
         'INSERT INTO reminds (user_id, message, remind_date) VALUES (?, ?, ?)',
         (user_id, message, remind_date)

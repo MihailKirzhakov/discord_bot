@@ -10,7 +10,8 @@ from variables import (
     ANSWER_IF_CLICKED_THE_SAME_TIME,
     LEADER_ROLE,
     OFICER_ROLE,
-    TREASURER_ROLE
+    TREASURER_ROLE,
+    SERGEANT_ROLE
 )
 from .embeds import (
     access_embed, denied_embed, application_embed, start_app_embed
@@ -61,7 +62,7 @@ class RoleButton(View):
         if not has_required_role(interaction.user):
             await answer_if_no_role(interaction)
         role_sergeant = discord.utils.get(
-            interaction.guild.roles, name='Старшина'
+            interaction.guild.roles, name=SERGEANT_ROLE
         )
         role_guest = discord.utils.get(
             interaction.guild.roles, name='Гость'

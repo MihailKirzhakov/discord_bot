@@ -10,7 +10,8 @@ from variables import (
     REMIND,
     DENIED_IMAGE_URL,
     ACCESS_IMAGE_URL,
-    RENAME_IMAGE_URL
+    RENAME_IMAGE_URL,
+    REMIND_IMAGE_URL
 )
 
 
@@ -120,6 +121,28 @@ def attention_embed(value: str) -> discord.Embed:
 
 def remind_embed(date: str, message: str) -> discord.Embed:
     """
+    Функция для создания вложения с инфой о готовности напоминания.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
+    """
+    embed = discord.Embed(
+        title='_**🤔 НАПОМИНАНИЕ 🤔**_',
+        description=(
+            f'\n_Сообщение будет отправлено в {date} '
+            f'__тебе в личку__ ✅.\n\n'
+            f'Содержание сообщения:\n\n**"{message}"**_'
+        ),
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=REMIND_IMAGE_URL)
+    return embed
+
+
+def remind_send_embed(date: str, message: str) -> discord.Embed:
+    """
     Функция для создания вложения с предупреждением.
 
     Parametrs:
@@ -137,7 +160,11 @@ def remind_embed(date: str, message: str) -> discord.Embed:
     """
     embed = discord.Embed(
         title=REMIND,
-        description=f'_Ты просил в {date} тебе чиркануть!\nТекст напоминания: **"{message}"**!_',
+        description=(
+            f'_Ты просил в {date} тебе чиркануть!\n\n'
+            f'Текст напоминания:\n\n**"{message}"**_\n\n'
+            f'-# Данное сообщение будет удалено через 5 минут!'
+        ),
         color=0xfffb00
     )
     embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
