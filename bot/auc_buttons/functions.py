@@ -213,6 +213,10 @@ def seconds_until_date(target_date_time: str) -> int:
         datetime.date.today().year,
         int(month), int(day), int(hour), int(minute), int(second)
     )
+    if target_datetime < datetime.datetime.now():
+        target_datetime = target_datetime.replace(
+            year=(datetime.datetime.now().year) + 1
+        )
     now = datetime.datetime.now()
     time_diff = target_datetime - now
     seconds_until = time_diff.total_seconds()

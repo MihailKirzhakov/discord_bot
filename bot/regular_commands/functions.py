@@ -1,4 +1,10 @@
 from random import randint, choice
+import sqlite3
+
+
+# Создание базы данных
+conn = sqlite3.connect('reminds.db')
+cursor = conn.cursor()
 
 
 def rand_choice(nicknames: str) -> str | None:
@@ -51,3 +57,25 @@ def remind_message(date: str, message: str) -> str:
         f'__**Тебе в ЛС**__✅.\n'
         f'Содержание сообщения: "{message}"._'
     )
+
+
+def add_remind_to_db(user_id, message, remind_date):
+    """Добавляет напоминание в базу данных"""
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS reminds
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, message TEXT, remind_date TEXT)
+    ''')
+    cursor.execute(
+        'INSERT INTO reminds (user_id, message, remind_date) VALUES (?, ?, ?)',
+        (user_id, message, remind_date)
+    )
+    conn.commit()
+
+
+def delete_remind_from_db(user_id, remind_date):
+    """Удаляет напоминание из базы данных"""
+    cursor.execute(
+        'DELETE FROM reminds WHERE user_id = ? AND remind_date = ?',
+        (user_id, remind_date)
+    )
+    conn.commit()
