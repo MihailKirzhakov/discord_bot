@@ -57,6 +57,10 @@ async def on_ready() -> None:
                 ),
                 delete_after=300
             )
+            logger.info(
+                f'Напоминание отправлено пользователю {user.display_name} '
+                f'после проверки БД.'
+            )
             delete_remind_from_db(user_id, remind_date)
         else:
             logger.error(f'Пользователь с данным ID {user_id} не найден')
