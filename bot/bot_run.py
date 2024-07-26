@@ -1,14 +1,17 @@
 import os
+from datetime import datetime
 
 import discord
 from dotenv import load_dotenv
 from loguru import logger
 
+from regular_commands.embeds import remind_send_embed
+from regular_commands.functions import delete_remind_from_db, cursor
+from regular_commands.randomaizer import RandomButton
+from regular_commands.rename_request import RenameButton
 from role_application.role_application import (
     ApplicationButton, has_required_role, answer_if_no_role
 )
-from regular_commands.randomaizer import RandomButton
-from regular_commands.rename_request import RenameButton
 from variables import APPLICATION_CHANNEL_ID
 
 load_dotenv()
@@ -31,6 +34,32 @@ async def on_ready() -> None:
     bot.add_view(RenameButton(channel=get_channel_object))
     bot.add_view(ApplicationButton(channel=get_channel_object))
     logger.info('Бот запущен и готов к работе!')
+    # Проверка наличия напоминаний в базе данных
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS reminds
+        (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, message TEXT, remind_date TEXT)
+    ''')
+    cursor.execute('SELECT * FROM reminds ORDER BY remind_date ASC')
+    reminds = cursor.fetchall()
+
+    # Отправка напоминаний с помощью discord.utils.sleep_until
+    for remind in reminds:
+        _, user_id, message, remind_date = remind
+        remind_date = datetime.strptime(remind_date, '%Y-%m-%d %H:%M:%S')
+        if remind_date < datetime.now():
+            remind_date = remind_date.replace(year=(datetime.now().year) + 1)
+        await discord.utils.sleep_until(remind_date)
+        user = await bot.fetch_user(user_id)
+        if user:
+            await user.send(
+                embed=remind_send_embed(
+                    discord.utils.format_dt(remind_date, style="F"), message
+                ),
+                delete_after=300
+            )
+            delete_remind_from_db(user_id, remind_date)
+        else:
+            logger.error(f'Пользователь с данным ID {user_id} не найден')
 
 
 @bot.command()

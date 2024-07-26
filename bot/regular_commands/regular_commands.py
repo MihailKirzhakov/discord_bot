@@ -2,18 +2,96 @@ from datetime import datetime
 
 import discord
 from discord.ext import commands
+from discord.ui import InputText, Modal
 from loguru import logger
 
-from .functions import remind_message
-from .embeds import technical_works_embed, attention_embed, remind_embed
+from .functions import add_remind_to_db, delete_remind_from_db
+from .embeds import technical_works_embed, attention_embed, remind_embed, remind_send_embed
 from .randomaizer import RandomButton
 from .rename_request import RenameButton
 from variables import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
     CLOSED_JMURENSKAYA, CLOSED_ORTHODOX, CLOSED_TEAM_TAYP,
     CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT,
-    BUHLOID_ID, IDOL_ID, TAYP_ID, KVAPA_ID, GOOSE_ID
+    BUHLOID_ID, IDOL_ID, TAYP_ID, KVAPA_ID, GOOSE_ID,
+    SERGEANT_ROLE, VETERAN_ROLE
 )
+
+
+class StartRemindModal(Modal):
+    """
+    Модальное окно для ввода данных напоминания.
+
+    Attributes:
+    ----------
+        message: str
+            Сообщения для напоминания.
+
+        date_time_str: str
+            дату и время "ДД.ММ ЧЧ:ММ"
+    """
+    def __init__(self):
+        super().__init__(title='Параметры напоминания', timeout=None)
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.multiline,
+                label='Укажи содержание сообщения',
+                placeholder='Не более 500 символов',
+                max_length=500
+            )
+        )
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.short,
+                label='Укажи дату отправки "ДД.ММ ЧЧ:ММ"',
+                placeholder='Соблюдай формат, или будет ошибка!'
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        message: str = str(self.children[0].value)
+        date_time_str: str = str(self.children[1].value)
+        try:
+            date_time_str_split = date_time_str.split()
+            date_split = date_time_str_split[0].replace(',', '.').replace('/', '.').split('.')
+            time_split = date_time_str_split[1].replace('/', ':').split(':')
+
+            # Получаем текущий год
+            current_year = datetime.now().year
+
+            remind_date = datetime(
+                year=current_year,
+                month=int(date_split[1]),
+                day=int(date_split[0]),
+                hour=int(time_split[0]),
+                minute=int(time_split[1]),
+            )
+
+            # Если введенная дата уже прошла, то устанавливаем год на следующий
+            if remind_date < datetime.now():
+                remind_date = remind_date.replace(year=current_year + 1)
+            convert_remind_date = discord.utils.format_dt(remind_date, style="F")
+            add_remind_to_db(interaction.user.id, message, remind_date)
+            await interaction.respond(
+                embed=remind_embed(convert_remind_date, message),
+                ephemeral=True,
+                delete_after=20
+            )
+            await discord.utils.sleep_until(remind_date)
+            await interaction.user.send(
+                embed=remind_send_embed(convert_remind_date, message),
+                delete_after=300
+            )
+            delete_remind_from_db(interaction.user.id, remind_date)
+        except (IndexError, ValueError):
+            await interaction.respond(
+                'Неправильный формат даты и времени. '
+                'Пожалуйста, используйте формат ДД.ММ ЧЧ:ММ',
+                ephemeral=True,
+                delete_after=10
+            )
 
 
 async def command_error(
@@ -369,20 +447,10 @@ async def clear_all_error(
 
 
 @commands.slash_command()
-@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
-async def remind(
-    ctx: discord.ApplicationContext,
-    message: discord.Option(
-        str,
-        description='Укажи сообщение',
-        name_localizations={'ru': 'строка'}
-    ),  # type: ignore
-    date_time_time_str: discord.Option(
-        str,
-        description='Укажи дату и время "ГГГГ-ММ-ДД ЧЧ:ММ"',
-        name_localizations={'ru': 'дата_время'}
-    ),  # type: ignore
-) -> None:
+@commands.has_any_role(
+    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE, SERGEANT_ROLE, VETERAN_ROLE
+)
+async def remind(ctx: discord.ApplicationContext) -> None:
     """
     Команда для отправки сообщения с напоминанием.
 
@@ -391,31 +459,20 @@ async def remind(
         ctx: discord.ApplicationContext
             Контекст команды.
 
-        date_time_time_str: str
-            Строка в формате "ГГГГ-ММ-ДД ЧЧ:ММ".
+        date_time_str: str
+            Строка в формате "ДД.ММ ЧЧ:ММ".
 
     Returns:
     --------
         None
     """
-    date_time_time_str_split = date_time_time_str.replace(
-        '-', ' '
-    ).replace('_', ' ').replace(':', ' ').split()
-    remind_date = datetime(
-        year=int(date_time_time_str_split[0]),
-        month=int(date_time_time_str_split[1]),
-        day=int(date_time_time_str_split[2]),
-        hour=int(date_time_time_str_split[3]),
-        minute=int(date_time_time_str_split[4]),
-    )
-    convert_remind_date = discord.utils.format_dt(remind_date, style="F")
-    await ctx.respond(
-        remind_message(convert_remind_date, message),
-        ephemeral=True,
-        delete_after=10
-    )
-    await discord.utils.sleep_until(remind_date)
-    await ctx.user.send(embed=remind_embed(convert_remind_date, message))
+    try:
+        await ctx.response.send_modal(StartRemindModal())
+    except Exception as error:
+        logger.error(
+                f'При попытке запустить аукцион командой /remind '
+                f'возникло исключение "{error}"'
+            )
 
 
 @remind.error
