@@ -79,10 +79,17 @@ class StartRemindModal(Modal):
                 ephemeral=True,
                 delete_after=20
             )
+            logger.info(
+                f'Пользователь {interaction.user.display_name} создал напоминалку'
+                f'на {remind_date}!'
+            )
             await discord.utils.sleep_until(remind_date)
             await interaction.user.send(
                 embed=remind_send_embed(convert_remind_date, message),
                 delete_after=300
+            )
+            logger.info(
+                f'Пользователь {interaction.user.display_name} получил напоминалку!'
             )
             delete_remind_from_db(interaction.user.id, remind_date)
         except (IndexError, ValueError):
