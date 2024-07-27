@@ -8,7 +8,10 @@ from discord.ext import commands
 from discord.ui import View, Button, Modal, InputText
 from loguru import logger
 
-from .embeds import start_auc_embed, results_embed, outbid_embed
+from .embeds import (
+    start_auc_embed, results_embed, outbid_embed,
+    end_auc_notification_embed
+)
 from .functions import (
     convert_bid,
     label_count,
@@ -57,7 +60,7 @@ class StartAucModal(Modal):
             InputText(
                 style=discord.InputTextStyle.short,
                 label='Укажи количество разыгрываемых лотов',
-                placeholder='число',
+                placeholder='кол-во лотов может быть от 1 до 25',
                 min_length=1,
                 max_length=MAX_BUTTON_VALUE
             )
@@ -93,6 +96,12 @@ class StartAucModal(Modal):
         start_bid: int = int(self.children[2].value)
         bid: int = int(self.children[3].value)
         target_date_time: str = str(self.children[4].value)
+        if count < 1 or count > 25:
+            return await interaction.respond(
+                '_Количество лотов должно быть от 1 до 24_',
+                ephemeral=True,
+                delete_after=10
+            )
         if final_time.get(name_auc) or channel_last_message.get(name_auc):
             name_auc += ' 😊'
         button_mentions: dict[str, str] = {}
@@ -153,6 +162,10 @@ class StartAucModal(Modal):
                 f'Команда /go_auc запущена пользователем "{interaction.user.display_name}"'
             )
             await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
+            await self.channel.send(
+                embed=end_auc_notification_embed(),
+                delete_after=30
+            )
             await check_timer(
                 channel_last_message=channel_last_message.get(name_auc),
                 view=button_manager,

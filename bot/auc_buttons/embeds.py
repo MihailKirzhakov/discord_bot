@@ -2,7 +2,7 @@ from datetime import datetime
 
 import discord
 
-from variables import ATTENTION, AUCTION_IMAGE_URL
+from variables import ATTENTION, AUCTION_IMAGE_URL, REMIND
 
 
 def start_auc_embed(
@@ -128,6 +128,38 @@ def outbid_embed(url: str, stop_time: datetime, delete_after: int) -> discord.Em
             f'{url}**_\n\n'
             f'-# Данное сообщение автоматически удалится через '
             f'{"минуту" if delete_after == 60 else "30 минут"}.'
+        ),
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=AUCTION_IMAGE_URL)
+    return embed
+
+
+def end_auc_notification_embed():
+    """
+    Создает встраиваемое сообщение о перебивании ставки.
+
+    Parametrs:
+    ----------
+        url: str
+            Ссылка на сообщение.
+
+        stop_time: datetime
+            Ссылка на сообщение.
+
+        delete_after: int
+            Время жизни сообщения.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
+    """
+    embed = discord.Embed(
+        title=REMIND,
+        description=(
+            '_**Что аукцион скоро завершится!\n\n'
+            '❗❗❗ НЕ УПУСТИ СВОЮ СТАВКУ ❗❗❗**_.'
         ),
         color=0xfffb00
     )
