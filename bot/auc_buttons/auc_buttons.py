@@ -82,8 +82,8 @@ class StartAucModal(Modal):
         self.add_item(
             InputText(
                 style=discord.InputTextStyle.short,
-                label='Укажи дату и время в формате ДД.ММ ЧЧ:ММ:СС',
-                placeholder='ДД.ММ ЧЧ:ММ:СС'
+                label='Укажи дату и время в формате ДД.ММ ЧЧ:ММ',
+                placeholder='ДД.ММ ЧЧ:ММ'
             )
         )
 
@@ -97,9 +97,17 @@ class StartAucModal(Modal):
             name_auc += ' 😊'
         button_mentions: dict[str, str] = {}
         today: datetime = datetime.now()
-        stop_time: datetime = today + timedelta(
-            seconds=seconds_until_date(target_date_time)
-        )
+        try:
+            stop_time: datetime = today + timedelta(
+                seconds=seconds_until_date(target_date_time)
+            )
+        except Exception as error:
+            await interaction.respond(
+                'Неверный формат. Ожидался ДД.ММ ЧЧ:ММ'
+            )
+            logger.error(
+                f'При вводе даты в команду аукциона возникла ошибка {error}'
+            )
         final_time[name_auc] = stop_time
         start_auc_user = interaction.user
         user_mention = interaction.user.mention

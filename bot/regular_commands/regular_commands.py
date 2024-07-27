@@ -1,4 +1,5 @@
 from datetime import datetime
+import re
 
 import discord
 from discord.ext import commands
@@ -6,7 +7,9 @@ from discord.ui import InputText, Modal
 from loguru import logger
 
 from .functions import add_remind_to_db, delete_remind_from_db
-from .embeds import technical_works_embed, attention_embed, remind_embed, remind_send_embed
+from .embeds import (
+    technical_works_embed, attention_embed, remind_embed, remind_send_embed
+)
 from .randomaizer import RandomButton
 from .rename_request import RenameButton
 from variables import (
@@ -45,28 +48,59 @@ class StartRemindModal(Modal):
         self.add_item(
             InputText(
                 style=discord.InputTextStyle.short,
-                label='Укажи дату отправки "ДД.ММ ЧЧ:ММ"',
-                placeholder='Соблюдай формат, или будет ошибка!'
+                label='Укажи дату отправки в формате "ДД.ММ"',
+                placeholder='ДД.ММ'
+            )
+        )
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.short,
+                label='Укажи время отправки в формате "ЧЧ:ММ"',
+                placeholder='ЧЧ:ММ'
             )
         )
 
     async def callback(self, interaction: discord.Interaction):
         message: str = str(self.children[0].value)
-        date_time_str: str = str(self.children[1].value)
+        date_str: str = str(self.children[1].value)
+        time_str: str = str(self.children[2].value)
+
+        # Регулярное выражение для проверки даты в формате ДД.ММ
+        date_pattern = r'^([0-2][0-9]|3[0-1])[.,/](0[1-9]|1[0-2])$'
+        date_match = re.match(date_pattern, date_str)
+
+        # Регулярное выражение для проверки времени в формате ЧЧ:ММ
+        time_pattern = r'^([0-1][0-9]|2[0-3])[:;]([0-5][0-9])$'
+        time_match = re.match(time_pattern, time_str)
+
+        if not date_match:
+            return await interaction.respond(
+                'Неправильный формат даты. Пожалуйста, используйте формат ДД.ММ',
+                ephemeral=True,
+                delete_after=10
+            )
+
+        if not time_match:
+            return await interaction.respond(
+                'Неправильный формат времени. Пожалуйста, используйте формат ЧЧ:ММ',
+                ephemeral=True,
+                delete_after=10
+            )
+
         try:
-            date_time_str_split = date_time_str.split()
-            date_split = date_time_str_split[0].replace(',', '.').replace('/', '.').split('.')
-            time_split = date_time_str_split[1].replace('/', ':').split(':')
+            day, month = map(int, date_match.groups())
+            hour, minute = map(int, time_match.groups())
 
             # Получаем текущий год
             current_year = datetime.now().year
 
             remind_date = datetime(
                 year=current_year,
-                month=int(date_split[1]),
-                day=int(date_split[0]),
-                hour=int(time_split[0]),
-                minute=int(time_split[1]),
+                month=month,
+                day=day,
+                hour=hour,
+                minute=minute,
             )
 
             # Если введенная дата уже прошла, то устанавливаем год на следующий
@@ -92,12 +126,15 @@ class StartRemindModal(Modal):
                 f'Пользователь {interaction.user.display_name} получил напоминалку!'
             )
             delete_remind_from_db(interaction.user.id, remind_date)
-        except (IndexError, ValueError):
+        except Exception as error:
             await interaction.respond(
-                'Неправильный формат даты и времени. '
-                'Пожалуйста, используйте формат ДД.ММ ЧЧ:ММ',
+                'Произошла ошибка при создании напоминания.',
                 ephemeral=True,
                 delete_after=10
+            )
+            logger.error(
+                f'Пользователь {interaction.user.display_name} попытался сделать напоминание '
+                f'но получил ошибку {error}!'
             )
 
 

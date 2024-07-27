@@ -29,8 +29,8 @@ def rand_choice(nicknames: str) -> str | None:
         return randint(int(values[0]), int(values[1]))
     else:
         message = (
-            f'_{'\n'.join([f'{i+1} - {val}' for i, val in enumerate(values)])}\n'
-            f'Победитель: **{choice(values)}**_'
+            f'_{'\n'.join([f'{i+1} - {val}' for i, val in enumerate(values)])}\n\n'
+            f'**Победитель: {choice(values)}**_'
         )
         return message
 

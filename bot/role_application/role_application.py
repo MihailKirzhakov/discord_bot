@@ -4,14 +4,9 @@ from discord.ui import Modal, InputText, View, button
 from loguru import logger
 
 from variables import (
-    ANSWER_IF_DUPLICATE_APP,
-    ANSWER_IF_DUPLICATE_NICK,
-    ANSWER_IF_CHEAT,
-    ANSWER_IF_CLICKED_THE_SAME_TIME,
-    LEADER_ROLE,
-    OFICER_ROLE,
-    TREASURER_ROLE,
-    SERGEANT_ROLE
+    ANSWER_IF_DUPLICATE_APP, ANSWER_IF_DUPLICATE_NICK, ANSWER_IF_CHEAT,
+    ANSWER_IF_CLICKED_THE_SAME_TIME, LEADER_ROLE, OFICER_ROLE,
+    TREASURER_ROLE, SERGEANT_ROLE
 )
 from .embeds import (
     access_embed, denied_embed, application_embed, start_app_embed

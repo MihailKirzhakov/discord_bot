@@ -42,7 +42,6 @@ async def on_ready() -> None:
     cursor.execute('SELECT * FROM reminds ORDER BY remind_date ASC')
     reminds = cursor.fetchall()
 
-    # Отправка напоминаний с помощью discord.utils.sleep_until
     for remind in reminds:
         _, user_id, message, remind_date = remind
         remind_date = datetime.strptime(remind_date, '%Y-%m-%d %H:%M:%S')

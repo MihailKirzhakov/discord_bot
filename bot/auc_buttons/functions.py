@@ -1,5 +1,6 @@
 import datetime
 from decimal import Decimal
+import re
 
 import discord
 
@@ -38,7 +39,7 @@ def thousand_summ(
 
     Parameters
     ----------
-    original_label: 'Decimal(float | int
+    original_label: 'Decimal(float | int)'
         Число, взятое с кнопки.
 
     bid: int
@@ -169,7 +170,7 @@ def convert_sorted_message(values: str) -> str | float:
     Parameters
     ----------
         values: str
-            Cтрок с содержимым кнопок (ставка + тэг ника).
+            Cтрока с содержимым кнопок (ставка + тэг ника).
 
     Returns
     -------
@@ -186,30 +187,28 @@ def convert_sorted_message(values: str) -> str | float:
     return cost
 
 
-def seconds_until_date(target_date_time: str) -> int:
+def seconds_until_date(target_date_time: str) -> int | str:
     """
     Функция считает количество секунд до определенной даты и времени.
 
     Parameters
     ----------
         target_date_time: str
-            Дата и время в ДД-ММ ЧЧ:ММ:СС формате.
+            Дата и время в ДД.ММ ЧЧ:ММ формате.
 
     Returns
     -------
         minutes_until: int
             Количество секунд до определенной даты и времени.
     """
-    if len(target_date_time) == 11:
-        target_date_time += ':00'
-    parts = target_date_time.split()
-    if len(parts) != 2:
-        raise ValueError("Неверный формат. Ожидался ДД.ММ ЧЧ:ММ:СС")
-    day, month = parts[0].replace('-', '.').replace('/', '.').replace('_', '.').split('.')
-    hour, minute, second = parts[1].split(':')
+    pattern = r'^([0-2][0-9]|3[0-1])[.,/](0[1-9]|1[0-2]) ([0-1][0-9]|2[0-3])[:;]([0-5][0-9])$'
+    match = re.match(pattern, target_date_time)
+    if not match:
+        return 'Неверный формат. Ожидался ДД.ММ ЧЧ:ММ'
+    day, month, hour, minute = map(int, match.groups())
     target_datetime = datetime.datetime(
         datetime.date.today().year,
-        int(month), int(day), int(hour), int(minute), int(second)
+        month, day, hour, minute
     )
     if target_datetime < datetime.datetime.now():
         target_datetime = target_datetime.replace(

@@ -1,17 +1,10 @@
 import discord
 
 from variables import (
-    ATTENTION,
-    GUILD_IMAGE_URL,
-    PLAYING_DICES_URL_ICON,
-    SMALL_GUILD_ICON_URL,
-    TEСHNICAL_WORKS,
-    WRENCH_IMAGE_URL,
-    REMIND,
-    DENIED_IMAGE_URL,
-    ACCESS_IMAGE_URL,
-    RENAME_IMAGE_URL,
-    REMIND_IMAGE_URL
+    ATTENTION, GUILD_IMAGE_URL, PLAYING_DICES_URL_ICON,
+    SMALL_GUILD_ICON_URL, TEСHNICAL_WORKS, WRENCH_IMAGE_URL,
+    REMIND, DENIED_IMAGE_URL, ACCESS_IMAGE_URL, RENAME_IMAGE_URL,
+    REMIND_IMAGE_URL, TO_REMIND
 )
 
 
@@ -129,10 +122,10 @@ def remind_embed(date: str, message: str) -> discord.Embed:
             Встраиваемое сообщение.
     """
     embed = discord.Embed(
-        title='_**🤔 НАПОМИНАНИЕ 🤔**_',
+        title=TO_REMIND,
         description=(
-            f'\n_Сообщение будет отправлено в {date} '
-            f'__тебе в личку__ ✅.\n\n'
+            f'_Сообщение отправится в {date}'
+            f'\nтебе в личные сообщения 📨.\n'
             f'Содержание сообщения:\n\n**"{message}"**_'
         ),
         color=0xfffb00
@@ -161,8 +154,8 @@ def remind_send_embed(date: str, message: str) -> discord.Embed:
     embed = discord.Embed(
         title=REMIND,
         description=(
-            f'_Ты просил в {date} тебе чиркануть!\n\n'
-            f'Текст напоминания:\n\n**"{message}"**_\n\n'
+            f'_Ты просил в {date}\nтебе чиркануть и напомнить о: '
+            f'\n\n**"{message}"**_\n\n'
             f'-# Данное сообщение будет удалено через 5 минут!'
         ),
         color=0xfffb00

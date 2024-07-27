@@ -3,9 +3,7 @@ import requests
 import random
 
 from variables import (
-    ANSWERS_IF_NO_ROLE,
-    LEADER_ROLE,
-    OFICER_ROLE,
+    ANSWERS_IF_NO_ROLE, LEADER_ROLE, OFICER_ROLE,
     TREASURER_ROLE
 )
 
