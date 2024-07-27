@@ -162,25 +162,23 @@ def convert_to_mention(
     return result
 
 
-def convert_sorted_message(values: list) -> str:
+def convert_sorted_message(values: str) -> str | float:
     """
-    Функция преобразует список строк, в нумерованный,
-    отсортированный список победителей.
+    Функция помощник для сортировки с учетом тысяч или миллионов.
 
     Parameters
     ----------
-        values: list
-            Список строк с содержимым кнопок (ставка + тэг ника).
+        values: str
+            Cтрок с содержимым кнопок (ставка + тэг ника).
 
     Returns
     -------
-        message: str
-            Результирующая, отсортированная, пронумерованная строка
-            с переносами на новую строку с тэгами ников.
+        message: str | float
+            Строка сконвертированная под тысячи или миллоны.
     """
     if values == NOT_SOLD:
         return values
-    cost = values.split(' ')[0]
+    cost = values.split()[0]
     cost_mult = (
         1_000_000 if cost[-1] == 'M' else 1_000 if cost[-1] == 'K' else 1
     )
