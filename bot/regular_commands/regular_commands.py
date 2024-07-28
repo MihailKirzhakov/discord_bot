@@ -161,8 +161,8 @@ async def command_error(
     """
     if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(
-            f'Команду {command_name} может вызвать только '
-            f'"Лидер", "Казначей" или "Офицер"!',
+            f'_Команду {command_name} может вызвать только '
+            f'"Лидер", "Казначей" или "Офицер"! ❌_',
             ephemeral=True,
             delete_after=10
         )
