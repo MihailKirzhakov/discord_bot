@@ -1,5 +1,5 @@
 import discord
-from discord.ui import Modal, InputText, Select, View, button
+from discord.ui import Modal, InputText, Select, View, button, select
 from loguru import logger
 
 from .embeds import (
@@ -10,6 +10,7 @@ from variables import VETERAN_ROLE
 
 
 member_list: list = []
+channel_last_message: list[discord.Message] = []
 
 
 class RaidChampionDominionApplication(Modal):
@@ -19,11 +20,13 @@ class RaidChampionDominionApplication(Modal):
     def __init__(
             self,
             embed: discord.Embed,
-            message: discord.Message
+            # message: discord.Message,
+            # channel: discord.TextChannel
     ):
         super().__init__(title='Заявка на РЧД', timeout=None)
         self.embed = embed
-        self.message = message
+        # self.message = message
+        # self.channel = channel
 
         self.add_item(
             InputText(
@@ -59,7 +62,7 @@ class RaidChampionDominionApplication(Modal):
             self.embed.fields[field_index].value += (
                 f'{interaction.user.mention}: {class_role} ({honor})\n'
             )
-            await self.message.edit(embed=self.embed)
+            await channel_last_message[0].edit(embed=self.embed)
             member_list.append(f'{interaction.user.display_name}')
             await interaction.respond(
                 '_Заявка принята ✅_',
@@ -91,12 +94,14 @@ class RCDButton(View):
     def __init__(
             self,
             embed: discord.Embed,
-            message: discord.Message,
+            # message: discord.Message,
+            # channel: discord.TextChannel,
             timeout: float | None = None
     ):
         super().__init__(timeout=timeout)
         self.embed = embed
-        self.message = message
+        # self.message = message
+        # self.channel = channel
 
     @button(
             label='Отправить заявку на РЧД', style=discord.ButtonStyle.green,
@@ -110,7 +115,9 @@ class RCDButton(View):
         try:
             await interaction.response.send_modal(
                 RaidChampionDominionApplication(
-                    embed=self.embed, message=self.message
+                    embed=self.embed,
+                    # message=self.message
+                    # channel=self.channel
                 ))
         except Exception as error:
             logger.error(
@@ -126,20 +133,28 @@ class SelectMemberToRCD(Select):
     """
     def __init__(
             self,
+            create_rcd_list,
             index: int,
             embed: discord.Embed,
             select_type: discord.ComponentType = discord.ComponentType.user_select
     ) -> None:
         super().__init__(select_type=select_type)
+        self.create_rcd_list = create_rcd_list
         self.index = index
         self.embed = embed
 
-    def callback(self, interaction: discord.Interaction):
+    async def callback(self, interaction: discord.Interaction, *args):
         if not self.values:
             self.embed.fields[self.index].value += 'Нет'
         else:
             selected_members = [user.mention for user in self.values]
             self.embed.fields[self.index].value += ', '.join(selected_members)
+        self.create_rcd_list.message.embed = self.embed
+        await interaction.respond(
+            '_Добавление прошло успешно!_',
+            ephemeral=True,
+            delete_after=5
+        )
 
 
 class CreateRCDList(View):
@@ -156,6 +171,7 @@ class CreateRCDList(View):
         None
     """
     embed = final_rcd_list_embed()
+    message = None
 
     def __init__(
         self,
@@ -175,6 +191,7 @@ class CreateRCDList(View):
         interaction: discord.Interaction
     ):
         await interaction.respond(embed=self.embed)
+        self.message = interaction.channel.last_message
 
     @button(
         label='Опубликовать список', style=discord.ButtonStyle.blurple,
@@ -204,8 +221,10 @@ class CreateRCDList(View):
             value='',
             inline=False
         )
+        view = discord.ui.View()
+        view.add_item(SelectMemberToRCD(create_rcd_list=self, index=0, embed=self.embed))
         await interaction.respond(
-            view=SelectMemberToRCD(index=0, embed=self.embed)
+            view=view
         )
 
     @button(
@@ -222,8 +241,10 @@ class CreateRCDList(View):
             value='',
             inline=False
         )
+        view = discord.ui.View()
+        view.add_item(SelectMemberToRCD(create_rcd_list=self, index=1, embed=self.embed))
         await interaction.respond(
-            view=SelectMemberToRCD(index=1, embed=self.embed)
+            view=view
         )
 
     @button(
@@ -240,8 +261,10 @@ class CreateRCDList(View):
             value='',
             inline=False
         )
+        view = discord.ui.View()
+        view.add_item(SelectMemberToRCD(create_rcd_list=self, index=2, embed=self.embed))
         await interaction.respond(
-            view=SelectMemberToRCD(index=2, embed=self.embed)
+            view=view
         )
 
     @button(
@@ -258,8 +281,10 @@ class CreateRCDList(View):
             value='',
             inline=False
         )
+        view = discord.ui.View()
+        view.add_item(SelectMemberToRCD(create_rcd_list=self, index=3, embed=self.embed))
         await interaction.respond(
-            view=SelectMemberToRCD(index=3, embed=self.embed)
+            view=view
         )
 
     @button(
@@ -276,8 +301,10 @@ class CreateRCDList(View):
             value='',
             inline=False
         )
+        view = discord.ui.View()
+        view.add_item(SelectMemberToRCD(create_rcd_list=self, index=4, embed=self.embed))
         await interaction.respond(
-            view=SelectMemberToRCD(index=4, embed=self.embed)
+            view=view
         )
 
     @button(
@@ -294,8 +321,10 @@ class CreateRCDList(View):
             value='',
             inline=False
         )
+        view = discord.ui.View()
+        view.add_item(SelectMemberToRCD(create_rcd_list=self, index=5, embed=self.embed))
         await interaction.respond(
-            view=SelectMemberToRCD(index=5, embed=self.embed)
+            view=view
         )
 
     @button(
@@ -312,8 +341,10 @@ class CreateRCDList(View):
             value='',
             inline=False
         )
+        view = discord.ui.View()
+        view.add_item(SelectMemberToRCD(create_rcd_list=self, index=6, embed=self.embed))
         await interaction.respond(
-            view=SelectMemberToRCD(index=6, embed=self.embed)
+            view=view
         )
 
     @button(
@@ -330,8 +361,10 @@ class CreateRCDList(View):
             value='',
             inline=False
         )
+        view = discord.ui.View()
+        view.add_item(SelectMemberToRCD(create_rcd_list=self, index=7, embed=self.embed))
         await interaction.respond(
-            view=SelectMemberToRCD(index=7, embed=self.embed)
+            view=view
         )
 
     @button(
@@ -348,8 +381,10 @@ class CreateRCDList(View):
             value='',
             inline=False
         )
+        view = discord.ui.View()
+        view.add_item(SelectMemberToRCD(create_rcd_list=self, index=8, embed=self.embed))
         await interaction.respond(
-            view=SelectMemberToRCD(index=8, embed=self.embed)
+            view=view
         )
 
     @button(
@@ -366,8 +401,10 @@ class CreateRCDList(View):
             value='',
             inline=False
         )
+        view = discord.ui.View()
+        view.add_item(SelectMemberToRCD(create_rcd_list=self, index=9, embed=self.embed))
         await interaction.respond(
-            view=SelectMemberToRCD(index=9, embed=self.embed)
+            view=view
         )
 
     @button(
@@ -385,7 +422,7 @@ class CreateRCDList(View):
             inline=False
         )
         view = discord.ui.View()
-        view.add_item(SelectMemberToRCD(index=10, embed=self.embed))
+        view.add_item(SelectMemberToRCD(create_rcd_list=self, index=10, embed=self.embed))
         await interaction.respond(
             view=view
         )
@@ -423,10 +460,13 @@ class StartRCDButton(View):
     ):
         try:
             await interaction.respond(embed=rcd_list_embed())
-            message = interaction.channel.last_message
+            channel_last_message.append(interaction.channel.last_message)
             await self.channel.send(
                 embed=start_rcd_embed(),
-                view=RCDButton(embed=rcd_list_embed(), message=message)
+                view=RCDButton(
+                    embed=rcd_list_embed(),
+                    # message=message
+                )
             )
             await interaction.respond(view=CreateRCDList(channel=self.channel))
             await interaction.respond(
