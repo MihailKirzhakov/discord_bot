@@ -183,4 +183,4 @@ class RenameButton(View):
         try:
             await interaction.response.send_modal(RenameModal(channel=self.channel))
         except Exception as error:
-            logger.error(f'При нажатии на кнопку возникла ошибка {error}')
+            logger.error(f'При нажатии на кнопку RenameButton возникла ошибка {error}')

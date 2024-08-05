@@ -8,7 +8,9 @@ MAX_BUTTON_VALUE = 24
 
 MIN_BID_VALUE = 100000
 
-APPLICATION_CHANNEL_ID = 1229511138954444890
+APPLICATION_CHANNEL_ID = 1231524306480140360
+
+RCD_APPLICATION_CHANNEL_ID = 1231524306480140360
 
 # Текстовые переменные с фразами
 ACCESS_VALUE = (
@@ -78,6 +80,8 @@ SERGEANT_ROLE = 'Старшина'
 
 VETERAN_ROLE = 'Ветеран'
 
+GUEST_ROLE = 'Гость'
+
 CLOSED_JMURENSKAYA = 'Закрытая Жмуренская комната'
 
 BUHLOID_ID = '896481846949445663'
@@ -123,3 +127,9 @@ WRENCH_IMAGE_URL = 'https://media.discordapp.net/attachments/1182584501147279491
 RENAME_IMAGE_URL = 'https://media.discordapp.net/attachments/1182584501147279491/1263864947536953364/img_179340.png?ex=669bc974&is=669a77f4&hm=fe1145063b7db4d0a9800f58a89b8f6e346147cfb505ac2667723ddf340340c4&=&format=webp&quality=lossless&width=640&height=640'
 
 REMIND_IMAGE_URL = 'https://media.discordapp.net/attachments/1182584501147279491/1266431727836860488/df8268919bba5efe.png?ex=66a51ff5&is=66a3ce75&hm=5110d6065800ed7f1683eb012cab960a65dfed4da164376a036d24f203bfe8f5&=&format=webp&quality=lossless&width=640&height=640'
+
+CROSSED_SWORDS_IMAGE_URL = 'https://media.discordapp.net/attachments/1182584501147279491/1269949509949980683/5fe0343e0f96803c.png?ex=66b1ec25&is=66b09aa5&hm=6bad797e84b11945ab62856b5622e76e51f07dc0cb8881653af79699feb623ad&=&format=webp&quality=lossless&width=655&height=655'
+
+RCD_LIST_IMAGE_URL = 'https://media.discordapp.net/attachments/1182584501147279491/1269955937477595186/53ceb6140f73a909.png?ex=66b1f222&is=66b0a0a2&hm=e4ca7be4622f4f57266d1de76d976dfef5cc35d5ea271690e2ba16197988e2b7&=&format=webp&quality=lossless&width=655&height=655'
+
+QUESTION_IMAGE_URL = 'https://media.discordapp.net/attachments/1182584501147279491/1269967902736515192/ad65f1ccea7e0e37.png?ex=66b1fd46&is=66b0abc6&hm=bbd1f02d4997fc7652427d220754cb689456635c9d9c4dea8fd84e4a2e998121&=&format=webp&quality=lossless&width=492&height=655'

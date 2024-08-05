@@ -12,6 +12,7 @@ from .embeds import (
 )
 from .randomaizer import RandomButton
 from .rename_request import RenameButton
+from .rcd_aplication import StartRCDButton
 from variables import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
     CLOSED_JMURENSKAYA, CLOSED_ORTHODOX, CLOSED_TEAM_TAYP,
@@ -24,14 +25,6 @@ from variables import (
 class StartRemindModal(Modal):
     """
     Модальное окно для ввода данных напоминания.
-
-    Attributes:
-    ----------
-        message: str
-            Сообщения для напоминания.
-
-        date_time_str: str
-            дату и время "ДД.ММ ЧЧ:ММ"
     """
     def __init__(self):
         super().__init__(title='Параметры напоминания', timeout=None)
@@ -91,10 +84,7 @@ class StartRemindModal(Modal):
         try:
             day, month = map(int, date_match.groups())
             hour, minute = map(int, time_match.groups())
-
-            # Получаем текущий год
             current_year = datetime.now().year
-
             remind_date = datetime(
                 year=current_year,
                 month=month,
@@ -102,8 +92,6 @@ class StartRemindModal(Modal):
                 hour=hour,
                 minute=minute,
             )
-
-            # Если введенная дата уже прошла, то устанавливаем год на следующий
             if remind_date < datetime.now():
                 remind_date = remind_date.replace(year=current_year + 1)
             convert_remind_date = discord.utils.format_dt(remind_date, style="F")
@@ -711,6 +699,86 @@ async def rename_error(
     await command_error(ctx, error, "rename")
 
 
+@commands.slash_command()
+@commands.has_any_role(
+    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
+)
+async def rcd_application(
+    ctx: discord.ApplicationContext,
+    channel: discord.Option(
+        discord.TextChannel,
+        description='Куда отправить кнопку?',
+        name_localizations={'ru':'текстовый_канал'}
+    ), # type: ignore
+    message_id: discord.Option(
+        str,
+        description='ID сообщения, в котором есть кнопка кнопка',
+        name_localizations={'ru':'id_сообщения'},
+        required=False
+    )  # type: ignore
+) -> None:
+    """
+    Команда для запуска кнопки старта РЧД заявок.
+
+    Parametrs:
+    ----------
+        ctx: discord.ApplicationContext
+            Контекст команды.
+
+        channel: discord.TextChannel
+            Канал, в который нужно отправить кнопку.
+
+        message_id: str
+            ID сообщения, в котором есть кнопка кнопка
+
+    Returns:
+    --------
+        None
+    """
+    if message_id:
+        message = ctx.channel.get_partial_message(int(message_id))
+        await message.edit(view=StartRCDButton(channel=channel))
+        await ctx.respond(
+            '_Кнопка запуска РЧД заявок обновлена и снова работает!_',
+            ephemeral=True,
+            delete_after=10
+        )
+    else:
+        await ctx.respond(view=StartRCDButton(channel=channel))
+        await ctx.respond(
+            '_Кнопка запуска РЧД заявок запущена!_',
+            ephemeral=True,
+            delete_after=10
+        )
+    logger.info(
+        f'Команда "/rcd_application" вызвана пользователем'
+        f'"{ctx.user.display_name}" в канал "{channel}"!'
+    )
+
+
+@rcd_application.error
+async def rcd_application_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+) -> None:
+    """
+    Обработчик ошибок для команды rcd_application.
+
+    Parametrs:
+    ----------
+        ctx: discord.ApplicationContext
+            Контекст команды.
+
+        error: Exception
+            Исключение, возникшее при выполнении команды.
+
+    Returns:
+    --------
+        None
+    """
+    await command_error(ctx, error, "rcd_application")
+
+
 def setup(bot: discord.Bot):
     bot.add_application_command(technical_works)
     bot.add_application_command(attention)
@@ -719,3 +787,4 @@ def setup(bot: discord.Bot):
     bot.add_application_command(remind)
     bot.add_application_command(give_role_to)
     bot.add_application_command(rename)
+    bot.add_application_command(rcd_application)

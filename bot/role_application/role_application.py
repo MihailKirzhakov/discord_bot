@@ -6,7 +6,7 @@ from loguru import logger
 from variables import (
     ANSWER_IF_DUPLICATE_APP, ANSWER_IF_DUPLICATE_NICK, ANSWER_IF_CHEAT,
     ANSWER_IF_CLICKED_THE_SAME_TIME, LEADER_ROLE, OFICER_ROLE,
-    TREASURER_ROLE, SERGEANT_ROLE
+    TREASURER_ROLE, SERGEANT_ROLE, GUEST_ROLE
 )
 from .embeds import (
     access_embed, denied_embed, application_embed, start_app_embed
@@ -60,7 +60,7 @@ class RoleButton(View):
             interaction.guild.roles, name=SERGEANT_ROLE
         )
         role_guest = discord.utils.get(
-            interaction.guild.roles, name='Гость'
+            interaction.guild.roles, name=GUEST_ROLE
         )
         try:
             if self.nickname not in app_list:
@@ -236,7 +236,7 @@ class RoleApplication(Modal):
         member_by_display_name = discord.utils.get(
             interaction.guild.members, display_name=nickname
         )
-        role = discord.utils.get(interaction.guild.roles, name='Гость')
+        role = discord.utils.get(interaction.guild.roles, name=GUEST_ROLE)
         player_parms = character_lookup(1, nickname)
         if not player_parms:
             return await interaction.respond(

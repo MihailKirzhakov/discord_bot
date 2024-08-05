@@ -4,7 +4,8 @@ from variables import (
     ATTENTION, GUILD_IMAGE_URL, PLAYING_DICES_URL_ICON,
     SMALL_GUILD_ICON_URL, TEСHNICAL_WORKS, WRENCH_IMAGE_URL,
     REMIND, DENIED_IMAGE_URL, ACCESS_IMAGE_URL, RENAME_IMAGE_URL,
-    REMIND_IMAGE_URL, TO_REMIND
+    REMIND_IMAGE_URL, TO_REMIND, CROSSED_SWORDS_IMAGE_URL,
+    RCD_LIST_IMAGE_URL, QUESTION_IMAGE_URL
 )
 
 
@@ -266,4 +267,94 @@ def denied_send_embed() -> discord.Embed:
         color=0xfffb00
     )
     embed.set_thumbnail(url=DENIED_IMAGE_URL)
+    return embed
+
+
+def start_rcd_embed() -> discord.Embed:
+    """
+    Функция для создания вложения о старте РЧД заявок.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
+    """
+    embed = discord.Embed(
+        title='_**Заявки на РЧД на этой неделе**_',
+        description=(
+            '_Тыкай на кнопку ниже ⬇️\n\n'
+            'Обрати внимание на то, что список внизу, '
+            'это не финальный состав рейда, а просто поданные заявки!_'
+        ),
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=CROSSED_SWORDS_IMAGE_URL)
+    return embed
+
+
+def rcd_list_embed() -> discord.Embed:
+    """
+    Функция для создания вложения о списке поданных РЧД заявок.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
+    """
+    embed = discord.Embed(
+        title='_**Список поданных заявок**_',
+        color=0xfffb00
+    )
+    embed.add_field(
+        name='------------------------------',
+        value='Ветераны:\n',
+        inline=False
+    )
+    embed.add_field(
+        name='------------------------------',
+        value='Старшины:\n',
+        inline=False
+    )
+    embed.set_thumbnail(url=RCD_LIST_IMAGE_URL)
+    return embed
+
+
+def ask_veteran_embed(member: discord.Member, url: str) -> discord.Embed:
+    """
+    Функция для создания вложения всем ветеранам.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
+    """
+    embed = discord.Embed(
+        title=ATTENTION,
+        description=(
+            f'_Рассылка от пользователя {member.display_name}\n\n'
+            f'Вопрос - можешь пойти на РЧД на этой неделе?\n'
+            f'Если да, заполни пожалуйста заявку на РЧД 😊!\n'
+            f'{url}_\n\n'
+            f'-# Данное сообщение будет удалено через 3 часа!'
+        ),
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=QUESTION_IMAGE_URL)
+    return embed
+
+
+def final_rcd_list_embed() -> discord.Embed:
+    """
+    Функция для создания вложения о списке РЧД.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
+    """
+    embed = discord.Embed(
+        title='_**Список РЧД**_',
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=RCD_LIST_IMAGE_URL)
     return embed
