@@ -385,7 +385,7 @@ class CreateRCDList(View):
             inline=False
         )
         view = discord.ui.View()
-        view.add_item(SelectMemberToRCD(index=0, embed=self.embed))
+        view.add_item(SelectMemberToRCD(index=10, embed=self.embed))
         await interaction.respond(
             view=view
         )
