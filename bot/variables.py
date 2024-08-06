@@ -10,8 +10,6 @@ MIN_BID_VALUE = 100000
 
 APPLICATION_CHANNEL_ID = 1231524306480140360
 
-RCD_APPLICATION_CHANNEL_ID = 1231524306480140360
-
 # Текстовые переменные с фразами
 ACCESS_VALUE = (
     '_Рекомендую посетить текстовый канал '

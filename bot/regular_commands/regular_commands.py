@@ -8,7 +8,8 @@ from loguru import logger
 
 from .functions import add_remind_to_db, delete_remind_from_db
 from .embeds import (
-    technical_works_embed, attention_embed, remind_embed, remind_send_embed
+    technical_works_embed, attention_embed, remind_embed,
+    remind_send_embed, rcd_list_embed
 )
 from .randomaizer import RandomButton
 from .rename_request import RenameButton
@@ -116,9 +117,8 @@ class StartRemindModal(Modal):
             delete_remind_from_db(interaction.user.id, remind_date)
         except Exception as error:
             await interaction.respond(
-                'Произошла ошибка при создании напоминания.',
-                ephemeral=True,
-                delete_after=10
+                f'Произошла ошибка при создании напоминания. {error}',
+                ephemeral=True
             )
             logger.error(
                 f'Пользователь {interaction.user.display_name} попытался сделать напоминание '
@@ -163,7 +163,7 @@ async def command_error(
         await ctx.respond(
             f'Команду {command_name} нельзя вызывать в личные сообщения бота!',
             ephemeral=True,
-            delete_after=10
+            delete_after=5
         )
         logger.info(
             f'Пользователь "{ctx.user.display_name}" '
@@ -212,7 +212,7 @@ async def technical_works(
     await ctx.respond(
         f'_Сообщение о тех работах отправлено в канал {channel.mention}!_',
         ephemeral=True,
-        delete_after=5
+        delete_after=3
     )
 
 
@@ -280,7 +280,7 @@ async def attention(
     await ctx.respond(
         f'_Сообщение отправлено в канал {channel.mention}!_',
         ephemeral=True,
-        delete_after=5
+        delete_after=3
     )
 
 
@@ -346,7 +346,7 @@ async def random(
                 f'_Кнопка рандомайзера обновлена и снова работает в '
                 f'канале {channel.mention}!_',
                 ephemeral=True,
-                delete_after=10
+                delete_after=3
             )
         else:
             await channel.send(view=RandomButton())
@@ -354,7 +354,7 @@ async def random(
                 f'_Кнопка рандомайзера отправлена в канал '
                 f'{channel.mention}!_',
                 ephemeral=True,
-                delete_after=10
+                delete_after=3
             )
         logger.info(
             f'Команда "/random" вызвана пользователем'
@@ -364,7 +364,7 @@ async def random(
         await ctx.respond(
             'Неверные данные, попробуй снова!',
             ephemeral=True,
-            delete_after=10
+            delete_after=3
         )
         logger.error(
             f'При запуске команды /random возникла ошибка '
@@ -442,12 +442,13 @@ async def clear_all(
         await ctx.respond(
             f'_Сообщения удалены в канале {channel.mention}!_',
             ephemeral=True,
-            delete_after=10
+            delete_after=3
         )
     except Exception as error:
         await ctx.respond(
             f'_При использовании команды "clear_all" в канале '
-            f'{channel} возникла ошибка: "{error}"!_'
+            f'{channel} возникла ошибка: "{error}"!_',
+            ephemeral=True
         )
         logger.error(
             f'_При использовании команды "clear_all" в канале '
@@ -582,7 +583,7 @@ async def give_role_to(
                 f'_**Роль**\n{check_group_leaders.get(str(ctx.user.id)).mention}\n'
                 f'**выдана**\n{member.mention}!_',
                 ephemeral=True,
-                delete_after=10
+                delete_after=5
             )
             logger.info(
                 f'Команда "/give_role_to" вызвана пользователем'
@@ -592,7 +593,7 @@ async def give_role_to(
             await ctx.respond(
                 '_У тебя нет доступа к этой команде!_',
                 ephemeral=True,
-                delete_after=10
+                delete_after=3
             )
     except Exception as error:
         logger.error(f'Ошибка при вызове команды "/give_role_to": {error}')
@@ -661,14 +662,14 @@ async def rename(
         await ctx.respond(
             '_Кнопка ренеймера обновлена и снова работает!_',
             ephemeral=True,
-            delete_after=10
+            delete_after=3
         )
     else:
         await ctx.respond(view=RenameButton(channel=channel))
         await ctx.respond(
             '_Кнопка ренеймера запущена!_',
             ephemeral=True,
-            delete_after=10
+            delete_after=3
         )
     logger.info(
         f'Команда "/rename" вызвана пользователем'
@@ -700,9 +701,7 @@ async def rename_error(
 
 
 @commands.slash_command()
-@commands.has_any_role(
-    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
-)
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def rcd_application(
     ctx: discord.ApplicationContext,
     channel: discord.Option(
@@ -710,12 +709,6 @@ async def rcd_application(
         description='Куда отправить кнопку?',
         name_localizations={'ru':'текстовый_канал'}
     ), # type: ignore
-    message_id: discord.Option(
-        str,
-        description='ID сообщения, в котором есть кнопка кнопка',
-        name_localizations={'ru':'id_сообщения'},
-        required=False
-    )  # type: ignore
 ) -> None:
     """
     Команда для запуска кнопки старта РЧД заявок.
@@ -735,25 +728,23 @@ async def rcd_application(
     --------
         None
     """
-    if message_id:
-        message = ctx.channel.get_partial_message(int(message_id))
-        await message.edit(view=StartRCDButton(channel=channel))
-        await ctx.respond(
-            '_Кнопка запуска РЧД заявок обновлена и снова работает!_',
-            ephemeral=True,
-            delete_after=10
-        )
-    else:
+    try:
         await ctx.respond(view=StartRCDButton(channel=channel))
+        await ctx.respond(embed=rcd_list_embed())
         await ctx.respond(
             '_Кнопка запуска РЧД заявок запущена!_',
             ephemeral=True,
-            delete_after=10
+            delete_after=3
         )
-    logger.info(
-        f'Команда "/rcd_application" вызвана пользователем'
-        f'"{ctx.user.display_name}" в канал "{channel}"!'
-    )
+        logger.info(
+            f'Команда "/rcd_application" вызвана пользователем'
+            f'"{ctx.user.display_name}" в канал "{channel}"!'
+        )
+    except Exception as error:
+        logger.error(
+            f'Ошибка при вызове команды "/rcd_application"! '
+            f'"{error}"'
+        )
 
 
 @rcd_application.error

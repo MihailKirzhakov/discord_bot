@@ -12,8 +12,7 @@ from regular_commands.rename_request import RenameButton
 from role_application.role_application import (
     ApplicationButton, has_required_role, answer_if_no_role
 )
-from regular_commands.rcd_aplication import StartRCDButton
-from variables import APPLICATION_CHANNEL_ID, RCD_APPLICATION_CHANNEL_ID
+from variables import APPLICATION_CHANNEL_ID
 
 load_dotenv()
 
@@ -31,11 +30,9 @@ if os.getenv('DEBUG_SERVER_ID'):
 async def on_ready() -> None:
     """Событие запуска бота"""
     app_channel = await bot.fetch_channel(APPLICATION_CHANNEL_ID)
-    rcd_app_channel = await bot.fetch_channel(RCD_APPLICATION_CHANNEL_ID)
     bot.add_view(RandomButton())
     bot.add_view(RenameButton(channel=app_channel))
     bot.add_view(ApplicationButton(channel=app_channel))
-    bot.add_view(StartRCDButton(channel=rcd_app_channel))
     logger.info('Бот запущен и готов к работе!')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS reminds
