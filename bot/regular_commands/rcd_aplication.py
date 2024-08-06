@@ -16,6 +16,11 @@ channel_last_message: list[discord.Message] = []
 class RaidChampionDominionApplication(Modal):
     """
     Модальное окно для ввода данных на заявку РЧД.
+
+    Attributes:
+    ----------
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     def __init__(
             self,
@@ -78,14 +83,10 @@ class RCDButton(View):
     """
     Кнопка для запуска модального окна для заявки РЧД.
 
-    Parametrs:
+    Attributes:
     ----------
-        channel: discord.TextChannel
-            Текстовый канал, в который отправляется запрос.
-
-    Returns:
-    --------
-        None
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     def __init__(
             self,
@@ -119,7 +120,15 @@ class RCDButton(View):
 
 class SelectMemberToRCD(Select):
     """
-    Меню для выбора пользователей в РЧД список
+    Меню для выбора пользователей в РЧД список.
+
+    Attributes:
+    ----------
+        index: int
+            Индекс поля втстраимого сообщения Embed.
+
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     def __init__(
             self,
@@ -148,16 +157,15 @@ class SelectMemberToRCD(Select):
 
 class EmptyButton(discord.ui.Button):
     """
-    Кнопка для запуска РЧД заявок.
+    Кнопка для заполнения пустоты в поле Embed.
 
-    Parametrs:
+    Attributes:
     ----------
-        channel: discord.TextChannel
-            Текстовый канал, в который отправляется запрос.
+        index: int
+            Индекс поля втстраимого сообщения Embed.
 
-    Returns:
-    --------
-        None
+        embed: discord.Embed
+            Встраиваемое сообщение.
     """
     def __init__(
         self,
@@ -178,16 +186,12 @@ class EmptyButton(discord.ui.Button):
 
 class CreateRCDList(View):
     """
-    Кнопки для создания РЧД списка.
+    Кнопки для создания РЧД списка, и отправки готового списка.
 
-    Parametrs:
+    Attributes:
     ----------
         channel: discord.TextChannel
-            Текстовый канал, в который отправляется запрос.
-
-    Returns:
-    --------
-        None
+            Канал в котором будет создан список РЧД.
     """
     embed = final_rcd_list_embed()
 
@@ -507,14 +511,10 @@ class StartRCDButton(View):
     """
     Кнопка для запуска РЧД заявок.
 
-    Parametrs:
+    Attributes:
     ----------
         channel: discord.TextChannel
-            Текстовый канал, в который отправляется запрос.
-
-    Returns:
-    --------
-        None
+            Канал в котором будет создан список РЧД.
     """
     def __init__(
         self,

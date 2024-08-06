@@ -721,9 +721,6 @@ async def rcd_application(
         channel: discord.TextChannel
             Канал, в который нужно отправить кнопку.
 
-        message_id: str
-            ID сообщения, в котором есть кнопка кнопка
-
     Returns:
     --------
         None
