@@ -270,7 +270,7 @@ def denied_send_embed() -> discord.Embed:
     return embed
 
 
-def start_rcd_embed() -> discord.Embed:
+def start_rcd_embed(date: str) -> discord.Embed:
     """
     Функция для создания вложения о старте РЧД заявок.
 
@@ -280,7 +280,7 @@ def start_rcd_embed() -> discord.Embed:
             Встраиваемое сообщение.
     """
     embed = discord.Embed(
-        title='_**Заявки на РЧД на этой неделе**_',
+        title=f'_**Заявки на РЧД {date}**_',
         description=(
             '_Тыкай на кнопку ниже ⬇️\n\n'
             'Обрати внимание на то, что список внизу, '
@@ -343,7 +343,7 @@ def ask_veteran_embed(member: discord.Member, url: str) -> discord.Embed:
     return embed
 
 
-def final_rcd_list_embed() -> discord.Embed:
+def final_rcd_list_embed(date: str) -> discord.Embed:
     """
     Функция для создания вложения о списке РЧД.
 
@@ -353,7 +353,7 @@ def final_rcd_list_embed() -> discord.Embed:
             Встраиваемое сообщение.
     """
     embed = discord.Embed(
-        title='_**Список РЧД**_',
+        title=f'_**Список РЧД {date}**_',
         color=0xfffb00
     )
     embed.set_thumbnail(url=RCD_LIST_IMAGE_URL)

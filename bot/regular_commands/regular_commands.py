@@ -9,11 +9,11 @@ from loguru import logger
 from .functions import add_remind_to_db, delete_remind_from_db
 from .embeds import (
     technical_works_embed, attention_embed, remind_embed,
-    remind_send_embed, rcd_list_embed
+    remind_send_embed
 )
 from .randomaizer import RandomButton
 from .rename_request import RenameButton
-from .rcd_aplication import StartRCDButton
+from .rcd_aplication import RcdDate
 from variables import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
     CLOSED_JMURENSKAYA, CLOSED_ORTHODOX, CLOSED_TEAM_TAYP,
@@ -719,13 +719,7 @@ async def rcd_application(ctx: discord.ApplicationContext) -> None:
         None
     """
     try:
-        await ctx.respond(view=StartRCDButton())
-        await ctx.respond(embed=rcd_list_embed())
-        await ctx.respond(
-            '_Кнопка запуска РЧД заявок запущена!_',
-            ephemeral=True,
-            delete_after=3
-        )
+        await ctx.response.send_modal(RcdDate())
         logger.info(
             f'Команда "/rcd_application" вызвана пользователем'
             f'"{ctx.user.display_name}"!'
