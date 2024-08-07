@@ -1,5 +1,5 @@
 import discord
-from discord.ui import Modal, InputText, Select, View, button
+from discord.ui import Modal, InputText, View, button, select
 from loguru import logger
 
 from .embeds import (
@@ -11,6 +11,9 @@ from variables import VETERAN_ROLE
 
 member_list: list = []
 channel_last_message: list[discord.Message] = []
+rcd_channel: list[discord.TextChannel] = []
+embed: discord.Embed = final_rcd_list_embed()
+last_message_rcd_list: list[discord.Message] = []
 
 
 class RaidChampionDominionApplication(Modal):
@@ -118,7 +121,7 @@ class RCDButton(View):
             )
 
 
-class SelectMemberToRCD(Select):
+class SelectMemberToRCD(View):
     """
     Меню для выбора пользователей в РЧД список.
 
@@ -130,58 +133,46 @@ class SelectMemberToRCD(Select):
         embed: discord.Embed
             Встраиваемое сообщение.
     """
-    def __init__(
-            self,
-            index: int,
-            embed: discord.Embed,
-            select_type: discord.ComponentType = discord.ComponentType.user_select,
-            min_values: int = 1,
-            max_values: int = 4,
-            placeholder: str = 'Выбери игроков...'
-    ) -> None:
-        super().__init__(
-            select_type=select_type,
-            min_values=min_values,
-            max_values=max_values,
-            placeholder=placeholder
-        )
+    def __init__(self, index: int) -> None:
+        super().__init__(timeout=None)
         self.index = index
-        self.embed = embed
 
-    async def callback(self, interaction: discord.Interaction, *args):
-        selected_members = [user.mention for user in self.values]
-        self.embed.fields[self.index].value = ', '.join(selected_members)
-        await interaction.channel.last_message.edit(embed=self.embed)
-        await interaction.respond('Добавлен ✅', ephemeral=True, delete_after=2)
-
-
-class EmptyButton(discord.ui.Button):
-    """
-    Кнопка для заполнения пустоты в поле Embed.
-
-    Attributes:
-    ----------
-        index: int
-            Индекс поля втстраимого сообщения Embed.
-
-        embed: discord.Embed
-            Встраиваемое сообщение.
-    """
-    def __init__(
+    @select(
+        select_type=discord.ComponentType.user_select,
+        min_values=1,
+        max_values=4,
+        placeholder='Выбери игроков...'
+    )
+    async def select_callback(
         self,
-        index: int,
-        embed: discord.Embed
+        select: discord.ui.Select,
+        interaction: discord.Interaction
     ):
-        super().__init__(
-            label='Пусто', style=discord.ButtonStyle.gray, custom_id='Пусто'
+        await self.update_embed(
+            interaction,', '.join(user.mention for user in select.values)
         )
-        self.index = index
-        self.embed = embed
 
-    async def callback(self, interaction: discord.Interaction):
-        self.embed.fields[self.index].value = 'Пусто'
-        await interaction.channel.last_message.edit(embed=self.embed)
-        await interaction.respond('Добавлен ✅', ephemeral=True, delete_after=2)
+    @button(label='Пусто', style=discord.ButtonStyle.gray, custom_id='Пусто')
+    async def button_callback(
+        self,
+        button: discord.ui.Button,
+        interaction: discord.Interaction
+    ):
+        await self.update_embed(interaction, 'Пусто')
+
+    async def update_embed(
+        self,
+        interaction: discord.Interaction,
+        value: str
+    ) -> None:
+        embed.fields[self.index].value = value
+        await last_message_rcd_list[0].edit(embed=embed)
+        await interaction.message.delete()
+        await interaction.respond(
+            f'Добавлено {"✅" if value else "⭕"}',
+            ephemeral=True,
+            delete_after=1
+        )
 
 
 class CreateRCDList(View):
@@ -193,18 +184,29 @@ class CreateRCDList(View):
         channel: discord.TextChannel
             Канал в котором будет создан список РЧД.
     """
-    embed = final_rcd_list_embed()
+
+    index_class_role = {
+        0: 'Воины:',
+        1: 'Паладины:',
+        2: 'Инженеры:',
+        3: 'Жрецы:',
+        4: 'Шаманы:',
+        5: 'Мистики:',
+        6: 'Лучники:',
+        7: 'Маги:',
+        8: 'Некроманты:',
+        9: 'Барды',
+        10: 'Демоны'
+    }
 
     def __init__(
         self,
-        channel: discord.TextChannel,
         timeout: float | None = None
     ):
         super().__init__(timeout=timeout)
-        self.channel = channel
 
     @button(
-        label='Создать список', style=discord.ButtonStyle.red,
+        label='Создать список', style=discord.ButtonStyle.blurple,
         custom_id='СоздатьСписок'
     )
     async def create_list_callback(
@@ -212,299 +214,264 @@ class CreateRCDList(View):
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await interaction.respond(embed=self.embed)
+        obj_1: discord.ui.Button = self.children[0]
+        obj_2: discord.ui.Button = self.children[1]
+        obj_13: discord.ui.Select = self.children[12]
+
+        obj_1.label = '⬇️ Список создан ниже ⬇️'
+        obj_1.style = discord.ButtonStyle.gray
+        obj_1.disabled = True
+
+        obj_2.style = discord.ButtonStyle.green
+        obj_2.disabled = False
+
+        obj_13.disabled = False
+        await interaction.message.edit(view=self)
+        await interaction.respond(embed=embed)
 
     @button(
-        label='Добавить "Воинов"', style=discord.ButtonStyle.green,
-        custom_id='ДобавитьВоинов'
+        label='Добавить "Воинов"', style=discord.ButtonStyle.gray,
+        custom_id='ДобавитьВоинов', disabled=True
     )
     async def add_warior_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if len(self.embed.fields) < 1:
-            self.embed.add_field(
-                    name='Воины:',
-                    value='',
-                    inline=False
-                )
-        view = View(
-            SelectMemberToRCD(index=0, embed=self.embed),
-            EmptyButton(index=0, embed=self.embed),
-            timeout=None
-        )
-        await interaction.respond(
-            view=view,
-            ephemeral=True
-        )
+        last_message_rcd_list.append(interaction.channel.last_message)
+        await self.update_view_rcd_list(interaction, 'Воины:', 0)
 
     @button(
-        label='Добавить "Паладинов"', style=discord.ButtonStyle.green,
-        custom_id='ДобавитьПаладинов'
+        label='Добавить "Паладинов"', style=discord.ButtonStyle.gray,
+        custom_id='ДобавитьПаладинов', disabled=True
     )
     async def add_paladin_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if len(self.embed.fields) < 2:
-            self.embed.add_field(
+        if len(embed.fields) < 2:
+            embed.add_field(
                 name='Паладин:',
                 value='',
                 inline=False
             )
-        view = View(
-            SelectMemberToRCD(index=1, embed=self.embed),
-            EmptyButton(index=1, embed=self.embed),
-            timeout=None
-        )
-        await interaction.respond(
-            view=view,
-            ephemeral=True
-        )
+        obj_4: discord.ui.Button = self.children[3]
+        obj_4.style = discord.ButtonStyle.green
+        obj_4.disabled = False
+        await interaction.message.edit(view=self)
+        await interaction.respond(view=SelectMemberToRCD(index=1))
 
     @button(
-        label='Добавить "Инженеров"', style=discord.ButtonStyle.green,
-        custom_id='ДобавитьИнженеров'
+        label='Добавить "Инженеров"', style=discord.ButtonStyle.gray,
+        custom_id='ДобавитьИнженеров', disabled=True
     )
     async def add_ingeneer_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if len(self.embed.fields) < 3:
-            self.embed.add_field(
+        if len(embed.fields) < 3:
+            embed.add_field(
                 name='Инженеры:',
                 value='',
                 inline=False
             )
-        view = View(
-            SelectMemberToRCD(index=2, embed=self.embed),
-            EmptyButton(index=2, embed=self.embed),
-            timeout=None
-        )
-        await interaction.respond(
-            view=view,
-            ephemeral=True
-        )
+        obj_5: discord.ui.Button = self.children[4]
+        obj_5.style = discord.ButtonStyle.green
+        obj_5.disabled = False
+        await interaction.message.edit(view=self)
+        await interaction.respond(view=SelectMemberToRCD(index=2))
 
     @button(
-        label='Добавить "Жрецов"', style=discord.ButtonStyle.green,
-        custom_id='ДобавитьЖрецов'
+        label='Добавить "Жрецов"', style=discord.ButtonStyle.gray,
+        custom_id='ДобавитьЖрецов', disabled=True
     )
     async def add_priest_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if len(self.embed.fields) < 4:
-            self.embed.add_field(
+        if len(embed.fields) < 4:
+            embed.add_field(
                 name='Жрецы:',
                 value='',
                 inline=False
             )
-        view = View(
-            SelectMemberToRCD(index=3, embed=self.embed),
-            EmptyButton(index=3, embed=self.embed),
-            timeout=None
-        )
-        await interaction.respond(
-            view=view,
-            ephemeral=True
-        )
+        obj_6: discord.ui.Button = self.children[5]
+        obj_6.style = discord.ButtonStyle.green
+        obj_6.disabled = False
+        await interaction.message.edit(view=self)
+        await interaction.respond(view=SelectMemberToRCD(index=3))
 
     @button(
-        label='Добавить "Друидов"', style=discord.ButtonStyle.green,
-        custom_id='ДобавитьДруидов'
+        label='Добавить "Друидов"', style=discord.ButtonStyle.gray,
+        custom_id='ДобавитьДруидов', disabled=True
     )
     async def add_druid_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if len(self.embed.fields) < 5:
-            self.embed.add_field(
+        if len(embed.fields) < 5:
+            embed.add_field(
                 name='Шаман:',
                 value='',
                 inline=False
             )
-        view = View(
-            SelectMemberToRCD(index=4, embed=self.embed),
-            EmptyButton(index=4, embed=self.embed),
-            timeout=None
-        )
-        await interaction.respond(
-            view=view,
-            ephemeral=True
-        )
+        obj_7: discord.ui.Button = self.children[6]
+        obj_7.style = discord.ButtonStyle.green
+        obj_7.disabled = False
+        await interaction.message.edit(view=self)
+        await interaction.respond(view=SelectMemberToRCD(index=4))
 
     @button(
-        label='Добавить "Мистиков"', style=discord.ButtonStyle.green,
-        custom_id='ДобавитьМистиков'
+        label='Добавить "Мистиков"', style=discord.ButtonStyle.gray,
+        custom_id='ДобавитьМистиков', disabled=True
     )
     async def add_mistic_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if len(self.embed.fields) < 6:
-            self.embed.add_field(
+        if len(embed.fields) < 6:
+            embed.add_field(
                 name='Мистики:',
                 value='',
                 inline=False
             )
-        view = View(
-            SelectMemberToRCD(index=5, embed=self.embed),
-            EmptyButton(index=5, embed=self.embed),
-            timeout=None
-        )
-        await interaction.respond(
-            view=view,
-            ephemeral=True
-        )
+        obj_8: discord.ui.Button = self.children[7]
+        obj_8.style = discord.ButtonStyle.green
+        obj_8.disabled = False
+        await interaction.message.edit(view=self)
+        await interaction.respond(view=SelectMemberToRCD(index=5))
 
     @button(
-        label='Добавить "Лучников"', style=discord.ButtonStyle.green,
-        custom_id='ДобавитьЛучников'
+        label='Добавить "Лучников"', style=discord.ButtonStyle.gray,
+        custom_id='ДобавитьЛучников', disabled=True
     )
     async def add_stalker_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if len(self.embed.fields) < 7:
-            self.embed.add_field(
+        if len(embed.fields) < 7:
+            embed.add_field(
                 name='Лучники:',
                 value='',
                 inline=False
             )
-        view = View(
-            SelectMemberToRCD(index=6, embed=self.embed),
-            EmptyButton(index=6, embed=self.embed),
-            timeout=None
-        )
-        await interaction.respond(
-            view=view,
-            ephemeral=True
-        )
+        obj_9: discord.ui.Button = self.children[8]
+        obj_9.style = discord.ButtonStyle.green
+        obj_9.disabled = False
+        await interaction.message.edit(view=self)
+        await interaction.respond(view=SelectMemberToRCD(index=6))
 
     @button(
-        label='Добавить "Магов"', style=discord.ButtonStyle.green,
-        custom_id='ДобавитьМагов'
+        label='Добавить "Магов"', style=discord.ButtonStyle.gray,
+        custom_id='ДобавитьМагов', disabled=True
     )
     async def add_mage_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if len(self.embed.fields) < 8:
-            self.embed.add_field(
+        if len(embed.fields) < 8:
+            embed.add_field(
                 name='Маги:',
                 value='',
                 inline=False
             )
-        view = View(
-            SelectMemberToRCD(index=7, embed=self.embed),
-            EmptyButton(index=7, embed=self.embed),
-            timeout=None
-        )
-        await interaction.respond(
-            view=view,
-            ephemeral=True
-        )
+        obj_10: discord.ui.Button = self.children[9]
+        obj_10.style = discord.ButtonStyle.green
+        obj_10.disabled = False
+        await interaction.message.edit(view=self)
+        await interaction.respond(view=SelectMemberToRCD(index=7))
 
     @button(
-        label='Добавить "Некромантов"', style=discord.ButtonStyle.green,
-        custom_id='ДобавитьНекромантов'
+        label='Добавить "Некромантов"', style=discord.ButtonStyle.gray,
+        custom_id='ДобавитьНекромантов', disabled=True
     )
     async def add_necromant_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if len(self.embed.fields) < 9:
-            self.embed.add_field(
+        if len(embed.fields) < 9:
+            embed.add_field(
                 name='Некроманты:',
                 value='',
                 inline=False
             )
-        view = View(
-            SelectMemberToRCD(index=8, embed=self.embed),
-            EmptyButton(index=8, embed=self.embed),
-            timeout=None
-        )
-        await interaction.respond(
-            view=view,
-            ephemeral=True
-        )
+        obj_11: discord.ui.Button = self.children[10]
+        obj_11.style = discord.ButtonStyle.green
+        obj_11.disabled = False
+        await interaction.message.edit(view=self)
+        await interaction.respond(view=SelectMemberToRCD(index=8))
 
     @button(
-        label='Добавить "Бардов"', style=discord.ButtonStyle.green,
-        custom_id='ДобавитьБардов'
+        label='Добавить "Бардов"', style=discord.ButtonStyle.gray,
+        custom_id='ДобавитьБардов', disabled=True
     )
     async def add_bard_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if len(self.embed.fields) < 10:
-            self.embed.add_field(
-                name='Барды:',
-                value='',
-                inline=False
-            )
-        view = View(
-            SelectMemberToRCD(index=9, embed=self.embed),
-            EmptyButton(index=9, embed=self.embed),
-            timeout=None
-        )
-        await interaction.respond(
-            view=view,
-            ephemeral=True
-        )
+        await self.update_view_rcd_list(interaction, 'Барды:', 9)
 
     @button(
-        label='Добавить "Демонологов"', style=discord.ButtonStyle.green,
-        custom_id='ДобавитьДемонологов'
+        label='Добавить "Демонологов"', style=discord.ButtonStyle.gray,
+        custom_id='ДобавитьДемонологов', disabled=True
     )
     async def add_deamon_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if len(self.embed.fields) < 11:
-            self.embed.add_field(
+        if len(embed.fields) < 11:
+            embed.add_field(
                 name='Демоны:',
                 value='',
                 inline=False
             )
-        view = View(
-            SelectMemberToRCD(index=10, embed=self.embed),
-            EmptyButton(index=10, embed=self.embed),
-            timeout=None
-        )
-        await interaction.respond(
-            view=view,
-            ephemeral=True
-        )
+        await interaction.respond(view=SelectMemberToRCD(index=10))
 
-    @button(
-        label='Опубликовать список', style=discord.ButtonStyle.blurple,
-        custom_id='ОпубликоватьСписок', emoji='📨'
+    @select(
+        select_type=discord.ComponentType.channel_select,
+        min_values=1,
+        max_values=1,
+        placeholder='Выбери канал, куда отправить список РЧД',
+        channel_types=[discord.ChannelType.text], disabled=True
     )
-    async def publish_list_callback(
-        self,
-        button: discord.ui.Button,
-        interaction: discord.Interaction
+    async def select_callback(
+        self, select: discord.ui.Select, interaction: discord.Interaction
     ):
-        await self.channel.last_message.delete()
-        await self.channel.send(embed=self.embed)
+        channel: discord.TextChannel = select.values[0]
+        await channel.last_message.delete()
+        await channel.send(embed=embed)
         await interaction.respond(
-            f'Список РЧД опубликован в канале {self.channel.mention}',
+            f'_Список РЧД опубликован в канале {channel.mention}_',
             ephemeral=True,
             delete_after=5
         )
+
+    async def update_view_rcd_list(
+            self,
+            interaction: discord.Interaction,
+            index: int,
+    ) -> None:
+        if len(embed.fields) < index + 1:
+            embed.add_field(
+                name=self.index_class_role.get(index),
+                value='',
+                inline=False
+            )
+        button: discord.ui.Button = self.children[index + 2]
+        button.style = discord.ButtonStyle.green
+        button.disabled = False
+        await interaction.message.edit(view=self)
+        await interaction.respond(view=SelectMemberToRCD(index=index))
 
 
 class StartRCDButton(View):
@@ -518,32 +485,37 @@ class StartRCDButton(View):
     """
     def __init__(
         self,
-        channel: discord.TextChannel,
         timeout: float | None = None
     ):
         super().__init__(timeout=timeout)
-        self.channel = channel
 
-    @button(
-        label='Запустить заявки на РЧД', style=discord.ButtonStyle.green,
-        custom_id='СтартЗаявокРЧД'
+    @select(
+        select_type=discord.ComponentType.channel_select,
+        min_values=1,
+        max_values=1,
+        placeholder='Выбери канал, в котором будет кнопка для заявок РЧД',
+        channel_types=[discord.ChannelType.text]
     )
-    async def start_callback(
-        self,
-        button: discord.ui.Button,
-        interaction: discord.Interaction
+    async def select_callback(
+        self, select: discord.ui.Select, interaction: discord.Interaction
     ):
+        channel: discord.TextChannel = select.values[0]
         try:
-            await self.channel.send(
+            await channel.send(
                 embed=start_rcd_embed(),
                 view=RCDButton(
                     embed=rcd_list_embed()
                 )
             )
             channel_last_message.append(interaction.channel.last_message)
-            await interaction.respond(view=CreateRCDList(channel=self.channel))
+            await interaction.respond(view=CreateRCDList())
+            rcd_channel.append(channel)
+            self.children[0].disabled = True
+            self.children[1].disabled = False
+            self.remove_item(self.children[0])
+            await interaction.message.edit(view=self)
             await interaction.respond(
-                f'_Заявки запущены в канале {self.channel.mention} 👌_',
+                f'_Заявки запущены в канале {channel.mention} 👌_',
                 ephemeral=True,
                 delete_after=3
             )
@@ -556,14 +528,14 @@ class StartRCDButton(View):
 
     @button(
         label='Спросить всех "Ветеранов"', style=discord.ButtonStyle.blurple,
-        emoji='❓', custom_id='СпроситьВетеранов'
+        emoji='❓', custom_id='СпроситьВетеранов', disabled=True
     )
     async def ask_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        url = self.channel.jump_url
+        url = rcd_channel[0].jump_url
         role = discord.utils.get(interaction.guild.roles, name=VETERAN_ROLE)
         veteran_members = [member for member in interaction.guild.members if role in member.roles]
         for veteran_member in veteran_members:
@@ -573,6 +545,7 @@ class StartRCDButton(View):
                 ),
                 delete_after=10800
             )
+        await interaction.message.delete()
         await interaction.respond(
             'Сообщения были отправлены всем ветеранам',
             ephemeral=True,

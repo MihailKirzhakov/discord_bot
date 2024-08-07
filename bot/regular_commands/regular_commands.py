@@ -702,14 +702,7 @@ async def rename_error(
 
 @commands.slash_command()
 @commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
-async def rcd_application(
-    ctx: discord.ApplicationContext,
-    channel: discord.Option(
-        discord.TextChannel,
-        description='Куда отправить кнопку?',
-        name_localizations={'ru':'текстовый_канал'}
-    ), # type: ignore
-) -> None:
+async def rcd_application(ctx: discord.ApplicationContext) -> None:
     """
     Команда для запуска кнопки старта РЧД заявок.
 
@@ -726,7 +719,7 @@ async def rcd_application(
         None
     """
     try:
-        await ctx.respond(view=StartRCDButton(channel=channel))
+        await ctx.respond(view=StartRCDButton())
         await ctx.respond(embed=rcd_list_embed())
         await ctx.respond(
             '_Кнопка запуска РЧД заявок запущена!_',
@@ -735,7 +728,7 @@ async def rcd_application(
         )
         logger.info(
             f'Команда "/rcd_application" вызвана пользователем'
-            f'"{ctx.user.display_name}" в канал "{channel}"!'
+            f'"{ctx.user.display_name}"!'
         )
     except Exception as error:
         logger.error(
