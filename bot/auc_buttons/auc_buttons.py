@@ -86,7 +86,8 @@ class StartAucModal(Modal):
             InputText(
                 style=discord.InputTextStyle.short,
                 label='Укажи дату и время в формате ДД.ММ ЧЧ:ММ',
-                placeholder='ДД.ММ ЧЧ:ММ'
+                placeholder='ДД.ММ ЧЧ:ММ',
+                max_length=11
             )
         )
 

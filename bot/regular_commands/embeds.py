@@ -292,7 +292,7 @@ def start_rcd_embed(date: str) -> discord.Embed:
     return embed
 
 
-def rcd_list_embed() -> discord.Embed:
+def rcd_list_embed(date: str) -> discord.Embed:
     """
     Функция для создания вложения о списке поданных РЧД заявок.
 
@@ -302,7 +302,7 @@ def rcd_list_embed() -> discord.Embed:
             Встраиваемое сообщение.
     """
     embed = discord.Embed(
-        title='_**Список поданных заявок**_',
+        title=f'_**Список поданных заявок {date}**_',
         color=0xfffb00
     )
     embed.add_field(
@@ -319,7 +319,7 @@ def rcd_list_embed() -> discord.Embed:
     return embed
 
 
-def ask_veteran_embed(member: discord.Member, url: str) -> discord.Embed:
+def ask_veteran_embed(member: discord.Member,date: str) -> discord.Embed:
     """
     Функция для создания вложения всем ветеранам.
 
@@ -332,10 +332,9 @@ def ask_veteran_embed(member: discord.Member, url: str) -> discord.Embed:
         title=ATTENTION,
         description=(
             f'_Рассылка от пользователя {member.display_name}\n\n'
-            f'Вопрос - можешь пойти на РЧД на этой неделе?\n'
-            f'Если да, заполни пожалуйста заявку на РЧД 😊!\n'
-            f'{url}_\n\n'
-            f'-# Данное сообщение будет удалено через 3 часа!'
+            f'Вопрос - можешь пойти на РЧД {date}?\n'
+            f'Если да, заполни пожалуйста заявку на РЧД 😊!\n\n'
+            f'-# Сообщение автоматически удалится через 3 часа, если не ответить!'
         ),
         color=0xfffb00
     )

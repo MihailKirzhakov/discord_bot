@@ -1,6 +1,5 @@
 import discord
 import requests
-import random
 
 from variables import (
     ANSWERS_IF_NO_ROLE, LEADER_ROLE, OFICER_ROLE,
@@ -132,26 +131,4 @@ def has_required_role(user: discord.Member):
         discord.utils.get(user.roles, name=LEADER_ROLE) or
         discord.utils.get(user.roles, name=TREASURER_ROLE) or
         discord.utils.get(user.roles, name=OFICER_ROLE)
-    )
-
-
-def answer_if_no_role(
-        interaction: discord.Interaction | discord.ApplicationContext
-):
-    """
-    Ответ на запрос, если у пользователя нет требуемых ролей
-
-    Parameters
-    ----------
-        interaction: discord.Interaction
-            Взаимодействие пользователя.
-
-    Returns
-    -------
-        None
-    """
-    return interaction.respond(
-        f'{ANSWERS_IF_NO_ROLE[str(random.randint(1, 3))]}',
-        ephemeral=True,
-        delete_after=15
     )

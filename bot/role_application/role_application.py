@@ -6,12 +6,12 @@ from loguru import logger
 from variables import (
     ANSWER_IF_DUPLICATE_APP, ANSWER_IF_DUPLICATE_NICK, ANSWER_IF_CHEAT,
     ANSWER_IF_CLICKED_THE_SAME_TIME, LEADER_ROLE, OFICER_ROLE,
-    TREASURER_ROLE, SERGEANT_ROLE, GUEST_ROLE
+    TREASURER_ROLE, SERGEANT_ROLE, GUEST_ROLE, ANSWERS_IF_NO_ROLE
 )
 from .embeds import (
     access_embed, denied_embed, application_embed, start_app_embed
 )
-from .functions import character_lookup, has_required_role, answer_if_no_role
+from .functions import character_lookup, has_required_role
 
 
 app_list: list = []  # Список для контроля дублирующих заявок
@@ -55,7 +55,11 @@ class RoleButton(View):
     ):
         """Кнопка выдачи роли 'Старшина'."""
         if not has_required_role(interaction.user):
-            await answer_if_no_role(interaction)
+            return await interaction.respond(
+                ANSWERS_IF_NO_ROLE,
+                ephemeral=True,
+                delete_after=15
+            )
         role_sergeant = discord.utils.get(
             interaction.guild.roles, name=SERGEANT_ROLE
         )
@@ -108,7 +112,11 @@ class RoleButton(View):
     ):
         """Кнопка отказа в выдаче выдачи роли 'Старшина'."""
         if not has_required_role(interaction.user):
-            await answer_if_no_role(interaction)
+            return await interaction.respond(
+                ANSWERS_IF_NO_ROLE,
+                ephemeral=True,
+                delete_after=15
+            )
         else:
             try:
                 await interaction.response.send_modal(DeniedRoleModal(

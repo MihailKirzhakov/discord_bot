@@ -43,7 +43,8 @@ class StartRemindModal(Modal):
             InputText(
                 style=discord.InputTextStyle.short,
                 label='Укажи дату отправки в формате "ДД.ММ"',
-                placeholder='ДД.ММ'
+                placeholder='ДД.ММ',
+                max_length=5
             )
         )
 
@@ -51,7 +52,8 @@ class StartRemindModal(Modal):
             InputText(
                 style=discord.InputTextStyle.short,
                 label='Укажи время отправки в формате "ЧЧ:ММ"',
-                placeholder='ЧЧ:ММ'
+                placeholder='ЧЧ:ММ',
+                max_length=5
             )
         )
 
