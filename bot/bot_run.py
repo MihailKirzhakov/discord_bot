@@ -10,9 +10,9 @@ from regular_commands.functions import delete_remind_from_db, cursor
 from regular_commands.randomaizer import RandomButton
 from regular_commands.rename_request import RenameButton
 from role_application.role_application import (
-    ApplicationButton, has_required_role, answer_if_no_role
+    ApplicationButton, has_required_role
 )
-from variables import APPLICATION_CHANNEL_ID
+from variables import APPLICATION_CHANNEL_ID, ANSWERS_IF_NO_ROLE
 
 load_dotenv()
 
@@ -65,7 +65,7 @@ async def on_ready() -> None:
 
 
 @bot.command()
-async def reload_extentions(ctx: discord.ApplicationContext) -> None:
+async def reload_extentions(ctx: discord.ApplicationContext):
     """
     Команда для перезагрузки расширений.
 
@@ -78,22 +78,21 @@ async def reload_extentions(ctx: discord.ApplicationContext) -> None:
     -------
         None
     """
-    if has_required_role(ctx.user):
-        bot.reload_extension('regular_commands.regular_commands')
-        bot.reload_extension('auc_buttons.auc_buttons')
-        bot.reload_extension('role_application.role_application')
-        await ctx.respond(
-            '_Расширения перезагружены!_',
+    if not has_required_role(ctx.user):
+        return await ctx.respond(
+            ANSWERS_IF_NO_ROLE,
             ephemeral=True,
-            delete_after=10
+            delete_after=15
         )
-        logger.info('Расширения перезагружены')
-    else:
-        await answer_if_no_role(ctx)
-        logger.error(
-            f'_{ctx.user.display_name} попытался '
-            'использовать команду /reload_extentions!_'
-        )
+    bot.reload_extension('regular_commands.regular_commands')
+    bot.reload_extension('auc_buttons.auc_buttons')
+    bot.reload_extension('role_application.role_application')
+    await ctx.respond(
+        '_Расширения перезагружены!_',
+        ephemeral=True,
+        delete_after=10
+    )
+    logger.info('Расширения перезагружены')
 
 
 bot.load_extension('regular_commands.regular_commands')

@@ -17,6 +17,7 @@ member_list: list = []
 rcd_date_list: dict[str, str] = {}
 embed: dict[str, discord.Embed] = {}
 last_message_to_finish: dict[str, discord.Message] = {}
+rcd_application_channel: dict[str, discord.TextChannel] = {}
 
 
 class RcdDate(Modal):
@@ -284,7 +285,7 @@ class SelectMemberToRCD(View):
         value: str
     ) -> None:
         embed.get('final_rcd_list_embed').fields[self.index].value = value
-        await last_message_to_finish.get('start_RCD_button_message').edit(embed=embed.get('final_rcd_list_embed'))
+        await last_message_to_finish.get('final_rcd_list_message').edit(embed=embed.get('final_rcd_list_embed'))
         await interaction.message.delete()
         await interaction.respond(
             f'Добавлено {"✅" if value else "⭕"}',
@@ -341,7 +342,7 @@ class CreateRCDList(View):
         last_message_to_finish['create_RCD_list_buttons'] = interaction.message
         obj_1: discord.ui.Button = self.children[0]
         obj_2: discord.ui.Button = self.children[1]
-        obj_14: discord.ui.Select = self.children[13]
+        obj_13: discord.ui.Button = self.children[12]
 
         obj_1.label = '⬇️ Список создан ниже ⬇️'
         obj_1.style = discord.ButtonStyle.gray
@@ -350,7 +351,8 @@ class CreateRCDList(View):
         obj_2.style = discord.ButtonStyle.green
         obj_2.disabled = False
 
-        obj_14.disabled = False
+        obj_13.style = discord.ButtonStyle.blurple
+        obj_13.disabled = False
         await interaction.message.edit(view=self)
         await interaction.respond(embed=embed.get('final_rcd_list_embed'))
 
@@ -363,7 +365,7 @@ class CreateRCDList(View):
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if not last_message_to_finish.get('start_RCD_button_message'):
+        if not last_message_to_finish.get('final_rcd_list_message'):
             last_message_to_finish['final_rcd_list_message'] = interaction.channel.last_message
         await self.update_view_rcd_list(interaction, 0)
 
@@ -490,6 +492,36 @@ class CreateRCDList(View):
         await interaction.respond(view=SelectMemberToRCD(index=10))
 
     @button(
+        label='Опубликовать список 📨',
+        style=discord.ButtonStyle.gray,
+        custom_id='ОпубликоватьСписок',
+        disabled=True
+    )
+    async def select_callback(
+        self, button: discord.ui.Select, interaction: discord.Interaction
+    ):
+        if not has_required_role(interaction.user):
+            return await interaction.respond(
+                ANSWERS_IF_NO_ROLE,
+                ephemeral=True,
+                delete_after=15
+            )
+        channel: discord.TextChannel = rcd_application_channel.get('rcd_aplication_channel')
+        if 'Список РЧД' in channel.last_message.embeds[0].title:
+            await channel.last_message.edit(embed=embed.get('final_rcd_list_embed'))
+        else:
+            await channel.last_message.delete()
+            await channel.send(embed=embed.get('final_rcd_list_embed'))
+        button: discord.ui.Button = self.children[13]
+        button.disabled = False
+        await interaction.message.edit(view=self)
+        await interaction.respond(
+            f'_Список РЧД опубликован в канале {channel.mention}_',
+            ephemeral=True,
+            delete_after=2
+        )
+
+    @button(
         label='Завершить работу со списком РЧД', style=discord.ButtonStyle.red,
         custom_id='ЗавершитьРЧДСписок', disabled=True
     )
@@ -517,37 +549,6 @@ class CreateRCDList(View):
             ephemeral=True,
             delete_after=2
 
-        )
-
-    @select(
-        select_type=discord.ComponentType.channel_select,
-        min_values=1,
-        max_values=1,
-        placeholder='Выбери канал, куда отправить список РЧД',
-        channel_types=[discord.ChannelType.text], disabled=True
-    )
-    async def select_callback(
-        self, select: discord.ui.Select, interaction: discord.Interaction
-    ):
-        if not has_required_role(interaction.user):
-            return await interaction.respond(
-                ANSWERS_IF_NO_ROLE,
-                ephemeral=True,
-                delete_after=15
-            )
-        channel: discord.TextChannel = select.values[0]
-        if 'Список РЧД' in channel.last_message.embeds[0].title:
-            await channel.last_message.edit(embed=embed.get('final_rcd_list_embed'))
-        else:
-            await channel.last_message.delete()
-            await channel.send(embed=embed.get('final_rcd_list_embed'))
-        button: discord.ui.Button = self.children[12]
-        button.disabled = False
-        await interaction.message.edit(view=self)
-        await interaction.respond(
-            f'_Список РЧД опубликован в канале {channel.mention}_',
-            ephemeral=True,
-            delete_after=2
         )
 
     async def update_view_rcd_list(
@@ -607,6 +608,7 @@ class StartRCDButton(View):
             )
         last_message_to_finish['start_RCD_button_message'] = interaction.message
         channel: discord.TextChannel = select.values[0]
+        rcd_application_channel['rcd_aplication_channel'] = channel
         try:
             await channel.send(
                 embed=start_rcd_embed(rcd_date_list.get('convert_rcd_date')),
