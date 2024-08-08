@@ -247,7 +247,7 @@ class SelectMemberToRCD(View):
     @select(
         select_type=discord.ComponentType.user_select,
         min_values=1,
-        max_values=4,
+        max_values=3,
         placeholder='Выбери игроков...'
     )
     async def select_callback(
