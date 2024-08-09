@@ -609,13 +609,16 @@ class StartRCDButton(View):
         except Exception as error:
             logger.error(f'При нажатии на кнопку StartRCDButton возникла ошибка {error}')
 
-    @button(
-        label='Спросить всех "Ветеранов"', style=discord.ButtonStyle.blurple,
-        emoji='❓', custom_id='СпроситьВетеранов', disabled=True
+    @select(
+        select_type=discord.ComponentType.user_select,
+        min_values=1,
+        max_values=24,
+        placeholder='Выбери игроков, которых спросить об РЧД',
+        disabled=True
     )
     async def ask_callback(
         self,
-        button: discord.ui.Button,
+        select: discord.ui.Select,
         interaction: discord.Interaction
     ):
         if not has_required_role(interaction.user):
@@ -624,10 +627,9 @@ class StartRCDButton(View):
                 ephemeral=True,
                 delete_after=5
             )
-        role = discord.utils.get(interaction.guild.roles, name=VETERAN_ROLE)
-        veteran_members = [member for member in interaction.guild.members if role in member.roles]
-        for veteran_member in veteran_members:
-            await veteran_member.send(
+        ask_users: list[discord.Member] = [user for user in select.values]
+        for user in ask_users:
+            await user.send(
                 embed=ask_veteran_embed(
                     member=interaction.user, date=rcd_date_list.get('convert_rcd_date')
                 ),
