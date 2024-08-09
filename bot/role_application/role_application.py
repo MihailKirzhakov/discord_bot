@@ -58,7 +58,7 @@ class RoleButton(View):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         role_sergeant = discord.utils.get(
             interaction.guild.roles, name=SERGEANT_ROLE
@@ -115,7 +115,7 @@ class RoleButton(View):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         else:
             try:

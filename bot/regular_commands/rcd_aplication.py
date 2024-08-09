@@ -259,7 +259,7 @@ class SelectMemberToRCD(View):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         await self.update_embed(
             interaction,', '.join(user.mention for user in select.values)
@@ -275,7 +275,7 @@ class SelectMemberToRCD(View):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         await self.update_embed(interaction, '')
 
@@ -337,7 +337,7 @@ class CreateRCDList(View):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         last_message_to_finish['create_RCD_list_buttons'] = interaction.message
         obj_1: discord.ui.Button = self.children[0]
@@ -490,7 +490,7 @@ class CreateRCDList(View):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         channel: discord.TextChannel = rcd_application_channel.get('rcd_aplication_channel')
         if 'Список РЧД' in channel.last_message.embeds[0].title:
@@ -520,7 +520,7 @@ class CreateRCDList(View):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         await interaction.channel.delete_messages(
             [message for key, message in last_message_to_finish.items() if key != 'start_RCD_button_message']
@@ -548,7 +548,7 @@ class CreateRCDList(View):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         await interaction.respond(view=SelectMemberToRCD(index=index))
 
@@ -582,7 +582,7 @@ class StartRCDButton(View):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         last_message_to_finish['start_RCD_button_message'] = interaction.message
         channel: discord.TextChannel = select.values[0]
@@ -622,7 +622,7 @@ class StartRCDButton(View):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         role = discord.utils.get(interaction.guild.roles, name=VETERAN_ROLE)
         veteran_members = [member for member in interaction.guild.members if role in member.roles]

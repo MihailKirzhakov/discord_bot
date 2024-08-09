@@ -757,7 +757,7 @@ async def rcd_application_error(
 
 
 @commands.slash_command()
-@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
+@commands.has_any_role(LEADER_ROLE)
 async def check_roles(
     ctx: discord.ApplicationContext,
     message_id: discord.Option(
