@@ -351,9 +351,28 @@ def final_rcd_list_embed(date: str) -> discord.Embed:
         embed: discord.Embed
             Встраиваемое сообщение.
     """
+    index_class_role = {
+        0: 'Воины:',
+        1: 'Паладины:',
+        2: 'Инженеры:',
+        3: 'Жрецы:',
+        4: 'Шаманы:',
+        5: 'Мистики:',
+        6: 'Лучники:',
+        7: 'Маги:',
+        8: 'Некроманты:',
+        9: 'Барды:',
+        10: 'Демоны:'
+    }
     embed = discord.Embed(
         title=f'_**Список РЧД {date}**_',
         color=0xfffb00
     )
+    for role in index_class_role.values():
+        embed.add_field(
+            name=role,
+            value='',
+            inline=False
+        )
     embed.set_thumbnail(url=RCD_LIST_IMAGE_URL)
     return embed

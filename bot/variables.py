@@ -46,7 +46,7 @@ ANSWER_IF_DUPLICATE_NICK = (
     f'обратись к {LEADER_NICKNAME} в ЛС_!'
 )
 
-ANSWERS_IF_NO_ROLE = 'У тебя нет доступа ❌'
+ANSWERS_IF_NO_ROLE = '_У тебя нет доступа ❌_'
 
 ATTENTION = '【В】【Н】【И】【М】【А】【Н】【И】【Е】'
 

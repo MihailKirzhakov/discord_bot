@@ -265,7 +265,7 @@ class SelectMemberToRCD(View):
             interaction,', '.join(user.mention for user in select.values)
         )
 
-    @button(label='Пусто', style=discord.ButtonStyle.gray, custom_id='Пусто')
+    @button(label='Очистить', style=discord.ButtonStyle.gray, custom_id='Очистить')
     async def button_callback(
         self,
         button: discord.ui.Button,
@@ -277,7 +277,7 @@ class SelectMemberToRCD(View):
                 ephemeral=True,
                 delete_after=15
             )
-        await self.update_embed(interaction, 'Пусто')
+        await self.update_embed(interaction, '')
 
     async def update_embed(
         self,
@@ -288,7 +288,7 @@ class SelectMemberToRCD(View):
         await last_message_to_finish.get('final_rcd_list_message').edit(embed=embed.get('final_rcd_list_embed'))
         await interaction.message.delete()
         await interaction.respond(
-            f'Добавлено {"✅" if value else "⭕"}',
+            f'_Выполнено! ✅_',
             ephemeral=True,
             delete_after=1
         )
@@ -314,8 +314,8 @@ class CreateRCDList(View):
         6: 'Лучники:',
         7: 'Маги:',
         8: 'Некроманты:',
-        9: 'Барды',
-        10: 'Демоны'
+        9: 'Барды:',
+        10: 'Демоны:'
     }
 
     def __init__(
@@ -341,15 +341,15 @@ class CreateRCDList(View):
             )
         last_message_to_finish['create_RCD_list_buttons'] = interaction.message
         obj_1: discord.ui.Button = self.children[0]
-        obj_2: discord.ui.Button = self.children[1]
         obj_13: discord.ui.Button = self.children[12]
 
         obj_1.label = '⬇️ Список создан ниже ⬇️'
         obj_1.style = discord.ButtonStyle.gray
         obj_1.disabled = True
 
-        obj_2.style = discord.ButtonStyle.green
-        obj_2.disabled = False
+        for button in self.children[1:12]:
+            button.style = discord.ButtonStyle.green
+            button.disabled = False
 
         obj_13.style = discord.ButtonStyle.blurple
         obj_13.disabled = False
@@ -357,139 +357,125 @@ class CreateRCDList(View):
         await interaction.respond(embed=embed.get('final_rcd_list_embed'))
 
     @button(
-        label='Добавить "Воинов"', style=discord.ButtonStyle.gray,
-        custom_id='ДобавитьВоинов', disabled=True
+        label='Редактировать "Воинов"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьВоинов', disabled=True
     )
     async def add_warior_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if not last_message_to_finish.get('final_rcd_list_message'):
-            last_message_to_finish['final_rcd_list_message'] = interaction.channel.last_message
-        await self.update_view_rcd_list(interaction, 0)
+        await self.check_interaction_permission(interaction, 0)
 
     @button(
-        label='Добавить "Паладинов"', style=discord.ButtonStyle.gray,
-        custom_id='ДобавитьПаладинов', disabled=True
+        label='Редактировать "Паладинов"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьПаладинов', disabled=True
     )
     async def add_paladin_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await self.update_view_rcd_list(interaction, 1)
+        await self.check_interaction_permission(interaction, 1)
 
     @button(
-        label='Добавить "Инженеров"', style=discord.ButtonStyle.gray,
-        custom_id='ДобавитьИнженеров', disabled=True
+        label='Редактировать "Инженеров"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьИнженеров', disabled=True
     )
     async def add_ingeneer_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await self.update_view_rcd_list(interaction, 2)
+        await self.check_interaction_permission(interaction, 2)
 
     @button(
-        label='Добавить "Жрецов"', style=discord.ButtonStyle.gray,
-        custom_id='ДобавитьЖрецов', disabled=True
+        label='Редактировать "Жрецов"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьЖрецов', disabled=True
     )
     async def add_priest_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await self.update_view_rcd_list(interaction, 3)
+        await self.check_interaction_permission(interaction, 3)
 
     @button(
-        label='Добавить "Друидов"', style=discord.ButtonStyle.gray,
-        custom_id='ДобавитьДруидов', disabled=True
+        label='Редактировать "Друидов"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьДруидов', disabled=True
     )
     async def add_druid_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await self.update_view_rcd_list(interaction, 4)
+        await self.check_interaction_permission(interaction, 4)
 
     @button(
-        label='Добавить "Мистиков"', style=discord.ButtonStyle.gray,
-        custom_id='ДобавитьМистиков', disabled=True
+        label='Редактировать "Мистиков"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьМистиков', disabled=True
     )
     async def add_mistic_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await self.update_view_rcd_list(interaction, 5)
+        await self.check_interaction_permission(interaction, 5)
 
     @button(
-        label='Добавить "Лучников"', style=discord.ButtonStyle.gray,
-        custom_id='ДобавитьЛучников', disabled=True
+        label='Редактировать "Лучников"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьЛучников', disabled=True
     )
     async def add_stalker_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await self.update_view_rcd_list(interaction, 6)
+        await self.check_interaction_permission(interaction, 6)
 
     @button(
-        label='Добавить "Магов"', style=discord.ButtonStyle.gray,
-        custom_id='ДобавитьМагов', disabled=True
+        label='Редактировать "Магов"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьМагов', disabled=True
     )
     async def add_mage_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await self.update_view_rcd_list(interaction, 7)
+        await self.check_interaction_permission(interaction, 7)
 
     @button(
-        label='Добавить "Некромантов"', style=discord.ButtonStyle.gray,
-        custom_id='ДобавитьНекромантов', disabled=True
+        label='Редактировать "Некромантов"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьНекромантов', disabled=True
     )
     async def add_necromant_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await self.update_view_rcd_list(interaction, 8)
+        await self.check_interaction_permission(interaction, 8)
 
     @button(
-        label='Добавить "Бардов"', style=discord.ButtonStyle.gray,
-        custom_id='ДобавитьБардов', disabled=True
+        label='Редактировать "Бардов"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьБардов', disabled=True
     )
     async def add_bard_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await self.update_view_rcd_list(interaction, 9)
+        await self.check_interaction_permission(interaction, 9)
 
     @button(
-        label='Добавить "Демонологов"', style=discord.ButtonStyle.gray,
-        custom_id='ДобавитьДемонологов', disabled=True
+        label='Редактировать "Демонологов"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьДемонологов', disabled=True
     )
     async def add_deamon_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        if not has_required_role(interaction.user):
-            return await interaction.respond(
-                ANSWERS_IF_NO_ROLE,
-                ephemeral=True,
-                delete_after=15
-            )
-        if len(embed.get('final_rcd_list_embed').fields) < 11:
-            embed.get('final_rcd_list_embed').add_field(
-                name='Демоны:',
-                value='',
-                inline=False
-            )
-        await interaction.respond(view=SelectMemberToRCD(index=10))
+        await self.check_interaction_permission(interaction, 10)
 
     @button(
         label='Опубликовать список 📨',
@@ -551,27 +537,19 @@ class CreateRCDList(View):
 
         )
 
-    async def update_view_rcd_list(
+    async def check_interaction_permission(
             self,
             interaction: discord.Interaction,
             index: int,
     ):
+        if not last_message_to_finish.get('final_rcd_list_message'):
+            last_message_to_finish['final_rcd_list_message'] = interaction.channel.last_message
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
                 delete_after=15
             )
-        if len(embed.get('final_rcd_list_embed').fields) < index + 1:
-            embed.get('final_rcd_list_embed').add_field(
-                name=self.index_class_role.get(index),
-                value='',
-                inline=False
-            )
-        button: discord.ui.Button = self.children[index + 2]
-        button.style = discord.ButtonStyle.green
-        button.disabled = False
-        await interaction.message.edit(view=self)
         await interaction.respond(view=SelectMemberToRCD(index=index))
 
 
