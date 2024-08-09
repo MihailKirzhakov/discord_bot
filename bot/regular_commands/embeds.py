@@ -376,3 +376,21 @@ def final_rcd_list_embed(date: str) -> discord.Embed:
         )
     embed.set_thumbnail(url=RCD_LIST_IMAGE_URL)
     return embed
+
+
+def removed_role_list_embed() -> discord.Embed:
+    """
+    Функция для создания вложения почищеных ролей.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
+    """
+    embed = discord.Embed(
+        title=ATTENTION,
+        description='_**Список пользователей, у которых забрали роль старшина:**_\n\n',
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
+    return embed

@@ -9,7 +9,7 @@ from loguru import logger
 from .functions import add_remind_to_db, delete_remind_from_db
 from .embeds import (
     technical_works_embed, attention_embed, remind_embed,
-    remind_send_embed
+    remind_send_embed, removed_role_list_embed
 )
 from .randomaizer import RandomButton
 from .rename_request import RenameButton
@@ -19,7 +19,7 @@ from variables import (
     CLOSED_JMURENSKAYA, CLOSED_ORTHODOX, CLOSED_TEAM_TAYP,
     CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT,
     BUHLOID_ID, IDOL_ID, TAYP_ID, KVAPA_ID, GOOSE_ID,
-    SERGEANT_ROLE, VETERAN_ROLE
+    SERGEANT_ROLE, VETERAN_ROLE, GUEST_ROLE
 )
 
 
@@ -756,6 +756,88 @@ async def rcd_application_error(
     await command_error(ctx, error, "rcd_application")
 
 
+@commands.slash_command()
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
+async def check_roles(
+    ctx: discord.ApplicationContext,
+    message_id: discord.Option(
+        str,
+        description='ID сообщения, в котором есть файл',
+        name_localizations={'ru':'id_сообщения'}
+    )  # type: ignore
+) -> None:
+    """
+    Команда для запуска кнопки старта РЧД заявок.
+
+    Parametrs:
+    ----------
+        ctx: discord.ApplicationContext
+            Контекст команды.
+
+        message_id: str
+            ID сообщения, в котором лежит файл с гильдейской информацией.
+
+    Returns:
+    --------
+        None
+    """
+    guild_member_list: list[str] = []
+    removed_role_members: list[str] = []
+    embed: discord.Embed = removed_role_list_embed()
+    try:
+        checking_message: discord.Message = await ctx.channel.fetch_message(int(message_id))
+        attachment = checking_message.attachments[0]
+        lines = (await attachment.read()).decode('windows-1251').splitlines()
+        for line in lines:
+            parts = line.split(';')
+            if len(parts) > 2:
+                guild_member_list.append(parts[2])
+        sergaunt_role: discord.Role = discord.utils.get(ctx.guild.roles, name=SERGEANT_ROLE)
+        guest_role: discord.Role = discord.utils.get(ctx.guild.roles, name=GUEST_ROLE)
+        for member in sergaunt_role.members:
+            if member.display_name not in guild_member_list:
+                removed_role_members.append(member.display_name)
+                await member.remove_roles(sergaunt_role)
+                await member.add_roles(guest_role)
+                logger.info(
+                    f'У пользователя {member.display_name} забрали старшину!'
+                )
+        for member_display_name in removed_role_members:
+            embed.description += f'_{member_display_name}\n_'
+        await ctx.respond(
+            embed=embed,
+            ephemeral=True
+        )
+    except Exception as error:
+        logger.error(
+            f'Ошибка при вызове команды "/check_roles"! '
+            f'"{error}"'
+        )
+
+
+@rcd_application.error
+async def check_roles_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+) -> None:
+    """
+    Обработчик ошибок для команды check_roles.
+
+    Parametrs:
+    ----------
+        ctx: discord.ApplicationContext
+            Контекст команды.
+
+        error: Exception
+            Исключение, возникшее при выполнении команды.
+
+    Returns:
+    --------
+        None
+    """
+    await command_error(ctx, error, "check_roles")
+
+
 def setup(bot: discord.Bot):
     bot.add_application_command(technical_works)
     bot.add_application_command(attention)
@@ -765,3 +847,4 @@ def setup(bot: discord.Bot):
     bot.add_application_command(give_role_to)
     bot.add_application_command(rename)
     bot.add_application_command(rcd_application)
+    bot.add_application_command(check_roles)
