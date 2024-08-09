@@ -794,14 +794,15 @@ async def check_roles(
                 guild_member_list.append(parts[2])
         sergaunt_role: discord.Role = discord.utils.get(ctx.guild.roles, name=SERGEANT_ROLE)
         guest_role: discord.Role = discord.utils.get(ctx.guild.roles, name=GUEST_ROLE)
-        for member in sergaunt_role.members:
-            if member.display_name not in guild_member_list:
-                removed_role_members.append(member.display_name)
-                await member.remove_roles(sergaunt_role)
-                await member.add_roles(guest_role)
-                logger.info(
-                    f'У пользователя {member.display_name} забрали старшину!'
-                )
+        for member in ctx.guild.members:
+            if sergaunt_role in member.roles:
+                if member.display_name not in guild_member_list:
+                    removed_role_members.append(member.display_name)
+                    await member.remove_roles(sergaunt_role)
+                    await member.add_roles(guest_role)
+                    logger.info(
+                        f'У пользователя {member.display_name} забрали старшину!'
+                    )
         for member_display_name in removed_role_members:
             embed.description += f'_{member_display_name}\n_'
         await ctx.respond(
