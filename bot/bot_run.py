@@ -21,9 +21,11 @@ logger.add(
     sink='discord_bot.log', level=10, rotation='5 MB', mode='a'
 )
 
-bot = discord.Bot()
+intents = discord.Intents.all()
+
+bot = discord.Bot(intents=intents)
 if os.getenv('DEBUG_SERVER_ID'):
-    bot = discord.Bot(debug_guilds=[int(os.getenv('DEBUG_SERVER_ID'))])
+    bot = discord.Bot(intents=intents, debug_guilds=[int(os.getenv('DEBUG_SERVER_ID'))])
 
 
 @bot.event

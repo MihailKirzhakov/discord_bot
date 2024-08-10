@@ -394,3 +394,20 @@ def removed_role_list_embed() -> discord.Embed:
     )
     embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
     return embed
+
+
+def publish_rcd_embed(date: str) -> discord.Embed:
+    """
+    Функция для создания вложения о старте РЧД заявок.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
+    """
+    embed = discord.Embed(
+        title=f'_**Список РЧД {date}**_',
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=CROSSED_SWORDS_IMAGE_URL)
+    return embed

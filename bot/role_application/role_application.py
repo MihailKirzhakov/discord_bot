@@ -156,8 +156,8 @@ class DeniedRoleModal(Modal):
     def __init__(
         self,
         nickname: str,
-        user: discord.Member | discord.User,
-        view: discord.ui.Button,
+        user: discord.Member,
+        view: discord.ui.View,
         embed: discord.Embed,
         *args,
         **kwargs

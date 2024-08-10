@@ -9,11 +9,12 @@ from loguru import logger
 from .functions import add_remind_to_db, delete_remind_from_db
 from .embeds import (
     technical_works_embed, attention_embed, remind_embed,
-    remind_send_embed, removed_role_list_embed
+    remind_send_embed
 )
 from .randomaizer import RandomButton
 from .rename_request import RenameButton
 from .rcd_aplication import RcdDate
+from .check_roles import CheckRoleButton
 from variables import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
     CLOSED_JMURENSKAYA, CLOSED_ORTHODOX, CLOSED_TEAM_TAYP,
@@ -782,38 +783,28 @@ async def check_roles(
         None
     """
     guild_member_list: list[str] = []
-    removed_role_members: list[str] = []
-    embed: discord.Embed = removed_role_list_embed()
     try:
+        members: list[discord.Member] = await ctx.guild.fetch_members(limit=None).flatten()
         checking_message: discord.Message = await ctx.channel.fetch_message(int(message_id))
         attachment = checking_message.attachments[0]
         lines = (await attachment.read()).decode('windows-1251').splitlines()
+        sergaunt_role: discord.Role = discord.utils.get(ctx.guild.roles, name=SERGEANT_ROLE)
+        guest_role: discord.Role = discord.utils.get(ctx.guild.roles, name=GUEST_ROLE)
         for line in lines:
             parts = line.split(';')
             if len(parts) > 2:
                 guild_member_list.append(parts[2])
-        sergaunt_role: discord.Role = discord.utils.get(ctx.guild.roles, name=SERGEANT_ROLE)
-        guest_role: discord.Role = discord.utils.get(ctx.guild.roles, name=GUEST_ROLE)
-        for member in ctx.guild.members:
-            if sergaunt_role in member.roles:
-                if member.display_name not in guild_member_list:
-                    removed_role_members.append(member.display_name)
-                    await member.remove_roles(sergaunt_role)
-                    await member.add_roles(guest_role)
-                    logger.info(
-                        f'У пользователя {member.display_name} забрали старшину!'
-                    )
-        for member_display_name in removed_role_members:
-            embed.description += f'_{member_display_name}\n_'
         await ctx.respond(
-            embed=embed,
+            view=CheckRoleButton(
+                members=members,
+                sergaunt_role=sergaunt_role,
+                guest_role=guest_role,
+                guild_member_list=guild_member_list
+            ),
             ephemeral=True
         )
     except Exception as error:
-        logger.error(
-            f'Ошибка при вызове команды "/check_roles"! '
-            f'"{error}"'
-        )
+        logger.error(f'Ошибка при вызове команды "/check_roles"! "{error}"')
 
 
 @rcd_application.error

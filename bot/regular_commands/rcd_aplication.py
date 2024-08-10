@@ -7,7 +7,7 @@ from loguru import logger
 
 from .embeds import (
     start_rcd_embed, rcd_list_embed, ask_veteran_embed,
-    final_rcd_list_embed
+    final_rcd_list_embed, publish_rcd_embed
 )
 from role_application.functions import has_required_role
 from variables import VETERAN_ROLE, ANSWERS_IF_NO_ROLE
@@ -18,6 +18,7 @@ rcd_date_list: dict[str, str] = {}
 embed: dict[str, discord.Embed] = {}
 last_message_to_finish: dict[str, discord.Message] = {}
 rcd_application_channel: dict[str, discord.TextChannel] = {}
+publish_embed: dict[str, discord.Embed] = {}
 
 
 class RcdDate(Modal):
@@ -493,11 +494,16 @@ class CreateRCDList(View):
                 delete_after=5
             )
         channel: discord.TextChannel = rcd_application_channel.get('rcd_aplication_channel')
+        f_embed: discord.Embed = embed.get('final_rcd_list_embed')
+        publish_embed: discord.Embed = publish_rcd_embed(date=rcd_date_list.get('convert_rcd_date'))
+        for field in [field for field in f_embed.fields if field.value != '']:
+            name, value, inline = field.name, field.value, field.inline
+            publish_embed.add_field(name=name, value=value, inline=inline)
         if 'Список РЧД' in channel.last_message.embeds[0].title:
-            await channel.last_message.edit(embed=embed.get('final_rcd_list_embed'))
+            await channel.last_message.edit(embed=publish_embed)
         else:
             await channel.last_message.delete()
-            await channel.send(embed=embed.get('final_rcd_list_embed'))
+            await channel.send(embed=publish_embed)
         button: discord.ui.Button = self.children[13]
         button.disabled = False
         await interaction.message.edit(view=self)
