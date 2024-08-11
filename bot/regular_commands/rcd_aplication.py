@@ -597,7 +597,7 @@ class StartRCDButton(View):
             self.children[0].disabled = True
             self.children[1].disabled = False
             self.remove_item(self.children[0])
-            await interaction.response.edit_message(view=self)
+            await interaction.message.edit(view=self)
             logger.info(
                 f'Пользователь {interaction.user.display_name} запустил '
                 f'заявки на РЧД'
