@@ -801,7 +801,7 @@ async def check_roles(
                 removed_role_members.append(member.display_name)
                 await member.remove_roles(sergaunt_role)
                 await member.add_roles(guest_role)
-            logger.info(f'У пользователя {member.display_name} забрали старшину!')
+                logger.info(f'У пользователя {member.display_name} забрали старшину!')
         embed.description += '\n'.join(f'_{member}_' for member in removed_role_members)
         await ctx.respond(embed=embed)
     except Exception as error:
