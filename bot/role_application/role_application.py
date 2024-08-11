@@ -14,7 +14,7 @@ from .embeds import (
 from .functions import character_lookup, has_required_role
 
 
-app_list: list = []  # Список для контроля дублирующих заявок
+app_list: list[str] = []  # Список для контроля дублирующих заявок
 
 
 class RoleButton(View):
@@ -73,27 +73,27 @@ class RoleButton(View):
                     ephemeral=True,
                     delete_after=15
                 )
-            else:
-                await self.user.edit(nick=self.nickname)
-                await self.user.add_roles(role_sergeant)
-                await self.user.remove_roles(role_guest)
-                self.embed.add_field(
-                    name='_Результат рассмотрения_ ✔',
-                    value=f'_{interaction.user.mention} выдал роль!_',
-                    inline=False
-                )
-                self.disable_all_items()
-                self.clear_items()
-                await interaction.response.edit_message(
-                    embed=self.embed,
-                    view=self
-                )
-                await self.user.send(embed=access_embed())
-                app_list.remove(self.nickname)
-                logger.info(
-                    f'Пользователь {interaction.user.display_name} '
-                    f'выдал роль пользователю "{self.nickname}"!'
-                )
+            await interaction.response.defer()
+            await self.user.edit(nick=self.nickname)
+            await self.user.add_roles(role_sergeant)
+            await self.user.remove_roles(role_guest)
+            self.embed.add_field(
+                name='_Результат рассмотрения_ ✅',
+                value=f'_{interaction.user.mention} выдал роль!_',
+                inline=False
+            )
+            self.disable_all_items()
+            self.clear_items()
+            await interaction.message.edit(
+                embed=self.embed,
+                view=self
+            )
+            await self.user.send(embed=access_embed())
+            app_list.remove(self.nickname)
+            logger.info(
+                f'Пользователь {interaction.user.display_name} '
+                f'выдал роль пользователю "{self.nickname}"!'
+            )
         except Exception as error:
             logger.error(
                     f'При попытке выдать роль '
@@ -117,19 +117,18 @@ class RoleButton(View):
                 ephemeral=True,
                 delete_after=5
             )
-        else:
-            try:
-                await interaction.response.send_modal(DeniedRoleModal(
-                    nickname=self.nickname,
-                    view=self,
-                    user=self.user,
-                    embed=self.embed
-                ))
-            except Exception as error:
-                logger.error(
-                    f'При попытке вызвать модальное окно нажатием на кнопку '
-                    f'"{button.label}" возникла ошибка "{error}"'
-                )
+        try:
+            await interaction.response.send_modal(DeniedRoleModal(
+                nickname=self.nickname,
+                view=self,
+                user=self.user,
+                embed=self.embed
+            ))
+        except Exception as error:
+            logger.error(
+                f'При попытке вызвать модальное окно нажатием на кнопку '
+                f'"{button.label}" возникла ошибка "{error}"'
+            )
 
 
 class DeniedRoleModal(Modal):
@@ -182,6 +181,13 @@ class DeniedRoleModal(Modal):
             )
 
     async def callback(self, interaction: discord.Interaction):
+        if self.nickname not in app_list:
+            await interaction.respond(
+                ANSWER_IF_CLICKED_THE_SAME_TIME,
+                ephemeral=True,
+                delete_after=15
+            )
+        await interaction.response.defer()
         user = interaction.user
         value = self.children[0].value
         self.embed.add_field(
@@ -189,28 +195,21 @@ class DeniedRoleModal(Modal):
                 value=f'_{interaction.user.mention} отказал в доступе!_',
                 inline=False
             )
-        if self.nickname not in app_list:
-            await interaction.respond(
-                ANSWER_IF_CLICKED_THE_SAME_TIME,
-                ephemeral=True,
-                delete_after=15
+        try:
+            app_list.remove(self.nickname)
+            await self.user.send(embed=denied_embed(user, value))
+            self.view.disable_all_items()
+            self.view.clear_items()
+            await interaction.message.edit(embed=self.embed, view=self.view)
+            logger.info(
+                f'Пользователь {interaction.user.display_name} отказал в доступе '
+                f'пользователю "{self.nickname}"!'
             )
-        else:
-            try:
-                app_list.remove(self.nickname)
-                await self.user.send(embed=denied_embed(user, value))
-                self.view.disable_all_items()
-                self.view.clear_items()
-                await interaction.response.edit_message(embed=self.embed, view=self.view)
-                logger.info(
-                    f'Пользователь {interaction.user.display_name} отказал в доступе '
-                    f'пользователю "{self.nickname}"!'
-                )
-            except Exception as error:
-                logger.error(
-                    f'При попытке отправить форму после нажатия на кнопку в '
-                    f'модальном окне "Отказ в заявке" возникла ошибка "{error}"'
-                )
+        except Exception as error:
+            logger.error(
+                f'При попытке отправить форму после нажатия на кнопку в '
+                f'модальном окне "Отказ в заявке" возникла ошибка "{error}"'
+            )
 
 
 class RoleApplication(Modal):
@@ -238,6 +237,7 @@ class RoleApplication(Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
         nickname: str = self.children[0].value
         user = interaction.user
         member = discord.utils.get(interaction.guild.members, id=user.id)

@@ -433,6 +433,7 @@ async def clear_all(
         None
     """
     try:
+        await ctx.defer(ephemeral=True)
         await channel.purge(
             limit=limit,
             bulk=True
@@ -443,7 +444,6 @@ async def clear_all(
         )
         await ctx.respond(
             f'_Сообщения удалены в канале {channel.mention}!_',
-            ephemeral=True,
             delete_after=3
         )
     except Exception as error:

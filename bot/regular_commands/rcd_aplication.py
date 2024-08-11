@@ -68,11 +68,11 @@ class RcdDate(Modal):
             embed['final_rcd_list_embed'] = final_rcd_list_embed(convert_rcd_date)
             embed['rcd_list_embed'] = rcd_list_embed(convert_rcd_date)
             await interaction.respond(embed=rcd_list_embed(convert_rcd_date), view=StartRCDButton())
-            await interaction.respond(
-                '_РЧД заявки запущены!_',
-                ephemeral=True,
-                delete_after=2
-            )
+            # await interaction.respond(
+            #     '_РЧД заявки запущены!_',
+            #     ephemeral=True,
+            #     delete_after=1
+            # )
         except Exception as error:
             logger.error(
                 f'При вводе даты РЧД возникла ошибка {error}'
@@ -115,7 +115,7 @@ class RaidChampionDominionApplication(Modal):
                 return await interaction.respond(
                     '_Ты уже подал заявку! ✅_',
                     ephemeral=True,
-                    delete_after=5
+                    delete_after=1
                 )
             honor: str = str(self.children[0].value)
             class_role: str = str(self.children[1].value)
@@ -134,7 +134,7 @@ class RaidChampionDominionApplication(Modal):
             await interaction.respond(
                 '_Заявка принята ✅_',
                 ephemeral=True,
-                delete_after=2
+                delete_after=1
             )
             logger.info(
                 f'Принята заявка на РЧД от {interaction.user.display_name}')
@@ -288,11 +288,6 @@ class SelectMemberToRCD(View):
         embed.get('final_rcd_list_embed').fields[self.index].value = value
         await last_message_to_finish.get('final_rcd_list_message').edit(embed=embed.get('final_rcd_list_embed'))
         await interaction.message.delete()
-        await interaction.respond(
-            f'_Выполнено! ✅_',
-            ephemeral=True,
-            delete_after=1
-        )
 
 
 class CreateRCDList(View):
@@ -510,7 +505,7 @@ class CreateRCDList(View):
         await interaction.respond(
             f'_Список РЧД опубликован в канале {channel.mention}_',
             ephemeral=True,
-            delete_after=2
+            delete_after=1
         )
 
     @button(
@@ -537,7 +532,7 @@ class CreateRCDList(View):
         embed.clear()
         last_message_to_finish.clear()
         await interaction.respond(
-            '_Работа со списком РЧД завершена!_',
+            '_Работа со списком РЧД завершена! ✅_',
             ephemeral=True,
             delete_after=2
 
@@ -602,12 +597,7 @@ class StartRCDButton(View):
             self.children[0].disabled = True
             self.children[1].disabled = False
             self.remove_item(self.children[0])
-            await interaction.message.edit(view=self)
-            await interaction.respond(
-                f'_Заявки запущены в канале {channel.mention} 👌_',
-                ephemeral=True,
-                delete_after=3
-            )
+            await interaction.response.edit_message(view=self)
             logger.info(
                 f'Пользователь {interaction.user.display_name} запустил '
                 f'заявки на РЧД'
@@ -633,6 +623,7 @@ class StartRCDButton(View):
                 ephemeral=True,
                 delete_after=5
             )
+        await interaction.response.defer()
         ask_users: list[discord.Member] = [user for user in select.values]
         for user in ask_users:
             await user.send(
@@ -645,8 +636,4 @@ class StartRCDButton(View):
         self.disable_all_items()
         self.clear_items()
         await interaction.message.edit(view=self)
-        await interaction.respond(
-            'Сообщения были отправлены всем ветеранам',
-            ephemeral=True,
-            delete_after=3
-        )
+        await interaction.respond('_Сообщения были отправлены, выбранным пользователям!_ ✅')

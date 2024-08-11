@@ -165,7 +165,7 @@ class StartAucModal(Modal):
             await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
             await self.channel.send(
                 embed=end_auc_notification_embed(),
-                delete_after=30
+                delete_after=10
             )
             await check_timer(
                 channel_last_message=channel_last_message.get(name_auc),
@@ -385,7 +385,7 @@ def bid_callback(
             )
             button_mentions[name] = mention
             if len(view.children) == 0:
-                await interaction.response.edit_message(view=reserve_view)
+                await interaction.message.edit(view=reserve_view)
                 await interaction.followup.send(
                     f'В момент обработки, сделанной ставки возникла ошибка!'
                     f'Бот не сломался, попробуй сделать ставку снова. Если '
@@ -407,7 +407,7 @@ def bid_callback(
                 )
             else:
                 if (stop_time - nowtime) < secondstime:
-                    await interaction.response.edit_message(
+                    await interaction.message.edit(
                         view=view,
                         embed=start_auc_embed(
                             user_mention=user_mention,
@@ -420,12 +420,12 @@ def bid_callback(
                     )
                     final_time[name_auc] = plus_minute
                 else:
-                    await interaction.response.edit_message(view=view)
+                    await interaction.message.edit(view=view)
                 if 'K' != before_button_label[-1] and 'M' != before_button_label[-1] and interaction.user.display_name not in before_button_label:
                     time_of_bid = None
                     url = interaction.message.jump_url
                     take_nick = before_button_label.split()
-                    member = discord.utils.get(interaction.guild.members, nick=take_nick[1])
+                    member: discord.Member = discord.utils.get(interaction.guild.members, nick=take_nick[1])
                     if (datetime.now() + timedelta(seconds=60)) > final_time.get(name_auc) > datetime.now():
                         time_of_bid = plus_minute
                         delete_after = 60
