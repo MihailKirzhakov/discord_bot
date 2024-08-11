@@ -636,4 +636,8 @@ class StartRCDButton(View):
         self.disable_all_items()
         self.clear_items()
         await interaction.message.edit(view=self)
-        await interaction.respond('_Сообщения были отправлены, выбранным пользователям!_ ✅')
+        await interaction.respond(
+            '_Сообщения были отправлены, выбранным пользователям!_ ✅',
+            ephemeral=True,
+            delete_after=1
+        )
