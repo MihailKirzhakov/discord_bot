@@ -124,6 +124,11 @@ class RenameModal(Modal):
         new_nickname: str = self.children[0].value
         user: discord.abc.User = interaction.user
         try:
+            await interaction.response.defer()
+            if interaction.user.display_name == new_nickname:
+                return await interaction.respond(
+                    '_Зачем менять никнейм на свой текущий? 🤔_'
+                )
             if que_request.get(user):
                 await interaction.respond(
                     '_Ты уже отправил запрос на смену ника, ожидай! 👌_',
@@ -135,7 +140,7 @@ class RenameModal(Modal):
                     embed=rename_embed(user=user.display_name, nickname=new_nickname),
                     view=AccessDeniedButton(user=user, new_nickname=new_nickname)
                     )
-                await interaction.response.send_message(
+                await interaction.respond(
                     '_Запрос отправлен, погоди чутка! ✅_',
                     ephemeral=True,
                     delete_after=10
