@@ -186,6 +186,7 @@ class StartAucModal(Modal):
                 f'возникло исключение "{error}"'
             )
 
+
 @commands.slash_command()
 @commands.has_role('Аукцион')
 async def go_auc(
@@ -366,6 +367,7 @@ def bid_callback(
             Вспомогательная функция inner().
     """
     async def inner(interaction: discord.Interaction):
+        await interaction.response.defer()
         nowtime: datetime = datetime.now()
         secondstime: timedelta = timedelta(seconds=60)
         plus_minute: datetime = nowtime + secondstime
