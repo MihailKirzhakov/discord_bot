@@ -137,7 +137,7 @@ def remind_embed(date: str, message: str) -> discord.Embed:
 
 def remind_send_embed(date: str, message: str) -> discord.Embed:
     """
-    Функция для создания вложения с предупреждением.
+    Функция для создания вложения для отправки пользователю о напоминании.
 
     Parametrs:
     ----------
@@ -167,7 +167,7 @@ def remind_send_embed(date: str, message: str) -> discord.Embed:
 
 def rename_embed(user: str, nickname: str) -> discord.Embed:
     """
-    Функция для создания вложения с предупреждением.
+    Функция для создания вложения с переименованием.
 
     Parametrs:
     ----------
@@ -197,7 +197,7 @@ def rename_embed(user: str, nickname: str) -> discord.Embed:
 
 def changed_rename_embed(user, nickname) -> discord.Embed:
     """
-    Функция для создания вложения с предупреждением.
+    Функция для создания вложения с выполненным переименованием.
 
     Parametrs:
     ----------
@@ -225,7 +225,7 @@ def changed_rename_embed(user, nickname) -> discord.Embed:
 
 def denied_rename_embed(user: str) -> discord.Embed:
     """
-    Функция для создания вложения с предупреждением.
+    Функция для создания вложения с отказом в ренейме.
 
     Parametrs:
     ----------
@@ -250,7 +250,7 @@ def denied_rename_embed(user: str) -> discord.Embed:
 
 def denied_send_embed() -> discord.Embed:
     """
-    Функция для создания вложения с предупреждением.
+    Функция для создания вложения для отправки отказа в ренейме.
 
     Returns:
     --------
@@ -319,7 +319,7 @@ def rcd_list_embed(date: str) -> discord.Embed:
     return embed
 
 
-def ask_veteran_embed(member: discord.Member,date: str) -> discord.Embed:
+def ask_veteran_embed(member: discord.Member, date: str) -> discord.Embed:
     """
     Функция для создания вложения всем ветеранам.
 
@@ -344,7 +344,7 @@ def ask_veteran_embed(member: discord.Member,date: str) -> discord.Embed:
 
 def final_rcd_list_embed(date: str) -> discord.Embed:
     """
-    Функция для создания вложения о списке РЧД.
+    Функция для создания вложения о финальном списке РЧД.
 
     Returns:
     --------
@@ -398,7 +398,7 @@ def removed_role_list_embed() -> discord.Embed:
 
 def publish_rcd_embed(date: str) -> discord.Embed:
     """
-    Функция для создания вложения о старте РЧД заявок.
+    Функция для создания вложения с публикацией списка РЧД.
 
     Returns:
     --------
@@ -407,6 +407,31 @@ def publish_rcd_embed(date: str) -> discord.Embed:
     """
     embed = discord.Embed(
         title=f'_**Список РЧД {date}**_',
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=CROSSED_SWORDS_IMAGE_URL)
+    return embed
+
+
+def rcd_notification_embed(date: str, jump_url: str | None) -> discord.Embed:
+    """
+    Функция для создания вложения о включении пользователя в список РЧД.
+
+    Returns:
+    --------
+        embed: discord.Embed
+            Встраиваемое сообщение.
+    """
+    embed = discord.Embed(
+        title=f'_**РЧД {date}**_',
+        description=(
+            "_**Сообщаем то, что тебя включили в список РЧД!**_"
+            f'{
+                f"\n_Не забудь оставить реакцию, о прочтении ✅ в канале:\n{jump_url}_"
+                "\n\n-# Сообщение автоматически удалится через 3 часа!" if jump_url else
+                "\n\n-# Сообщение автоматически удалится через 3 часа!"
+            }'
+        ),
         color=0xfffb00
     )
     embed.set_thumbnail(url=CROSSED_SWORDS_IMAGE_URL)

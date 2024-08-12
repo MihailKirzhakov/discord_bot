@@ -7,7 +7,7 @@ from loguru import logger
 
 from .embeds import (
     start_rcd_embed, rcd_list_embed, ask_veteran_embed,
-    final_rcd_list_embed, publish_rcd_embed
+    final_rcd_list_embed, publish_rcd_embed, rcd_notification_embed
 )
 from role_application.functions import has_required_role
 from variables import VETERAN_ROLE, ANSWERS_IF_NO_ROLE
@@ -19,6 +19,7 @@ embed: dict[str, discord.Embed] = {}
 last_message_to_finish: dict[str, discord.Message] = {}
 rcd_application_channel: dict[str, discord.TextChannel] = {}
 publish_embed: dict[str, discord.Embed] = {}
+members_by_roles: dict[str, set[discord.Member]] = {}
 
 
 class RcdDate(Modal):
@@ -68,11 +69,6 @@ class RcdDate(Modal):
             embed['final_rcd_list_embed'] = final_rcd_list_embed(convert_rcd_date)
             embed['rcd_list_embed'] = rcd_list_embed(convert_rcd_date)
             await interaction.respond(embed=rcd_list_embed(convert_rcd_date), view=StartRCDButton())
-            # await interaction.respond(
-            #     '_РЧД заявки запущены!_',
-            #     ephemeral=True,
-            #     delete_after=1
-            # )
         except Exception as error:
             logger.error(
                 f'При вводе даты РЧД возникла ошибка {error}'
@@ -263,7 +259,9 @@ class SelectMemberToRCD(View):
                 delete_after=5
             )
         await self.update_embed(
-            interaction,', '.join(user.mention for user in select.values)
+            interaction,
+            ', '.join(user.mention for user in select.values),
+            set(select.values)
         )
 
     @button(label='Очистить', style=discord.ButtonStyle.gray, custom_id='Очистить')
@@ -278,14 +276,19 @@ class SelectMemberToRCD(View):
                 ephemeral=True,
                 delete_after=5
             )
-        await self.update_embed(interaction, '')
+        await self.update_embed(interaction, '', None)
 
     async def update_embed(
         self,
         interaction: discord.Interaction,
-        value: str
+        value: str,
+        members: set[discord.Member] | None
     ) -> None:
         embed.get('final_rcd_list_embed').fields[self.index].value = value
+        if not members and members_by_roles.get(CreateRCDList.index_class_role.get(self.index)):
+            del members_by_roles[CreateRCDList.index_class_role.get(self.index)]
+        else:
+            members_by_roles[CreateRCDList.index_class_role.get(self.index)] = members
         await last_message_to_finish.get('final_rcd_list_message').edit(embed=embed.get('final_rcd_list_embed'))
         await interaction.message.delete()
 
@@ -338,10 +341,13 @@ class CreateRCDList(View):
         last_message_to_finish['create_RCD_list_buttons'] = interaction.message
         obj_1: discord.ui.Button = self.children[0]
         obj_13: discord.ui.Button = self.children[12]
+        notification_button: discord.ui.Button = self.children[13]
 
         obj_1.label = '⬇️ Список создан ниже ⬇️'
         obj_1.style = discord.ButtonStyle.gray
         obj_1.disabled = True
+        notification_button.style = discord.ButtonStyle.blurple
+        notification_button.disabled = False
 
         for button in self.children[1:12]:
             button.style = discord.ButtonStyle.green
@@ -499,15 +505,69 @@ class CreateRCDList(View):
         else:
             await channel.last_message.delete()
             await channel.send(embed=publish_embed)
-        button: discord.ui.Button = self.children[13]
-        button.disabled = False
-        button.disabled = discord.ButtonStyle.red
+        finish_button: discord.ui.Button = self.children[14]
+        finish_button.disabled = False
+        finish_button.style = discord.ButtonStyle.red
         await interaction.message.edit(view=self)
         await interaction.respond(
             f'_Список РЧД опубликован в канале {channel.mention}_',
             ephemeral=True,
             delete_after=1
         )
+
+    @button(
+        label='Оповестить об РЧД из списка 📣', style=discord.ButtonStyle.gray,
+        custom_id='ОповеститьОСписке', disabled=True
+    )
+    async def notification_callback(
+        self,
+        button: discord.ui.Button,
+        interaction: discord.Interaction
+    ):
+        try:
+            await interaction.response.defer()
+            channel: discord.TextChannel = rcd_application_channel.get('rcd_aplication_channel')
+            jump_url = channel.last_message.jump_url if 'Список РЧД' in channel.last_message.embeds[0].title else None
+
+            if not members_by_roles:
+                return await interaction.respond(
+                    '_Дядь, в списке пусто 🤔_',
+                    ephemeral=True,
+                    delete_after=3
+                )
+
+            async def send_notification(member):
+                await member.send(
+                    embed=rcd_notification_embed(
+                        date=rcd_date_list.get('convert_rcd_date'),
+                        jump_url=jump_url
+                    ),
+                    delete_after=10800
+                )
+                logger.info(
+                    f'Пользователю {member.display_name} было отправлено '
+                    'оповещение об РЧД!'
+                )
+
+            for member_set in members_by_roles.values():
+                for member in member_set:
+                    await send_notification(member)
+
+            notification_button: discord.ui.Button = self.children[13]
+            notification_button.disabled = True
+            notification_button.style = discord.ButtonStyle.green
+            notification_button.label = 'Оповещения разосланы ✅'
+            await interaction.message.edit(view=self)
+            # await interaction.respond(
+            #     '_Оповещения разосланы ✅!_',
+            #     ephemeral=True,
+            #     delete_after=1
+            # )
+        except Exception as error:
+            logger.error(
+                'При отправке уведомлений пользователям из списка '
+                f'РЧД возникла ошибка: "{error}"!'
+            )
 
     @button(
         label='Завершить работу со списком РЧД', style=discord.ButtonStyle.gray,
