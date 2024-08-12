@@ -182,10 +182,10 @@ class DeniedRoleModal(Modal):
 
     async def callback(self, interaction: discord.Interaction):
         if self.nickname not in app_list:
-            await interaction.respond(
+            return await interaction.respond(
                 ANSWER_IF_CLICKED_THE_SAME_TIME,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         await interaction.response.defer()
         user = interaction.user

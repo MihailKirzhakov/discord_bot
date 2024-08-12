@@ -73,6 +73,7 @@ class AccessDeniedButton(View):
         interaction: discord.Interaction
     ):
         try:
+            await interaction.response.defer()
             self.disable_all_items()
             self.clear_items()
             await self.user.send(

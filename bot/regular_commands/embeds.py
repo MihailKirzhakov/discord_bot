@@ -413,7 +413,7 @@ def publish_rcd_embed(date: str) -> discord.Embed:
     return embed
 
 
-def rcd_notification_embed(date: str, jump_url: str | None) -> discord.Embed:
+def rcd_notification_embed(date: str, jump_url: str | None, rcd_role: str) -> discord.Embed:
     """
     Функция для создания вложения о включении пользователя в список РЧД.
 
@@ -422,14 +422,15 @@ def rcd_notification_embed(date: str, jump_url: str | None) -> discord.Embed:
         embed: discord.Embed
             Встраиваемое сообщение.
     """
+    delete_notification = "\n\n-# Сообщение автоматически удалится через 3 часа!"
     embed = discord.Embed(
         title=f'_**РЧД {date}**_',
         description=(
-            "_**Сообщаем то, что тебя включили в список РЧД!**_"
+            '_**Сообщаем то, что тебя включили в список РЧД!**'
+            f'\nТребуемый класс: **{rcd_role[:-2]}**_'
             f'{
-                f"\n_Не забудь оставить реакцию, о прочтении ✅ в канале:\n{jump_url}_"
-                "\n\n-# Сообщение автоматически удалится через 3 часа!" if jump_url else
-                "\n\n-# Сообщение автоматически удалится через 3 часа!"
+                f"\n\n_Не забудь оставить реакцию, о прочтении ✅ в канале:\n{jump_url}_"
+                f"{delete_notification}" if jump_url else f"{delete_notification}"
             }'
         ),
         color=0xfffb00

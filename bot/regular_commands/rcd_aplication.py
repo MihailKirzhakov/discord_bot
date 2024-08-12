@@ -113,6 +113,7 @@ class RaidChampionDominionApplication(Modal):
                     ephemeral=True,
                     delete_after=1
                 )
+            await interaction.response.defer()
             honor: str = str(self.children[0].value)
             class_role: str = str(self.children[1].value)
             if not class_role:
@@ -239,7 +240,7 @@ class SelectMemberToRCD(View):
     """
     def __init__(self, index: int) -> None:
         super().__init__(timeout=None)
-        self.index = index
+        self.index: int = index
 
     @select(
         select_type=discord.ComponentType.user_select,
@@ -536,11 +537,12 @@ class CreateRCDList(View):
                     delete_after=3
                 )
 
-            async def send_notification(member):
+            async def send_notification(member: discord.Member, rcd_role: str):
                 await member.send(
                     embed=rcd_notification_embed(
                         date=rcd_date_list.get('convert_rcd_date'),
-                        jump_url=jump_url
+                        jump_url=jump_url,
+                        rcd_role=rcd_role
                     ),
                     delete_after=10800
                 )
@@ -549,20 +551,17 @@ class CreateRCDList(View):
                     'оповещение об РЧД!'
                 )
 
-            for member_set in members_by_roles.values():
+            for index, member_set in members_by_roles.items():
                 for member in member_set:
-                    await send_notification(member)
+                    await send_notification(member, index)
 
             notification_button: discord.ui.Button = self.children[13]
             notification_button.disabled = True
             notification_button.style = discord.ButtonStyle.green
             notification_button.label = 'Оповещения разосланы ✅'
+            if 'Список РЧД' in channel.last_message.embeds[0].title:
+                await channel.last_message.add_reaction('✅')
             await interaction.message.edit(view=self)
-            # await interaction.respond(
-            #     '_Оповещения разосланы ✅!_',
-            #     ephemeral=True,
-            #     delete_after=1
-            # )
         except Exception as error:
             logger.error(
                 'При отправке уведомлений пользователям из списка '
@@ -700,5 +699,5 @@ class StartRCDButton(View):
         await interaction.respond(
             '_Сообщения были отправлены, выбранным пользователям!_ ✅',
             ephemeral=True,
-            delete_after=1
+            delete_after=3
         )
