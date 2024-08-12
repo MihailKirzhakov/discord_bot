@@ -479,7 +479,7 @@ class CreateRCDList(View):
         custom_id='ОпубликоватьСписок',
         disabled=True
     )
-    async def select_callback(
+    async def publish_callback(
         self, button: discord.ui.Select, interaction: discord.Interaction
     ):
         if not has_required_role(interaction.user):
@@ -501,6 +501,7 @@ class CreateRCDList(View):
             await channel.send(embed=publish_embed)
         button: discord.ui.Button = self.children[13]
         button.disabled = False
+        button.disabled = discord.ButtonStyle.red
         await interaction.message.edit(view=self)
         await interaction.respond(
             f'_Список РЧД опубликован в канале {channel.mention}_',
@@ -509,7 +510,7 @@ class CreateRCDList(View):
         )
 
     @button(
-        label='Завершить работу со списком РЧД', style=discord.ButtonStyle.red,
+        label='Завершить работу со списком РЧД', style=discord.ButtonStyle.gray,
         custom_id='ЗавершитьРЧДСписок', disabled=True
     )
     async def stop_callback(

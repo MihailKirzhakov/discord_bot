@@ -307,12 +307,12 @@ def rcd_list_embed(date: str) -> discord.Embed:
     )
     embed.add_field(
         name='------------------------------',
-        value='Ветераны:\n',
+        value='**Ветераны:**\n\n',
         inline=False
     )
     embed.add_field(
         name='------------------------------',
-        value='Старшины:\n',
+        value='**Старшины:**\n\n',
         inline=False
     )
     embed.set_thumbnail(url=RCD_LIST_IMAGE_URL)
