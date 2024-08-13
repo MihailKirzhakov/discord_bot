@@ -10,20 +10,6 @@ from variables import (
 def character_lookup(server: int, name: str) -> dict | None:
     """
     Функция для получения информации об игроке через оружейку.
-
-    Parameters
-    ----------
-    server: int
-        Число, обозначающее сервер на сайте оружейки через
-        панель разработки.
-
-    name: str
-        Никнейм игрока взятый с оружейки.
-
-    Returns
-    -------
-    player_parms: dict
-        Словарь с параметрами персонажа
     """
     # Никнейм игрока, которого ищем в оружейке
     lookup_name = name
@@ -116,16 +102,7 @@ def character_lookup(server: int, name: str) -> dict | None:
 
 
 def has_required_role(user: discord.Member):
-    """Проверка на наличие требуемых ролей у пользователя
-
-    Parameters
-    ----------
-        user: discord.abc.Member
-            Пользователь, чьи роли проверяем.
-
-    Returns
-    -------
-        None
+    """Проверка на наличие требуемых ролей у пользователя.
     """
     return (
         discord.utils.get(user.roles, name=LEADER_ROLE) or

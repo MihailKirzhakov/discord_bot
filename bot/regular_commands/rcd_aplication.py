@@ -10,7 +10,7 @@ from .embeds import (
     final_rcd_list_embed, publish_rcd_embed, rcd_notification_embed
 )
 from role_application.functions import has_required_role
-from variables import VETERAN_ROLE, ANSWERS_IF_NO_ROLE
+from variables import VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE
 
 
 member_list: list = []
@@ -25,11 +25,6 @@ members_by_roles: dict[str, set[discord.Member]] = {}
 class RcdDate(Modal):
     """
     Модальное окно для ввода даты РЧД.
-
-    Attributes:
-    ----------
-        date: str
-            Дата проведения РЧД.
     """
     def __init__(self):
         super().__init__(title='Введи дату проведения РЧД', timeout=None)
@@ -78,11 +73,6 @@ class RcdDate(Modal):
 class RaidChampionDominionApplication(Modal):
     """
     Модальное окно для ввода данных на заявку РЧД.
-
-    Attributes:
-    ----------
-        embed: discord.Embed
-            Встраиваемое сообщение.
     """
     def __init__(self):
         super().__init__(title='Заявка на РЧД', timeout=None)
@@ -194,11 +184,6 @@ class PrivateMessageView(View):
 class RCDButton(View):
     """
     Кнопка для запуска модального окна для заявки РЧД.
-
-    Attributes:
-    ----------
-        embed: discord.Embed
-            Встраиваемое сообщение.
     """
     def __init__(
         self,
@@ -229,14 +214,6 @@ class RCDButton(View):
 class SelectMemberToRCD(View):
     """
     Меню для выбора пользователей в РЧД список.
-
-    Attributes:
-    ----------
-        index: int
-            Индекс поля втстраимого сообщения Embed.
-
-        embed: discord.Embed
-            Встраиваемое сообщение.
     """
     def __init__(self, index: int) -> None:
         super().__init__(timeout=None)
@@ -286,10 +263,10 @@ class SelectMemberToRCD(View):
         members: set[discord.Member] | None
     ) -> None:
         embed.get('final_rcd_list_embed').fields[self.index].value = value
-        if not members and members_by_roles.get(CreateRCDList.index_class_role.get(self.index)):
-            del members_by_roles[CreateRCDList.index_class_role.get(self.index)]
+        if not members and members_by_roles.get(INDEX_CLASS_ROLE.get(self.index)):
+            del members_by_roles[INDEX_CLASS_ROLE.get(self.index)]
         else:
-            members_by_roles[CreateRCDList.index_class_role.get(self.index)] = members
+            members_by_roles[INDEX_CLASS_ROLE.get(self.index)] = members
         await last_message_to_finish.get('final_rcd_list_message').edit(embed=embed.get('final_rcd_list_embed'))
         await interaction.message.delete()
 
@@ -297,27 +274,7 @@ class SelectMemberToRCD(View):
 class CreateRCDList(View):
     """
     Кнопки для создания РЧД списка, и отправки готового списка.
-
-    Attributes:
-    ----------
-        channel: discord.TextChannel
-            Канал в котором будет создан список РЧД.
     """
-
-    index_class_role = {
-        0: 'Воины:',
-        1: 'Паладины:',
-        2: 'Инженеры:',
-        3: 'Жрецы:',
-        4: 'Шаманы:',
-        5: 'Мистики:',
-        6: 'Лучники:',
-        7: 'Маги:',
-        8: 'Некроманты:',
-        9: 'Барды:',
-        10: 'Демоны:'
-    }
-
     def __init__(
         self,
         timeout: float | None = None

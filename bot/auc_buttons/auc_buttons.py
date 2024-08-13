@@ -9,8 +9,7 @@ from discord.ui import View, Button, Modal, InputText
 from loguru import logger
 
 from .embeds import (
-    start_auc_embed, results_embed, outbid_embed,
-    end_auc_notification_embed
+    start_auc_embed, results_embed, outbid_embed
 )
 from .functions import (
     convert_bid,
@@ -20,7 +19,8 @@ from .functions import (
     seconds_until_date
 )
 from variables import (
-    MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD, LEADER_NICKNAME
+    MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD, LEADER_NICKNAME,
+    REMIND
 )
 
 
@@ -31,15 +31,6 @@ channel_last_message: dict[str, discord.Message] = {}
 class StartAucModal(Modal):
     """
     Модальное окно для ввода данных для старта аукциона.
-
-    Parametrs:
-    ----------
-        channel: discord.TextChannel
-            Текстовый канал, в который отправляется запрос.
-
-    Returns:
-    --------
-        None
     """
     def __init__(
             self,
@@ -119,8 +110,8 @@ class StartAucModal(Modal):
                 f'При вводе даты в команду аукциона возникла ошибка {error}'
             )
         final_time[name_auc] = stop_time
-        start_auc_user = interaction.user
-        user_mention = interaction.user.mention
+        start_auc_user: discord.Member = interaction.user
+        user_mention: str = interaction.user.mention
         button_manager = View(timeout=None)
         for _ in range(count):
             auc_button: discord.ui.Button = Button(
@@ -163,10 +154,6 @@ class StartAucModal(Modal):
                 f'Команда /go_auc запущена пользователем "{interaction.user.display_name}"'
             )
             await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
-            await self.channel.send(
-                embed=end_auc_notification_embed(),
-                delete_after=10
-            )
             await check_timer(
                 channel_last_message=channel_last_message.get(name_auc),
                 view=button_manager,
@@ -199,18 +186,6 @@ async def go_auc(
 ) -> None:
     """
     Команда для запуска аукциона.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        channel: discord.TextChannel
-            Канал, в котором лежит сообщение для редактирования Embed'а
-
-    Returns:
-    --------
-        None.
     """
     try:
         await ctx.response.send_modal(StartAucModal(channel=channel))
@@ -227,18 +202,6 @@ async def go_auc_error(
 ) -> None:
     """
     Обработчик ошибок для команды go_auc.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        error: error
-            Исключение, возникшее при выполнении команды.
-
-    Returns:
-    --------
-        None.
     """
     if isinstance(error, commands.errors.MissingRole):
         await ctx.respond(
@@ -267,33 +230,6 @@ async def check_timer(
 ) -> None:
     """
     Функция для полинга таймера, которая автоматически завершает аукцион.
-
-    Parametrs:
-    ----------
-        channel_last_message: discord.Message
-            Последнее сообщение в текстовом канале.
-
-        view: discord.ui.View
-            Объект класса View.
-
-        user_mention: str
-            Тэг юзера.
-
-        name_auc: str
-            Название аукциона.
-
-        count: int
-            Количество лотов.
-
-        final_time: dict
-            Словарь с временем завершения аукциона.
-
-        button_mentions: dict
-            Словарь с тэгами юзеров в кнопках.
-
-    Returns:
-    --------
-        None.
     """
     while True:
         if final_time.get(name_auc) > datetime.now():
@@ -325,46 +261,6 @@ def bid_callback(
 ) -> Callable:
     """
     Функция для обработки нажатия на кнопку ставки.
-
-    Parametrs:
-    ----------
-        button: discord.ui.Button
-            Кнопка.
-
-        view: discord.ui.View
-            Объект класса View.
-
-        start_bid: int
-            Начальная ставка.
-
-        bid: int
-            Шаг ставки.
-
-        start_auc_user: discord.Member | discord.User
-            Никнейм пользователя, начавшего аукцион.
-
-        stop_time: datetime
-            Время завершения аукциона.
-
-        user_mention: str
-            Тэг юзера.
-
-        count: int
-            Количество лотов.
-
-        name_auc: str
-            Название аукциона.
-
-        final_time: dict
-            Словарь с временем завершения аукциона.
-
-        button_mentions: dict
-            Словарь с тэгами юзеров в кнопках.
-
-    Returns:
-    --------
-        inner: Callable
-            Вспомогательная функция inner().
     """
     async def inner(interaction: discord.Interaction):
         await interaction.response.defer()
@@ -460,27 +356,6 @@ async def auto_stop_auc(
 ) -> None:
     """
     Функция для автозавершения аукциона.
-
-    Parametrs:
-    ----------
-        channel_last_message: discord.Message
-            Последнее сообщение в текстовом канале.
-
-        view: discord.ui.View
-            Объект класса View
-
-        user_mention: str
-            Тэг юзера
-
-        name_auc: str
-            Название аукциона
-
-        count: int
-            Количество лотов
-
-    Returns:
-    --------
-        None.
     """
     view.disable_all_items()
     label_values = [btn.label for btn in view.children]

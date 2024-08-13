@@ -16,9 +16,9 @@ from .rename_request import RenameButton
 from .rcd_aplication import RcdDate
 from variables import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
-    CLOSED_JMURENSKAYA, CLOSED_ORTHODOX, CLOSED_TEAM_TAYP,
+    CLOSED_JMURENSKAYA, CLOSED_ORTHODOX,
     CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT,
-    BUHLOID_ID, IDOL_ID, TAYP_ID, KVAPA_ID, GOOSE_ID,
+    BUHLOID_ID, IDOL_ID, KVAPA_ID, GOOSE_ID,
     SERGEANT_ROLE, VETERAN_ROLE, GUEST_ROLE
 )
 
@@ -133,21 +133,6 @@ async def command_error(
 ) -> None:
     """
     Обработчик ошибок для команд.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        error: Exception
-            Исключение, возникшее при выполнении команды.
-
-        command_name: str
-            Имя команды.
-
-    Returns:
-    --------
-        None
     """
     if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(
@@ -193,18 +178,6 @@ async def technical_works(
 ) -> None:
     """
     Команда для отправки сообщения о технических работах.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        channel: discord.TextChannel
-            Текстовый канал, в который нужно отправить сообщение.
-
-    Returns:
-    --------
-        None
     """
     await channel.send(embed=technical_works_embed())
     logger.info(
@@ -225,18 +198,6 @@ async def technical_works_error(
 ) -> None:
     """
     Обработчик ошибок для команды technical_works.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        error: Exception
-            Исключение, возникшее при выполнении команды.
-
-    Returns:
-    --------
-        None
     """
     await command_error(ctx, error, "technical_works")
 
@@ -258,21 +219,6 @@ async def attention(
 ) -> None:
     """
     Команда для отправки сообщения с пометкой 'Внимание!'.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        channel: discord.TextChannel
-            Канал, в который нужно отправить сообщение.
-
-        value: str
-            Текст сообщения.
-
-    Returns:
-    --------
-        None
     """
     await channel.send(embed=attention_embed(value=value))
     logger.info(
@@ -293,18 +239,6 @@ async def attention_error(
 ) -> None:
     """
     Обработчик ошибок для команды attention.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        error: Exception
-            Исключение, возникшее при выполнении команды.
-
-    Returns:
-    --------
-        None
     """
     await command_error(ctx, error, "attention")
 
@@ -327,18 +261,6 @@ async def random(
 ) -> None:
     """
     Команда для отправки кнопки рандомайзера.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст вызова команды.
-
-        channel: discord.TextChannel
-            Канал, в который нужно отправить кнопку.
-
-    Returns:
-    --------
-        None
     """
     try:
         if message_id:
@@ -381,18 +303,6 @@ async def random_error(
 ) -> None:
     """
     Обработчик ошибок для команды random.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        error: Exception
-            Исключение, возникшее при выполнении команды.
-
-    Returns:
-    --------
-        None
     """
     await command_error(ctx, error, "random")
 
@@ -416,21 +326,6 @@ async def clear_all(
 ) -> None:
     """
     Команда для удаления сообщений в текстовом канале.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст вызова команды.
-
-        channel: discord.TextChannel
-            Канал, в который нужно отправить кнопку.
-
-        limit: int
-            Количество сообщений для удаления с конца.
-
-    Returns:
-    --------
-        None
     """
     try:
         await ctx.defer(ephemeral=True)
@@ -465,18 +360,6 @@ async def clear_all_error(
 ) -> None:
     """
     Обработчик ошибок для команды clear_all.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        error: Exception
-            Исключение, возникшее при выполнении команды.
-
-    Returns:
-    --------
-        None
     """
     await command_error(ctx, error, "clear_all")
 
@@ -488,18 +371,6 @@ async def clear_all_error(
 async def remind(ctx: discord.ApplicationContext) -> None:
     """
     Команда для отправки сообщения с напоминанием.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        date_time_str: str
-            Строка в формате "ДД.ММ ЧЧ:ММ".
-
-    Returns:
-    --------
-        None
     """
     try:
         await ctx.response.send_modal(StartRemindModal())
@@ -517,25 +388,13 @@ async def remind_error(
 ) -> None:
     """
     Обработчик ошибок для команды remind.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        error: Exception
-            Исключение, возникшее при выполнении команды.
-
-    Returns:
-    --------
-        None
     """
     await command_error(ctx, error, "remind")
 
 
 @commands.slash_command()
 @commands.has_any_role(
-    CLOSED_JMURENSKAYA, CLOSED_ORTHODOX, CLOSED_TEAM_TAYP,
+    CLOSED_JMURENSKAYA, CLOSED_ORTHODOX,
     CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT
 )
 async def give_role_to(
@@ -548,25 +407,11 @@ async def give_role_to(
 ) -> None:
     """
     Команда для отправки кнопки на выдачу роли.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        member: discord.Member
-            Пользователь дискорда, кому нужна роль.
-
-    Returns:
-    --------
-        None
     """
     closed_jmurenskaya = discord.utils.get(
             ctx.guild.roles, name=CLOSED_JMURENSKAYA)
     closed_orthodox = discord.utils.get(
             ctx.guild.roles, name=CLOSED_ORTHODOX)
-    closed_team_tayp = discord.utils.get(
-            ctx.guild.roles, name=CLOSED_TEAM_TAYP)
     closed_goose_home = discord.utils.get(
             ctx.guild.roles, name=CLOSED_GOOSE_HOME)
     closed_on_the_mind_aspect = discord.utils.get(
@@ -574,7 +419,6 @@ async def give_role_to(
     check_group_leaders = {
         BUHLOID_ID: closed_jmurenskaya,
         IDOL_ID: closed_orthodox,
-        TAYP_ID: closed_team_tayp,
         GOOSE_ID: closed_goose_home,
         KVAPA_ID: closed_on_the_mind_aspect
     }
@@ -608,18 +452,6 @@ async def give_role_to_error(
 ) -> None:
     """
     Обработчик ошибок для команды random.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        error: Exception
-            Исключение, возникшее при выполнении команды.
-
-    Returns:
-    --------
-        None
     """
     await command_error(ctx, error, "give_role_to")
 
@@ -642,21 +474,6 @@ async def rename(
 ) -> None:
     """
     Команда для отправки кнопки рандомайзера.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        channel: discord.TextChannel
-            Канал, в который нужно отправить кнопку.
-
-        message_id: str
-            ID сообщения, в котором есть кнопка кнопка
-
-    Returns:
-    --------
-        None
     """
     if message_id:
         message = ctx.channel.get_partial_message(int(message_id))
@@ -686,18 +503,6 @@ async def rename_error(
 ) -> None:
     """
     Обработчик ошибок для команды rename.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        error: Exception
-            Исключение, возникшее при выполнении команды.
-
-    Returns:
-    --------
-        None
     """
     await command_error(ctx, error, "rename")
 
@@ -707,18 +512,6 @@ async def rename_error(
 async def rcd_application(ctx: discord.ApplicationContext) -> None:
     """
     Команда для запуска кнопки старта РЧД заявок.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        channel: discord.TextChannel
-            Канал, в который нужно отправить кнопку.
-
-    Returns:
-    --------
-        None
     """
     try:
         await ctx.response.send_modal(RcdDate())
@@ -740,18 +533,6 @@ async def rcd_application_error(
 ) -> None:
     """
     Обработчик ошибок для команды rcd_application.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        error: Exception
-            Исключение, возникшее при выполнении команды.
-
-    Returns:
-    --------
-        None
     """
     await command_error(ctx, error, "rcd_application")
 
@@ -768,18 +549,6 @@ async def check_roles(
 ) -> None:
     """
     Команда для запуска кнопки старта РЧД заявок.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        message_id: str
-            ID сообщения, в котором лежит файл с гильдейской информацией.
-
-    Returns:
-    --------
-        None
     """
     guild_member_list: list[str] = []
     removed_role_members: list[str] = []
@@ -815,18 +584,6 @@ async def check_roles_error(
 ) -> None:
     """
     Обработчик ошибок для команды check_roles.
-
-    Parametrs:
-    ----------
-        ctx: discord.ApplicationContext
-            Контекст команды.
-
-        error: Exception
-            Исключение, возникшее при выполнении команды.
-
-    Returns:
-    --------
-        None
     """
     await command_error(ctx, error, "check_roles")
 
