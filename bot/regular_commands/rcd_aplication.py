@@ -328,8 +328,8 @@ class CreateRCDList(View):
         await self.check_interaction_permission(interaction, 0)
 
     @button(
-        label='Редактировать "Паладинов"', style=discord.ButtonStyle.gray,
-        custom_id='РедактироватьПаладинов', disabled=True
+        label='Редактировать "Инженеров"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьИнженеров', disabled=True
     )
     async def add_paladin_callback(
         self,
@@ -339,8 +339,8 @@ class CreateRCDList(View):
         await self.check_interaction_permission(interaction, 1)
 
     @button(
-        label='Редактировать "Инженеров"', style=discord.ButtonStyle.gray,
-        custom_id='РедактироватьИнженеров', disabled=True
+        label='Редактировать "Жрецов"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьЖрецов', disabled=True
     )
     async def add_ingeneer_callback(
         self,
@@ -350,8 +350,8 @@ class CreateRCDList(View):
         await self.check_interaction_permission(interaction, 2)
 
     @button(
-        label='Редактировать "Жрецов"', style=discord.ButtonStyle.gray,
-        custom_id='РедактироватьЖрецов', disabled=True
+        label='Редактировать "Паладинов"', style=discord.ButtonStyle.gray,
+        custom_id='РедактироватьПаладинов', disabled=True
     )
     async def add_priest_callback(
         self,
@@ -548,6 +548,7 @@ class CreateRCDList(View):
         rcd_date_list.clear()
         embed.clear()
         last_message_to_finish.clear()
+        members_by_roles.clear()
         await interaction.respond(
             '_Работа со списком РЧД завершена! ✅_',
             ephemeral=True,

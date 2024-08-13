@@ -8,7 +8,7 @@ from .embeds import (
 )
 
 
-que_request: dict = {}  # Словарь для отслеживания уже поданных заявок
+que_request: dict = {}
 
 
 class AccessDeniedButton(View):

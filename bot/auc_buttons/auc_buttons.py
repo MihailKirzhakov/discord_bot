@@ -315,8 +315,10 @@ def bid_callback(
                         )
                     )
                     final_time[name_auc] = plus_minute
+                    logger.info(f'Кнопка обновилась, результат "{button.label}"')
                 else:
                     await interaction.message.edit(view=view)
+                    logger.info(f'Кнопка обновилась, результат "{button.label}"')
                 if 'K' != before_button_label[-1] and 'M' != before_button_label[-1] and interaction.user.display_name not in before_button_label:
                     time_of_bid = None
                     url = interaction.message.jump_url
