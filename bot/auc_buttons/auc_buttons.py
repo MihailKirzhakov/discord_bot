@@ -19,8 +19,7 @@ from .functions import (
     seconds_until_date
 )
 from variables import (
-    MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD, LEADER_NICKNAME,
-    REMIND
+    MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD, LEADER_NICKNAME
 )
 
 

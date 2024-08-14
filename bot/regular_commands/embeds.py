@@ -248,6 +248,24 @@ def final_rcd_list_embed(date: str) -> discord.Embed:
     return embed
 
 
+def second_final_rcd_list_embed(date: str) -> discord.Embed:
+    """
+    Функция для создания вложения о финальном списке РЧД.
+    """
+    embed = discord.Embed(
+        title=f'_**Список РЧД (второй) {date}**_',
+        color=0xfffb00
+    )
+    for role in INDEX_CLASS_ROLE.values():
+        embed.add_field(
+            name=role,
+            value='',
+            inline=False
+        )
+    embed.set_thumbnail(url=RCD_LIST_IMAGE_URL)
+    return embed
+
+
 def removed_role_list_embed() -> discord.Embed:
     """
     Функция для создания вложения почищеных ролей.
