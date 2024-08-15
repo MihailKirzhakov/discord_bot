@@ -11,7 +11,10 @@ from .embeds import (
     second_final_rcd_list_embed, publish_rcd_second_embed
 )
 from role_application.functions import has_required_role
-from variables import VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE
+from variables import (
+    VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE,
+    SERGEANT_ROLE, GUEST_ROLE
+)
 
 
 member_list: list = []
@@ -23,6 +26,7 @@ publish_embed: dict[str, discord.Embed] = {}
 members_by_roles_attack: dict[str, set[discord.Member]] = {}
 members_by_roles_deff: dict[str, set[discord.Member]] = {}
 rcd_application_last_message: dict[str, discord.Message] = {}
+pub_info: dict[str, bool] = {}
 
 
 class RcdDate(Modal):
@@ -289,27 +293,20 @@ class SelectMemberToRCD(View):
         members: set[discord.Member] | None
     ) -> None:
         tumbler_button: discord.ui.Button = self.item_list[1]
-        embed_name = (
-            'second_final_rcd_list_embed' if tumbler_button.style
-            == discord.ButtonStyle.red else 'final_rcd_list_embed'
-        )
-        message_name = (
-            'second_final_rcd_list_message' if tumbler_button.style
-            == discord.ButtonStyle.red else 'final_rcd_list_message'
-        )
+        is_red = tumbler_button.style == discord.ButtonStyle.red
+
+        embed_name = 'second_final_rcd_list_embed' if is_red else 'final_rcd_list_embed'
+        message_name = 'second_final_rcd_list_message' if is_red else 'final_rcd_list_message'
         embed_object: discord.Embed = embed[embed_name]
         embed_object.fields[self.index].value = value
 
-        if tumbler_button.style == discord.ButtonStyle.red:
-            if not members and members_by_roles_deff.get(INDEX_CLASS_ROLE.get(self.index)):
-                del members_by_roles_deff[INDEX_CLASS_ROLE.get(self.index)]
-            else:
-                members_by_roles_deff[INDEX_CLASS_ROLE.get(self.index)] = members
+        members_dict = members_by_roles_deff if is_red else members_by_roles_attack
+        role = INDEX_CLASS_ROLE.get(self.index)
+
+        if not members and role in members_dict:
+            del members_dict[role]
         else:
-            if not members and members_by_roles_attack.get(INDEX_CLASS_ROLE.get(self.index)):
-                del members_by_roles_attack[INDEX_CLASS_ROLE.get(self.index)]
-            else:
-                members_by_roles_attack[INDEX_CLASS_ROLE.get(self.index)] = members
+            members_dict[role] = members
 
         message: discord.Message = last_message_to_finish.get(message_name)
         await message.edit(embed=embed_object)
@@ -333,16 +330,19 @@ class AddMemberToListButton(discord.ui.Button):
         self.create_rcd_view = create_rcd_view
 
     async def callback(self, interaction: discord.Interaction):
-        if not last_message_to_finish.get('final_rcd_list_message'):
-            last_message_to_finish['final_rcd_list_message'] = interaction.channel.last_message
-            self.create_rcd_view.children[0].disabled = False
-            await last_message_to_finish.get('create_RCD_list_buttons').edit(view=self.create_rcd_view)
+        create_button: discord.ui.Button = self.create_rcd_view.children[0]
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
                 delete_after=5
             )
+        if not last_message_to_finish.get('final_rcd_list_message'):
+            last_message_to_finish['final_rcd_list_message'] = interaction.channel.last_message
+            self.create_rcd_view.children[0].disabled = False
+            await last_message_to_finish.get('create_RCD_list_buttons').edit(view=self.create_rcd_view)
+        if not last_message_to_finish.get('second_final_rcd_list_message') and create_button.style == discord.ButtonStyle.gray:
+            last_message_to_finish['second_final_rcd_list_message'] = interaction.channel.last_message
         await interaction.respond(view=SelectMemberToRCD(
             index=self.index, item_list=self.create_rcd_view.children
         ))
@@ -384,6 +384,11 @@ class CreateRCDList(View):
                 ))
             button.label = 'Создать 2-ой список'
             button.disabled = True
+            for index in range(2, 5):
+                self.children[index].disabled = False
+                self.children[index].style = discord.ButtonStyle.blurple
+                if index == 4:
+                    self.children[index].style = discord.ButtonStyle.red
             await interaction.respond(embed=embed.get('final_rcd_list_embed'))
         else:
             button.label = '⬇️ Списки созданы ниже ⬇️'
@@ -394,11 +399,6 @@ class CreateRCDList(View):
             tumbler_button.style = discord.ButtonStyle.blurple
             tumbler_button.disabled = False
             await interaction.respond(embed=embed.get('second_final_rcd_list_embed'))
-        for index in range(2, 5):
-            self.children[index].disabled = False
-            self.children[index].style = discord.ButtonStyle.blurple
-            if index == 4:
-                self.children[index].style = discord.ButtonStyle.red
         await interaction.message.edit(view=self)
 
     @button(
@@ -457,7 +457,7 @@ class CreateRCDList(View):
             if '(АТАКА)' in channel.last_message.embeds[0].title:
                 await channel.send(embed=publish_second_embed)
             elif 'Заявки на РЧД' in channel.last_message.embeds[0].title:
-                await interaction.respond(
+                return await interaction.respond(
                     '_Сначала нужно отправить список "АТАКА"! ❌_',
                     ephemeral=True,
                 )
@@ -489,23 +489,10 @@ class CreateRCDList(View):
     ):
         try:
             await interaction.response.defer()
+            sergaunt_role: discord.Role = discord.utils.get(interaction.guild.roles, name=SERGEANT_ROLE)
             channel: discord.TextChannel = rcd_application_channel.get('rcd_aplication_channel')
-            jump_url = channel.jump_url if 'Список РЧД' in channel.last_message.embeds[0].title else None
-
-            if self.children[1].style == discord.ButtonStyle.red:
-                if not members_by_roles_deff:
-                    return await interaction.respond(
-                        '_Дядь, в списке пусто 🤔_',
-                        ephemeral=True,
-                        delete_after=3
-                    )
-            else:
-                if not members_by_roles_attack:
-                    return await interaction.respond(
-                        '_Дядь, в списке пусто 🤔_',
-                        ephemeral=True,
-                        delete_after=3
-                    )
+            permissions_for_sergaunt: discord.permissions = channel.permissions_for(sergaunt_role).read_messages
+            jump_url = channel.jump_url if 'Список РЧД' in channel.last_message.embeds[0].title and permissions_for_sergaunt == True else None
 
             async def send_notification(member: discord.Member, rcd_role: str):
                 await member.send(
@@ -521,21 +508,33 @@ class CreateRCDList(View):
                     'оповещение об РЧД!'
                 )
 
-            if self.children[1].style == discord.ButtonStyle.red:
-                for index, member_set in members_by_roles_deff.items():
+            async def get_members_by_role(members_by_roles, pub_info_key):
+                if not members_by_roles:
+                    return await interaction.respond(
+                        '_Дядь, в списке пусто 🤔_',
+                        ephemeral=True,
+                        delete_after=3
+                    )
+                if pub_info.get(pub_info_key):
+                    return await interaction.respond(
+                        f'_Опевещения из списка {pub_info_key} уже были отправлены! ❌_',
+                        ephemeral=True
+                    )
+                for index, member_set in members_by_roles.items():
                     for member in member_set:
                         await send_notification(member, index)
-            else:
-                for index, member_set in members_by_roles_attack.items():
-                    for member in member_set:
-                        await send_notification(member, index)
+                    pub_info[pub_info_key] = True
 
-            # button.disabled = True
-            button.style = discord.ButtonStyle.green
-            # button.label = 'Оповещения разосланы ✅'
-            if 'Список РЧД' in channel.last_message.embeds[0].title:
-                await channel.last_message.add_reaction('✅')
-            await interaction.message.edit(view=self)
+            if self.children[1].style == discord.ButtonStyle.red:
+                await get_members_by_role(members_by_roles_deff, 'ЗАЩИТЫ')
+            else:
+                await get_members_by_role(members_by_roles_attack, 'АТАКИ')
+
+            if pub_info.get('deff') and pub_info.get('atack'):
+                button.label = 'Все оповещения были отправлены ✅'
+                button.style = discord.ButtonStyle.gray
+                button.disabled = True
+                await interaction.message.edit(view=self)
         except Exception as error:
             logger.error(
                 'При отправке уведомлений пользователям из списка '
