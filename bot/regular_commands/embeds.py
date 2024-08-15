@@ -235,7 +235,7 @@ def final_rcd_list_embed(date: str) -> discord.Embed:
     Функция для создания вложения о финальном списке РЧД.
     """
     embed = discord.Embed(
-        title=f'_**Список РЧД {date}**_',
+        title=f'_**Список РЧД (АТАКА) {date}**_',
         color=0xfffb00
     )
     for role in INDEX_CLASS_ROLE.values():
@@ -253,7 +253,7 @@ def second_final_rcd_list_embed(date: str) -> discord.Embed:
     Функция для создания вложения о финальном списке РЧД.
     """
     embed = discord.Embed(
-        title=f'_**Список РЧД (второй) {date}**_',
+        title=f'_**Список РЧД (ЗАЩИТА) {date}**_',
         color=0xfffb00
     )
     for role in INDEX_CLASS_ROLE.values():
@@ -284,7 +284,19 @@ def publish_rcd_embed(date: str) -> discord.Embed:
     Функция для создания вложения с публикацией списка РЧД.
     """
     embed = discord.Embed(
-        title=f'_**Список РЧД {date}**_',
+        title=f'_**Список РЧД (АТАКА) {date}**_',
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=CROSSED_SWORDS_IMAGE_URL)
+    return embed
+
+
+def publish_rcd_second_embed(date: str) -> discord.Embed:
+    """
+    Функция для создания вложения с публикацией списка РЧД.
+    """
+    embed = discord.Embed(
+        title=f'_**Список РЧД (ЗАЩИТА) {date}**_',
         color=0xfffb00
     )
     embed.set_thumbnail(url=CROSSED_SWORDS_IMAGE_URL)
