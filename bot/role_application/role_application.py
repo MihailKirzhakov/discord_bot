@@ -21,18 +21,7 @@ class RoleButton(View):
     """
     Класс кнопки роли для взаимодействия с пользователем в Discord.
     Создаёт 2 кнопки. Первая для выдачи роли,
-    вторая для отказа в выдаче роли 'Старшина'
-
-    Attributes:
-    -----------
-        nickname: str
-            Discord - псевдоним пользователя.
-
-        embed: discord.Embed
-            Embed объект, связанный с взаимодействием с пользователем.
-
-        user: discord.Member | discord.User
-            Пользователь, который взаимодействовал с модалкой.
+    вторая для отказа в выдаче роли 'Старшина'.
     """
 
     def __init__(
@@ -135,21 +124,6 @@ class DeniedRoleModal(Modal):
     """
     Класс модального окна для взаимодействия с пользователем в Discord.
     В данном случае, модальное окно используется для отказа в выдаче роли 'Старшина'.
-
-    Attributes:
-    -----------
-        nickname: str
-            Discord нинкнейм пользователя.
-
-        user: discord.Member | discord.User
-            Пользователь, провзаимодействоваший с кнопкой отказа в доступе.
-
-        view: discord.ui.Button
-            Кнопка.
-
-        embed: discord.Embed
-            Embed объект, связанный с взаимодействием с пользователем.
-
     """
 
     def __init__(
@@ -182,10 +156,10 @@ class DeniedRoleModal(Modal):
 
     async def callback(self, interaction: discord.Interaction):
         if self.nickname not in app_list:
-            await interaction.respond(
+            return await interaction.respond(
                 ANSWER_IF_CLICKED_THE_SAME_TIME,
                 ephemeral=True,
-                delete_after=15
+                delete_after=5
             )
         await interaction.response.defer()
         user = interaction.user
@@ -216,11 +190,6 @@ class RoleApplication(Modal):
     """
     Класс модального окна для взаимодействия с пользователем в Discord.
     Используется для создания модального окна с полем для ввода никнейма.
-
-    Attributes:
-    -----------
-        channel: discord.TextChannel
-            Канал, в котором будет создано модальное окно.
     """
 
     def __init__(self, channel: discord.TextChannel, *args, **kwargs):
@@ -305,12 +274,7 @@ class RoleApplication(Modal):
 class ApplicationButton(View):
     """
     Класс кнопки роли для взаимодействия с пользователем в Discord.
-    Вызывает модальное окно для заполнения формы.'
-
-    Attributes:
-    -----------
-        channel: discord.TextChannel.
-            Канал, в котором будет создано модальное окно.
+    Вызывает модальное окно для заполнения формы.
     """
 
     def __init__(
@@ -359,18 +323,6 @@ async def role_application(
 ) -> None:
     """
     Команда для вызова кнопки, которая обрабатывает запросы на доступ.
-
-    Parameters
-    ----------
-        ctx: discord.ApplicationContext.
-            Контекст.
-
-        channel: discord.TextChannel.
-            Канал, в котором будет размещена кнопка.
-
-    Returns
-    -------
-        None
     """
     try:
         if message_id:
@@ -415,18 +367,6 @@ async def role_application_error(
     """
     Обрабатывать ошибки, возникающие
     при выполнении команды запросов на выдачу доступа.
-
-    Parameters
-    ----------
-        ctx: discord.ApplicationContext.
-            Контекст.
-
-        error: Exception
-            Выбрасываемая ошибка.
-
-    Returns
-    -------
-        None
     """
     if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(

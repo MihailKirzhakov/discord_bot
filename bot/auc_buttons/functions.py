@@ -11,17 +11,6 @@ def convert_bid(bid: int) -> str:
     """
     Функция для конвертирования стартовой стоимости лота
     в вид к примеру "800K" или "1.2M" в десятичную систему.
-
-    Parameters
-    ----------
-        bid: int
-            Ставка, параметр берется из slash-функции /go_auc.
-
-    Returns
-    -------
-        'str'
-            Сконвертированная строка с объемом ставки и
-            отображением единицы измерения.
     """
     result = (
         f'{Decimal(bid) / Decimal('1000')}K' if 100000 <= bid
@@ -36,20 +25,6 @@ def thousand_summ(
 ) -> Decimal:
     """
     Функция считает суммы ставки с текущим значением на кнопке.
-
-    Parameters
-    ----------
-    original_label: 'Decimal(float | int)'
-        Число, взятое с кнопки.
-
-    bid: int
-        Ставка, параметр берется из slash-функции /go_auc.
-
-    Returns
-    -------
-        'Decimal(float | int)'
-            Число, полученное в результате прибавления ставки
-            для отображения в тысячах.
     """
     result = (
         original_label + (Decimal(bid) / Decimal('1000'))
@@ -60,20 +35,6 @@ def thousand_summ(
 def million_summ(original_label, bid) -> Decimal:
     """
     Функция считает суммы ставки с текущим значением на кнопке.
-
-    Parameters
-    ----------
-        original_label: Decimal(int | float)
-            Число, взятое с кнопки.
-
-        bid: str
-            Ставка, параметр берется из slash-функции /go_auc.
-
-    Returns
-    -------
-        'Decimal(float | int)'
-            Число, полученное в результате прибавления ставки
-            для отображения в миллионах.
     """
     result = (
         original_label + (Decimal(bid) / Decimal('1000000'))
@@ -89,25 +50,6 @@ def label_count(
 ) -> str:
     """
     Функция считает результат вычисления числа после сделанной ставки.
-
-    Parameters
-    ----------
-        button: discord.ui.Button
-            Отображающаяся кнопка.
-
-        original_label: Decimal(int | float)
-            Число, взятое с кнопки.
-
-        name: interaction.user.display_name
-            Имя пользователя, который взаимодействовал с кнопкой.
-
-        bid: int
-            Ставка, параметр берется из slash-функции /go_auc.
-
-    Returns
-    -------
-        button.label: str
-            Строка, отображающаяся на кнопке.
     """
     if len(button.label.split()) == 1:
         if 'K' in button.label:
@@ -138,19 +80,6 @@ def convert_to_mention(
     """
     Функция преобразует никнейм игрока на кнопке в тэг,
     для вывода списка победителей.
-
-    Parameters
-    ----------
-        label_values: list
-            Список строк, которые содержат ставку и никнейм игрока.
-
-        button_mentions: dict
-            Словарь, в котором ключи это 'display_nmame', а значения это 'mention'.
-
-    Returns
-    -------
-        result: list
-            Результирующий список строк с тэгами ников.
     """
     result = list()
     for value in label_values:
@@ -166,16 +95,6 @@ def convert_to_mention(
 def convert_sorted_message(values: str) -> str | float:
     """
     Функция помощник для сортировки с учетом тысяч или миллионов.
-
-    Parameters
-    ----------
-        values: str
-            Cтрока с содержимым кнопок (ставка + тэг ника).
-
-    Returns
-    -------
-        message: str | float
-            Строка сконвертированная под тысячи или миллоны.
     """
     if values == NOT_SOLD:
         return values
@@ -190,16 +109,6 @@ def convert_sorted_message(values: str) -> str | float:
 def seconds_until_date(target_date_time: str) -> int | str:
     """
     Функция считает количество секунд до определенной даты и времени.
-
-    Parameters
-    ----------
-        target_date_time: str
-            Дата и время в ДД.ММ ЧЧ:ММ формате.
-
-    Returns
-    -------
-        minutes_until: int
-            Количество секунд до определенной даты и времени.
     """
     pattern = r'^([0-2][0-9]|3[0-1])[.,/](0[1-9]|1[0-2]) ([0-1][0-9]|2[0-3])[:;]([0-5][0-9])$'
     match = re.match(pattern, target_date_time)

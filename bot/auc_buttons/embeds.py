@@ -15,31 +15,6 @@ def start_auc_embed(
 ) -> discord.Embed:
     """
     Создает встраиваемое сообщение об открытии аукциона.
-
-    Parametrs:
-    ----------
-        user_mention: discord.abc.User.mention
-            Упоминание пользователя, открывшего аукцион
-
-        name_auc: str
-            Название аукциона
-
-        stop_time: datetime
-            Время окончания аукциона
-
-        lot_count: int
-            Количество лотов в аукционе
-
-        first_bid: str
-            Начальная ставка
-
-        next_bid: str
-            Шаг ставки
-
-    Returns:
-    --------
-        embed: discord.Embed
-            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title=ATTENTION,
@@ -65,25 +40,6 @@ def results_embed(
 ) -> discord.Embed:
     """
     Создает встраиваемое сообщение с результатами аукциона.
-
-    Parametrs:
-    ----------
-        results_message: str
-            Результаты аукциона в виде строки.
-
-        user_mention: discord.abc.User.mention
-            Упоминание пользователя, открывшего аукцион.
-
-        name_auc: str
-            Название аукциона.
-
-        count: int
-            Количество лотов в аукционе.
-
-    Returns:
-    --------
-        embed: discord.Embed
-            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title=ATTENTION,
@@ -100,25 +56,13 @@ def results_embed(
     return embed
 
 
-def outbid_embed(url: str, stop_time: datetime, delete_after: int) -> discord.Embed:
+def outbid_embed(
+        url: str,
+        stop_time: datetime,
+        delete_after: int
+) -> discord.Embed:
     """
     Создает встраиваемое сообщение о перебивании ставки.
-
-    Parametrs:
-    ----------
-        url: str
-            Ссылка на сообщение.
-
-        stop_time: datetime
-            Ссылка на сообщение.
-
-        delete_after: int
-            Время жизни сообщения.
-
-    Returns:
-    --------
-        embed: discord.Embed
-            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title=ATTENTION,
@@ -138,22 +82,6 @@ def outbid_embed(url: str, stop_time: datetime, delete_after: int) -> discord.Em
 def end_auc_notification_embed():
     """
     Создает встраиваемое сообщение о перебивании ставки.
-
-    Parametrs:
-    ----------
-        url: str
-            Ссылка на сообщение.
-
-        stop_time: datetime
-            Ссылка на сообщение.
-
-        delete_after: int
-            Время жизни сообщения.
-
-    Returns:
-    --------
-        embed: discord.Embed
-            Встраиваемое сообщение.
     """
     embed = discord.Embed(
         title=REMIND,
