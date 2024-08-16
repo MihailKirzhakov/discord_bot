@@ -13,7 +13,7 @@ from .embeds import (
 from role_application.functions import has_required_role
 from variables import (
     VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE,
-    SERGEANT_ROLE, GUEST_ROLE
+    SERGEANT_ROLE
 )
 
 
@@ -119,9 +119,15 @@ class RaidChampionDominionApplication(Modal):
             guild = interaction.user.mutual_guilds[0]
             member = guild.get_member(interaction.user.id)
             field_index = 0 if discord.utils.get(member.roles, name=VETERAN_ROLE) else 1
-            embed.get('rcd_list_embed').fields[field_index].value += (
-                f'{interaction.user.mention}: {class_role} ({honor})\n'
-            )
+            field_value = embed.get('rcd_list_embed').fields[field_index].value
+            if member.mention in field_value and '🟡' in field_value:
+                new_value = field_value.replace(f'{member.mention}: 🟡\n', f'{member.mention}: {class_role} ({honor})\n')
+            elif member.mention in field_value and '🔴' in field_value:
+                new_value = field_value.replace(f'{member.mention}: 🔴\n', f'{member.mention}: {class_role} ({honor})\n')
+            else:
+                new_value = field_value + f'{member.mention}: {class_role} ({honor})\n'
+            embed.get('rcd_list_embed').fields[field_index].value = new_value
+
             await last_message_to_finish.get('start_RCD_button_message').edit(embed=embed.get('rcd_list_embed'))
             member_list.append(interaction.user.id)
             if interaction.channel.type.value == 1:
@@ -176,6 +182,15 @@ class PrivateMessageView(View):
         interaction: discord.Interaction
     ):
         try:
+            await interaction.response.defer()
+            guild = interaction.user.mutual_guilds[0]
+            member = guild.get_member(interaction.user.id)
+            field_index = 0 if discord.utils.get(member.roles, name=VETERAN_ROLE) else 1
+            field_value = embed.get('rcd_list_embed').fields[field_index].value
+            if member.mention in field_value:
+                new_value = field_value.replace(f'{member.mention}: 🟡\n', f'{member.mention}: 🔴\n')
+                embed.get('rcd_list_embed').fields[field_index].value = new_value
+                await last_message_to_finish.get('start_RCD_button_message').edit(embed=embed.get('rcd_list_embed'))
             await interaction.message.delete()
             await interaction.respond(
                 '_Принято ✅_',
@@ -564,7 +579,12 @@ class CreateRCDList(View):
         rcd_date_list.clear()
         embed.clear()
         last_message_to_finish.clear()
+        rcd_application_channel.clear()
+        publish_embed.clear()
         members_by_roles_attack.clear()
+        members_by_roles_deff.clear()
+        rcd_application_last_message.clear()
+        pub_info.clear()
         await interaction.respond(
             '_Работа со списком РЧД завершена! ✅_',
             ephemeral=True,
@@ -632,9 +652,7 @@ class StartRCDButton(View):
         disabled=True
     )
     async def ask_callback(
-        self,
-        select: discord.ui.Select,
-        interaction: discord.Interaction
+        self, select: discord.ui.Select, interaction: discord.Interaction
     ):
         if not has_required_role(interaction.user):
             return await interaction.respond(
@@ -645,6 +663,8 @@ class StartRCDButton(View):
         await interaction.response.defer()
         ask_users: list[discord.Member] = [user for user in select.values]
         for user in ask_users:
+            field_index = 0 if discord.utils.get(user.roles, name=VETERAN_ROLE) else 1
+            embed.get('rcd_list_embed').fields[field_index].value += (f'{user.mention}: 🟡\n')
             await user.send(
                 embed=ask_veteran_embed(
                     member=interaction.user, date=rcd_date_list.get('convert_rcd_date')
@@ -654,7 +674,7 @@ class StartRCDButton(View):
             )
         self.disable_all_items()
         self.clear_items()
-        await interaction.message.edit(view=self)
+        await interaction.message.edit(embed=embed.get('rcd_list_embed'), view=self)
         await interaction.respond(
             '_Сообщения были отправлены, выбранным пользователям!_ ✅',
             ephemeral=True,
