@@ -24,7 +24,7 @@ from variables import (
 
 
 final_time: dict[str, datetime] = {}
-channel_last_message: dict[str, discord.Message] = {}
+channel_last_message_dict: dict[str, discord.Message] = {}
 
 
 class StartAucModal(Modal):
@@ -93,7 +93,7 @@ class StartAucModal(Modal):
                 ephemeral=True,
                 delete_after=10
             )
-        if final_time.get(name_auc) or channel_last_message.get(name_auc):
+        if final_time.get(name_auc) or channel_last_message_dict.get(name_auc):
             name_auc += ' 😊'
         button_mentions: dict[str, str] = {}
         today: datetime = datetime.now()
@@ -143,18 +143,18 @@ class StartAucModal(Modal):
                 ),
                 view=button_manager
             )
-            channel_last_message[name_auc] = self.channel.last_message
+            channel_last_message_dict[name_auc] = self.channel.last_message
             await interaction.respond(
                 f'_Аукцион запущен в канале {self.channel.mention}_',
                 ephemeral=True,
-                delete_after=10
+                delete_after=3
             )
             logger.info(
                 f'Команда /go_auc запущена пользователем "{interaction.user.display_name}"'
             )
             await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
             await check_timer(
-                channel_last_message=channel_last_message.get(name_auc),
+                channel_last_message=channel_last_message_dict.get(name_auc),
                 view=button_manager,
                 user_mention=user_mention,
                 name_auc=name_auc,
@@ -262,7 +262,7 @@ def bid_callback(
     Функция для обработки нажатия на кнопку ставки.
     """
     async def inner(interaction: discord.Interaction):
-        await interaction.response.defer()
+        await interaction.response.defer(invisible=False, ephemeral=True)
         nowtime: datetime = datetime.now()
         secondstime: timedelta = timedelta(seconds=60)
         plus_minute: datetime = nowtime + secondstime
@@ -286,14 +286,13 @@ def bid_callback(
                     f'Бот не сломался, попробуй сделать ставку снова. Если '
                     f'данное сообщение появляется снова, обратись к '
                     f'{LEADER_NICKNAME}, для скорейшего решения проблемы!',
-                    ephemeral=True,
                     delete_after=10
                 )
                 await start_auc_user.send(
-                    f'Сигнал об ошибке во время аукциона! '
+                    f'_Сигнал об ошибке во время аукциона! '
                     f'При попытке пользователя "{interaction.user.display_name}" '
                     f'сделать ставку, произошла неизвестная ошибка! '
-                    f'Отработала резервная view.'
+                    f'Отработала резервная view._'
                 )
                 logger.error(
                     f'При попытке сделать ставку пользователем '
@@ -314,9 +313,11 @@ def bid_callback(
                         )
                     )
                     final_time[name_auc] = plus_minute
+                    await interaction.respond('✅', delete_after=1)
                     logger.info(f'Кнопка обновилась, результат "{button.label}"')
                 else:
                     await interaction.message.edit(view=view)
+                    await interaction.respond('✅', delete_after=1)
                     logger.info(f'Кнопка обновилась, результат "{button.label}"')
                 if 'K' != before_button_label[-1] and 'M' != before_button_label[-1] and interaction.user.display_name not in before_button_label:
                     time_of_bid = None
@@ -399,6 +400,8 @@ async def auto_stop_auc(
             f'При автоматическом завершении аукциона возникла ошибка '
             f'"{error}"'
         )
+    finally:
+        channel_last_message_dict.pop(name_auc)
 
 
 def setup(bot: discord.Bot):
