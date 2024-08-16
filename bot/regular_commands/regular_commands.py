@@ -548,7 +548,7 @@ async def check_roles(
     )  # type: ignore
 ) -> None:
     """
-    Команда для запуска кнопки старта РЧД заявок.
+    Команда для проверки ролей на сервере.
     """
     guild_member_list: list[str] = []
     removed_role_members: list[str] = []
