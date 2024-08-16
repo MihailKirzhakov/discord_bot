@@ -566,15 +566,14 @@ class CreateRCDList(View):
                         delete_after=3
                     )
                 for index, member_set in members_by_roles.items():
+                    pub_info[pub_info_key] = True
                     for member in member_set:
                         await send_notification(member, index)
                         logger.info(f'"{member.display_name}" оповещён об РЧД')
-                pub_info[pub_info_key] = True
-
             if self.children[1].style == discord.ButtonStyle.red:
-                await get_members_by_role(members_by_roles_deff, 'ЗАЩИТЫ')
+                await get_members_by_role(members_by_roles_deff, 'deff')
             else:
-                await get_members_by_role(members_by_roles_attack, 'АТАКИ')
+                await get_members_by_role(members_by_roles_attack, 'atack')
 
             if pub_info.get('deff') and pub_info.get('atack'):
                 button.label = 'Все оповещения были отправлены ✅'
@@ -711,7 +710,7 @@ class StartRCDButton(View):
                         member=interaction.user, date=rcd_date_list.get('convert_rcd_date')
                     ),
                     view=PrivateMessageView(),
-                    delete_after=10800
+                    delete_after=86400
                 )
                 logger.info(f'Пользователю "{user.display_name}" был отправлен вопрос об РЧД')
             self.disable_all_items()
