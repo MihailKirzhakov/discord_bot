@@ -71,7 +71,7 @@ class RcdDate(Modal):
             embed['final_rcd_list_embed'] = final_rcd_list_embed(convert_rcd_date)
             embed['second_final_rcd_list_embed'] = second_final_rcd_list_embed(convert_rcd_date)
             embed['rcd_list_embed'] = rcd_list_embed(convert_rcd_date)
-            await interaction.followup.send(embed=rcd_list_embed(convert_rcd_date), view=StartRCDButton())
+            await interaction.respond(embed=rcd_list_embed(convert_rcd_date), view=StartRCDButton())
         except Exception as error:
             logger.error(
                 f'При вводе даты РЧД возникла ошибка {error}'
@@ -106,11 +106,6 @@ class RaidChampionDominionApplication(Modal):
     async def callback(self, interaction: discord.Interaction):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
-            if interaction.user.id in member_list:
-                return await interaction.respond(
-                    '_Ты уже подал заявку! ✅_',
-                    delete_after=1
-                )
             honor: str = str(self.children[0].value)
             class_role: str = str(self.children[1].value)
             if not class_role:
@@ -145,7 +140,7 @@ class RaidChampionDominionApplication(Modal):
 
 class PrivateMessageView(View):
     """
-    Кнопка для отказа соглашения идти на РЧД.
+    Кнопка для отказа или соглашения идти на РЧД.
     """
     def __init__(self):
         super().__init__(timeout=None)
@@ -160,6 +155,11 @@ class PrivateMessageView(View):
         interaction: discord.Interaction
     ):
         try:
+            if interaction.user.id in member_list:
+                return await interaction.respond(
+                    '_Ты уже подал заявку! ✅_',
+                    delete_after=1
+                )
             await interaction.response.send_modal(RaidChampionDominionApplication())
         except Exception as error:
             logger.error(
@@ -220,8 +220,13 @@ class RCDButton(View):
         interaction: discord.Interaction
     ):
         try:
-            await interaction.response.send_modal(
-                RaidChampionDominionApplication())
+            if interaction.user.id in member_list:
+                return await interaction.respond(
+                    '_Ты уже подал заявку! ✅_',
+                    delete_after=1,
+                    ephemeral=True
+                )
+            await interaction.response.send_modal(RaidChampionDominionApplication())
         except Exception as error:
             logger.error(
                 f'При нажатии на кнопку отправки заявки на РЧД '
@@ -255,11 +260,10 @@ class SelectMemberToRCD(View):
         select: discord.ui.Select,
         interaction: discord.Interaction
     ):
-        await interaction.response.defer(invisible=False, ephemeral=True)
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
-                delete_after=5
+                delete_after=2
             )
         f_embed: discord.Embed = embed.get('final_rcd_list_embed')
         s_embed: discord.Embed = embed.get('second_final_rcd_list_embed')
@@ -274,7 +278,7 @@ class SelectMemberToRCD(View):
             if user.mention in check_set:
                 return await interaction.respond(
                     '_Повторно добавлять одного и того же нельзя, проверь списки! ❌_',
-                    ephemeral=True
+                    delete_after=3
                 )
         await self.update_embed(
             interaction,
@@ -288,11 +292,10 @@ class SelectMemberToRCD(View):
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
-        await interaction.response.defer(invisible=False, ephemeral=True)
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
-                delete_after=5
+                delete_after=2
             )
         await self.update_embed(interaction, '', None)
 
@@ -302,6 +305,7 @@ class SelectMemberToRCD(View):
         value: str,
         members: set[discord.Member] | None
     ) -> None:
+        await interaction.response.defer(invisible=False, ephemeral=True)
         tumbler_button: discord.ui.Button = self.item_list[1]
         is_red = tumbler_button.style == discord.ButtonStyle.red
 
@@ -320,7 +324,7 @@ class SelectMemberToRCD(View):
 
         message: discord.Message = last_message_to_finish.get(message_name)
         await message.edit(embed=embed_object)
-        await interaction.message.delete()
+        await interaction.respond('✅', delete_after=1)
 
 
 class AddMemberToListButton(discord.ui.Button):
@@ -340,12 +344,12 @@ class AddMemberToListButton(discord.ui.Button):
         self.create_rcd_view = create_rcd_view
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer(invisible=False)
+        await interaction.response.defer(invisible=False, ephemeral=True)
         create_button: discord.ui.Button = self.create_rcd_view.children[0]
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
-                delete_after=5
+                delete_after=2
             )
         if not last_message_to_finish.get('final_rcd_list_message'):
             last_message_to_finish['final_rcd_list_message'] = interaction.channel.last_message
@@ -381,7 +385,7 @@ class CreateRCDList(View):
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
-                delete_after=5
+                delete_after=2
             )
         last_message_to_finish['create_RCD_list_buttons'] = interaction.message
         if not last_message_to_finish.get('final_rcd_list_message'):
@@ -423,7 +427,7 @@ class CreateRCDList(View):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 ephemeral=True,
-                delete_after=5
+                delete_after=2
             )
         if not last_message_to_finish.get('second_final_rcd_list_message'):
             last_message_to_finish['second_final_rcd_list_message'] = interaction.channel.last_message
@@ -448,7 +452,7 @@ class CreateRCDList(View):
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
-                delete_after=5
+                delete_after=2
             )
         channel: discord.TextChannel = rcd_application_channel.get('rcd_aplication_channel')
         f_embed: discord.Embed = embed.get('final_rcd_list_embed')
@@ -465,7 +469,8 @@ class CreateRCDList(View):
                 await channel.send(embed=publish_second_embed)
             elif 'Заявки на РЧД' in channel.last_message.embeds[0].title:
                 return await interaction.respond(
-                    '_Сначала нужно отправить список "АТАКА"! ❌_'
+                    '_Сначала нужно отправить список "АТАКА"! ❌_',
+                    delete_after=3
                 )
             else:
                 await channel.last_message.edit(embed=publish_second_embed)
@@ -473,15 +478,16 @@ class CreateRCDList(View):
             for field in [field for field in f_embed.fields if field.value != '']:
                 name, value, inline = field.name, field.value, field.inline
                 publish_embed.add_field(name=name, value=value, inline=inline)
+            if not last_message_to_finish.get('final_rcd_list_message'):
+                last_message_to_finish['final_rcd_list_message'] = interaction.channel.last_message
+                self.children[0].disabled = False
+                await interaction.message.edit(view=self)
             if 'Заявки на РЧД' in channel.last_message.embeds[0].title:
                 await channel.last_message.delete()
                 await channel.send(embed=publish_embed)
             else:
                 await rcd_application_last_message.get('attack').edit(embed=publish_embed)
-        await interaction.respond(
-            f'_Список РЧД опубликован в канале {channel.mention}_',
-            delete_after=1
-        )
+        await interaction.respond('✅', delete_after=1)
 
     @button(
         label='Оповестить об РЧД из списка 📣', style=discord.ButtonStyle.gray,
@@ -521,7 +527,8 @@ class CreateRCDList(View):
                     )
                 if pub_info.get(pub_info_key):
                     return await interaction.respond(
-                        f'_Опевещения из списка {pub_info_key} уже были отправлены! ❌_'
+                        f'_Опевещения из списка {pub_info_key} уже были отправлены! ❌_',
+                        delete_after=3
                     )
                 for index, member_set in members_by_roles.items():
                     for member in member_set:
@@ -538,6 +545,7 @@ class CreateRCDList(View):
                 button.style = discord.ButtonStyle.gray
                 button.disabled = True
                 await interaction.message.edit(view=self)
+            await interaction.respond('✅', delete_after=1)
         except Exception as error:
             logger.error(
                 'При отправке уведомлений пользователям из списка '
@@ -557,7 +565,7 @@ class CreateRCDList(View):
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
-                delete_after=5
+                delete_after=2
             )
         await interaction.channel.delete_messages(
             [message for key, message in last_message_to_finish.items() if key != 'start_RCD_button_message']
@@ -566,7 +574,8 @@ class CreateRCDList(View):
             rcd_application_channel.get('rcd_aplication_channel').last_message
             if 'Заявки на РЧД' in rcd_application_channel.get('rcd_aplication_channel').last_message.embeds[0].title else None
         )
-        await rcd_application_channel.get('rcd_aplication_channel').delete_messages([rcd_app_message])
+        if rcd_app_message:
+            await rcd_application_channel.get('rcd_aplication_channel').delete_messages([rcd_app_message])
         await last_message_to_finish.get('start_RCD_button_message').edit(view=None)
         member_list.clear()
         rcd_date_list.clear()
@@ -578,10 +587,7 @@ class CreateRCDList(View):
         members_by_roles_deff.clear()
         rcd_application_last_message.clear()
         pub_info.clear()
-        await interaction.respond(
-            '_Работа со списком РЧД завершена! ✅_',
-            delete_after=2
-        )
+        await interaction.respond('✅', delete_after=1)
 
 
 class StartRCDButton(View):
@@ -613,7 +619,7 @@ class StartRCDButton(View):
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
-                delete_after=5
+                delete_after=2
             )
         last_message_to_finish['start_RCD_button_message'] = interaction.message
         channel: discord.TextChannel = select.values[0]
@@ -645,15 +651,16 @@ class StartRCDButton(View):
     async def ask_callback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):
-        await interaction.response.defer(invisible=False)
+        await interaction.response.defer(invisible=False, ephemeral=True)
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
-                ephemeral=True,
-                delete_after=5
+                delete_after=2
             )
         ask_users: list[discord.Member] = [user for user in select.values]
         for user in ask_users:
+            if user.id in member_list:
+                continue
             field_index = 0 if discord.utils.get(user.roles, name=VETERAN_ROLE) else 1
             embed.get('rcd_list_embed').fields[field_index].value += (f'{user.mention}: 🟡\n')
             await user.send(
@@ -666,7 +673,4 @@ class StartRCDButton(View):
         self.disable_all_items()
         self.clear_items()
         await interaction.message.edit(embed=embed.get('rcd_list_embed'), view=self)
-        await interaction.respond(
-            '_Сообщения были отправлены, выбранным пользователям!_ ✅',
-            delete_after=3
-        )
+        await interaction.respond('✅', delete_after=1)
