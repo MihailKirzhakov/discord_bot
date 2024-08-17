@@ -43,10 +43,10 @@ class RoleButton(View):
         interaction: discord.Interaction
     ):
         """Кнопка выдачи роли 'Старшина'."""
+        await interaction.response.defer(invisible=False, ephemeral=True)
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
-                ephemeral=True,
                 delete_after=5
             )
         role_sergeant = discord.utils.get(
@@ -59,10 +59,8 @@ class RoleButton(View):
             if self.nickname not in app_list:
                 await interaction.respond(
                     ANSWER_IF_CLICKED_THE_SAME_TIME,
-                    ephemeral=True,
                     delete_after=15
                 )
-            await interaction.response.defer()
             await self.user.edit(nick=self.nickname)
             await self.user.add_roles(role_sergeant)
             await self.user.remove_roles(role_guest)
@@ -79,6 +77,7 @@ class RoleButton(View):
             )
             await self.user.send(embed=access_embed())
             app_list.remove(self.nickname)
+            await interaction.respond('✅', delete_after=1)
             logger.info(
                 f'Пользователь {interaction.user.display_name} '
                 f'выдал роль пользователю "{self.nickname}"!'
@@ -155,13 +154,12 @@ class DeniedRoleModal(Modal):
             )
 
     async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(invisible=False, ephemeral=True)
         if self.nickname not in app_list:
             return await interaction.respond(
                 ANSWER_IF_CLICKED_THE_SAME_TIME,
-                ephemeral=True,
                 delete_after=5
             )
-        await interaction.response.defer()
         user = interaction.user
         value = self.children[0].value
         self.embed.add_field(
@@ -175,6 +173,7 @@ class DeniedRoleModal(Modal):
             self.view.disable_all_items()
             self.view.clear_items()
             await interaction.message.edit(embed=self.embed, view=self.view)
+            await interaction.respond('✅', delete_after=1)
             logger.info(
                 f'Пользователь {interaction.user.display_name} отказал в доступе '
                 f'пользователю "{self.nickname}"!'
@@ -206,7 +205,7 @@ class RoleApplication(Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer()
+        await interaction.response.defer(invisible=False, ephemeral=True)
         nickname: str = self.children[0].value
         user = interaction.user
         member = discord.utils.get(interaction.guild.members, id=user.id)
@@ -218,20 +217,17 @@ class RoleApplication(Modal):
         if not player_parms:
             return await interaction.respond(
                 ANSWER_IF_CHEAT,
-                ephemeral=True,
                 delete_after=15
             )
         if nickname in app_list:
             return await interaction.respond(
                 ANSWER_IF_DUPLICATE_APP,
-                ephemeral=True,
                 delete_after=10
             )
         if member_by_display_name:
             if role not in member_by_display_name.roles:
                 return await interaction.respond(
                     ANSWER_IF_DUPLICATE_NICK,
-                    ephemeral=True,
                     delete_after=10
                 )
         description = (
@@ -256,8 +252,7 @@ class RoleApplication(Modal):
             app_list.append(nickname)
             await interaction.respond(
                 '👍\n_Твой запрос принят! Дождись выдачи роли_',
-                ephemeral=True,
-                delete_after=10
+                delete_after=5
             )
             logger.info(
                     f'Пользователь {interaction.user.display_name} заполнил форму, '
@@ -295,9 +290,7 @@ class ApplicationButton(View):
         interaction: discord.Interaction
     ):
         try:
-            await interaction.response.send_modal(RoleApplication(
-                channel=self.channel
-            ))
+            await interaction.response.send_modal(RoleApplication(channel=self.channel))
         except Exception as error:
             logger.error(
                 f'При попытке вызвать модальное окно нажатием на кнопку '
