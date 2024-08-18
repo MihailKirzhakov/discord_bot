@@ -58,6 +58,7 @@ class StartRemindModal(Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(invisible=False, ephemeral=True)
         message: str = str(self.children[0].value)
         date_str: str = str(self.children[1].value)
         time_str: str = str(self.children[2].value)
@@ -73,14 +74,12 @@ class StartRemindModal(Modal):
         if not date_match:
             return await interaction.respond(
                 'Неправильный формат даты. Пожалуйста, используйте формат ДД.ММ',
-                ephemeral=True,
                 delete_after=10
             )
 
         if not time_match:
             return await interaction.respond(
                 'Неправильный формат времени. Пожалуйста, используйте формат ЧЧ:ММ',
-                ephemeral=True,
                 delete_after=10
             )
 
@@ -101,7 +100,6 @@ class StartRemindModal(Modal):
             add_remind_to_db(interaction.user.id, message, remind_date)
             await interaction.respond(
                 embed=remind_embed(convert_remind_date, message),
-                ephemeral=True,
                 delete_after=20
             )
             logger.info(
