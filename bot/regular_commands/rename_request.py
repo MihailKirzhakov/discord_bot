@@ -17,11 +17,13 @@ class AccessDeniedButton(View):
     """
     def __init__(
             self,
+            old_nickname: str,
             new_nickname: str,
-            user: discord.abc.User,
+            user: discord.Member,
             timeout: float | None = None
     ):
         super().__init__(timeout=timeout)
+        self.old_nickname = old_nickname
         self.new_nickname = new_nickname
         self.user = user
 
@@ -32,20 +34,22 @@ class AccessDeniedButton(View):
         interaction: discord.Interaction
     ):
         try:
+            await interaction.response.defer(invisible=False, ephemeral=True)
             self.disable_all_items()
             self.clear_items()
             await self.user.edit(nick=self.new_nickname)
             await interaction.message.edit(
                 embed=changed_rename_embed(
-                    user=self.user.display_name, nickname=self.new_nickname
+                    user=self.user, nickname=self.new_nickname
                 ),
                 view=self
             )
+            que_request[self.user] = False
+            await interaction.respond('✅', delete_after=1)
             logger.info(
-                f'Никнейм пользователя {self.user.display_name} изменён '
+                f'Никнейм пользователя {self.user} изменён '
                 f'на {self.new_nickname}'
             )
-            que_request[self.user] = False
         except Exception as error:
             logger.error(
                 f'При попытке изменить никнейм возникла ошибка {error}'
@@ -61,7 +65,7 @@ class AccessDeniedButton(View):
         interaction: discord.Interaction
     ):
         try:
-            await interaction.response.defer()
+            await interaction.response.defer(invisible=False, ephemeral=True)
             self.disable_all_items()
             self.clear_items()
             await self.user.send(
@@ -72,6 +76,7 @@ class AccessDeniedButton(View):
                 view=self
             )
             que_request[self.user] = False
+            await interaction.respond('✅', delete_after=1)
             logger.info(f'Никнейм пользователя {self.user.display_name} НЕ изменён')
         except Exception as error:
             logger.error(
@@ -102,28 +107,27 @@ class RenameModal(Modal):
 
     async def callback(self, interaction: discord.Interaction):
         new_nickname: str = self.children[0].value
-        user: discord.abc.User = interaction.user
+        user: discord.Member = interaction.user
         try:
-            await interaction.response.defer()
+            await interaction.response.defer(invisible=False, ephemeral=True)
             if interaction.user.display_name == new_nickname:
                 return await interaction.respond(
-                    '_Зачем менять никнейм на свой текущий? 🤔_'
+                    '_Зачем менять никнейм на свой текущий? 🤔_',
+                    delete_after=3
                 )
             if que_request.get(user):
                 await interaction.respond(
                     '_Ты уже отправил запрос на смену ника, ожидай! 👌_',
-                    ephemeral=True,
-                    delete_after=10
+                    delete_after=3
                 )
             else:
                 await self.channel.send(
                     embed=rename_embed(user=user.display_name, nickname=new_nickname),
-                    view=AccessDeniedButton(user=user, new_nickname=new_nickname)
+                    view=AccessDeniedButton(old_nickname=user.display_name, user=user, new_nickname=new_nickname)
                     )
                 await interaction.respond(
                     '_Запрос отправлен, погоди чутка! ✅_',
-                    ephemeral=True,
-                    delete_after=10
+                    delete_after=3
                 )
                 que_request[user] = True
                 logger.info(
