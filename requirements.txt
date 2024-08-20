@@ -13,6 +13,6 @@ pillow==10.3.0
 py-cord==2.6.0
 python-dotenv==1.0.1
 requests==2.32.2
-urllib3==2.2.1
+urllib3==2.2.2
 win32-setctime==1.1.0
 yarl==1.9.4
