@@ -12,11 +12,12 @@ def convert_bid(bid: int) -> str:
     Функция для конвертирования стартовой стоимости лота
     в вид к примеру "800K" или "1.2M" в десятичную систему.
     """
-    result = (
-        f'{Decimal(bid) / Decimal('1000')}K' if 100000 <= bid
-        <= 900000 else f'{Decimal(bid) / Decimal('1000000')}M'
-    )
-    return result
+    if bid < 1000:
+        return str(bid)
+    elif 1000 <= bid < 1000000:
+        return f"{bid / 1000:.1f}K"
+    else:
+        return f"{bid / 1000000:.1f}M"
 
 
 def thousand_summ(
