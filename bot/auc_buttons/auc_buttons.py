@@ -16,7 +16,8 @@ from .functions import (
     label_count,
     convert_to_mention,
     convert_sorted_message,
-    seconds_until_date
+    seconds_until_date,
+    convert_bid_back
 )
 from variables import (
     MAX_BUTTON_VALUE, MIN_BID_VALUE, NOT_SOLD, LEADER_NICKNAME
@@ -82,6 +83,7 @@ class StartAucModal(Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(invisible=False)
         name_auc: str = str(self.children[0].value)
         count: int = int(self.children[1].value)
         start_bid: int = int(self.children[2].value)
@@ -113,14 +115,7 @@ class StartAucModal(Modal):
         user_mention: str = interaction.user.mention
         button_manager = View(timeout=None)
         for _ in range(count):
-            auc_button: discord.ui.Button = Button(
-                label=str(convert_bid(start_bid)),
-                style=discord.ButtonStyle.green
-            )
-            button_manager.add_item(auc_button)
-            auc_button.callback = bid_callback(
-                button=auc_button,
-                view=button_manager,
+            button_manager.add_item(BidButton(
                 start_bid=start_bid,
                 bid=bid,
                 start_auc_user=start_auc_user,
@@ -129,48 +124,49 @@ class StartAucModal(Modal):
                 count=count,
                 name_auc=name_auc,
                 final_time=final_time,
-                button_mentions=button_mentions
-            )
-        try:
-            await self.channel.send(
-                embed=start_auc_embed(
-                    user_mention=user_mention,
-                    name_auc=name_auc,
-                    stop_time=stop_time,
-                    lot_count=count,
-                    first_bid=convert_bid(start_bid),
-                    next_bid=convert_bid(bid)
-                ),
-                view=button_manager
-            )
-            channel_last_message_dict[name_auc] = self.channel.last_message
-            await interaction.respond(
-                f'_Аукцион запущен в канале {self.channel.mention}_',
-                ephemeral=True,
-                delete_after=3
-            )
-            logger.info(
-                f'Команда /go_auc запущена пользователем "{interaction.user.display_name}"'
-            )
-            await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
-            await check_timer(
-                channel_last_message=channel_last_message_dict.get(name_auc),
-                view=button_manager,
-                user_mention=user_mention,
-                name_auc=name_auc,
-                count=count,
-                final_time=final_time,
-                button_mentions=button_mentions
-            )
-        except Exception as error:
-            await interaction.respond(
-                f'Не вышло, вот ошибка: {error}',
-                ephemeral=True
-            )
-            logger.error(
-                f'При попытке запустить аукцион модальным окном '
-                f'возникло исключение "{error}"'
-            )
+                button_mentions=button_mentions,
+                button_manager=button_manager
+            ))
+        await self.channel.send(view=button_manager)
+        await interaction.respond('✅', delete_after=1)
+
+
+class BidButton(Button):
+    def __init__(
+            self,
+            start_bid: int,
+            bid: int,
+            start_auc_user: discord.Member,
+            stop_time: datetime,
+            user_mention: str,
+            count: int,
+            name_auc: str,
+            final_time: dict[str, datetime],
+            button_mentions: dict[str, str],
+            button_manager: discord.ui.View
+    ):
+        super().__init__(
+            style=discord.ButtonStyle.blurple,
+            label=convert_bid(start_bid)
+        )
+        self.start_bid = start_bid
+        self.bid = bid
+        self.start_auc_user = start_auc_user
+        self.stop_time = stop_time
+        self.user_mention = user_mention
+        self.count = count
+        self.name_auc = name_auc
+        self.final_time = final_time
+        self.button_mentions = button_mentions
+        self.button_manager = button_manager
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(invisible=False, ephemeral=True)
+        label_parts = self.label.split()
+        full_label_number = convert_bid_back(label_parts[0])
+        self.label = f'{convert_bid(full_label_number + self.bid) if len(label_parts) > 1 else label_parts[0]} {interaction.user.display_name}'
+        await interaction.message.edit(view=self.view)
+        await interaction.respond('✅', delete_after=1)
 
 
 @commands.slash_command()

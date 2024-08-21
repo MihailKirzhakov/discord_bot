@@ -15,7 +15,7 @@ def convert_bid(bid: int) -> str:
     if bid < 1000:
         return str(bid)
     elif 1000 <= bid < 1000000:
-        return f"{bid / 1000:.1f}K"
+        return f"{bid / 1000:.0f}K"
     else:
         return f"{bid / 1000000:.1f}M"
 
