@@ -13,6 +13,7 @@ from .embeds import (
 )
 from .functions import (
     convert_bid,
+    convert_bid_back,
     label_count,
     convert_to_mention,
     convert_sorted_message,
@@ -188,9 +189,9 @@ class BidButton(discord.ui.Button):
     ):
         super().__init__(
             style=discord.ButtonStyle.blurple,
-            label=str(start_bid) if start_bid < 1000 else start_bid / 1000
+            label=convert_bid(start_bid)
         )
-        self.start_bid = 
+        self.start_bid = start_bid
         self.bid = bid
         self.start_auc_user = start_auc_user
         self.stop_time = stop_time
@@ -201,7 +202,11 @@ class BidButton(discord.ui.Button):
         self.button_mentions = button_mentions
 
     async def callback(self, interaction: discord.Interaction):
-        result_bid = self.start_bid + self.bid
+        full_label_number = convert_bid_back(self.label.split()[0])
+        if len(self.label.split()) == 1:
+            self.label = f'{self.label} {interaction.user.display_name}'
+        else:
+            self.label = f'{convert_bid(full_label_number + self.bid)} {interaction.user.display_name}'
 
 
 @commands.slash_command()
@@ -433,7 +438,3 @@ async def auto_stop_auc(
         )
     finally:
         channel_last_message_dict.pop(name_auc)
-
-
-def setup(bot: discord.Bot):
-    bot.add_application_command(go_auc)

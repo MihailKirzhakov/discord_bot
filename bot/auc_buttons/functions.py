@@ -20,6 +20,19 @@ def convert_bid(bid: int) -> str:
         return f"{bid / 1000000:.1f}M"
 
 
+def convert_bid_back(bid: str) -> int:
+    """
+    Функция для конвертирования строки в формате "800K" или "1.2M"
+    в десятичную систему.
+    """
+    if bid.endswith('K'):
+        return int(float(bid[:-1]) * 1000)
+    elif bid.endswith('M'):
+        return int(float(bid[:-1]) * 1000000)
+    else:
+        return int(bid)
+
+
 def thousand_summ(
     original_label: Decimal,
     bid: int
