@@ -1,8 +1,5 @@
 import datetime
-from decimal import Decimal
 import re
-
-import discord
 
 from variables import NOT_SOLD
 
@@ -12,65 +9,25 @@ def convert_bid(bid: int) -> str:
     Функция для конвертирования стартовой стоимости лота
     в вид к примеру "800K" или "1.2M" в десятичную систему.
     """
-    result = (
-        f'{Decimal(bid) / Decimal('1000')}K' if 100000 <= bid
-        <= 900000 else f'{Decimal(bid) / Decimal('1000000')}M'
-    )
-    return result
-
-
-def thousand_summ(
-    original_label: Decimal,
-    bid: int
-) -> Decimal:
-    """
-    Функция считает суммы ставки с текущим значением на кнопке.
-    """
-    result = (
-        original_label + (Decimal(bid) / Decimal('1000'))
-    )
-    return result
-
-
-def million_summ(original_label, bid) -> Decimal:
-    """
-    Функция считает суммы ставки с текущим значением на кнопке.
-    """
-    result = (
-        original_label + (Decimal(bid) / Decimal('1000000'))
-    )
-    return result
-
-
-def label_count(
-    button: discord.ui.Button,
-    original_label: Decimal,
-    name: discord.abc.User.display_name,
-    bid: int
-) -> str:
-    """
-    Функция считает результат вычисления числа после сделанной ставки.
-    """
-    if len(button.label.split()) == 1:
-        if 'K' in button.label:
-            button.label = f'{original_label}K {name}'
-        else:
-            button.label = f'{original_label}M {name}'
+    if bid < 1000:
+        return str(bid)
+    elif 1000 <= bid < 1000000:
+        return f"{bid / 1000:.0f}K"
     else:
-        if 'K' in button.label:
-            if original_label < 900 and (
-                thousand_summ(original_label, bid) < 1000
-            ):
-                button.label = f'{thousand_summ(original_label, bid)}K {name}'
-            else:
-                button.label = (
-                    f'{thousand_summ(
-                        original_label, bid
-                    ) / Decimal('1000')}M {name}'
-                )
-        else:
-            button.label = f'{million_summ(original_label, bid)}M {name}'
-    return button.label
+        return f"{bid / 1000000:.1f}M"
+
+
+def convert_bid_back(bid: str) -> int:
+    """
+    Функция для конвертирования строки в формате "800K" или "1.2M"
+    в десятичную систему.
+    """
+    if bid.endswith('K'):
+        return int(float(bid[:-1]) * 1000)
+    elif bid.endswith('M'):
+        return int(float(bid[:-1]) * 1000000)
+    else:
+        return int(bid)
 
 
 def convert_to_mention(

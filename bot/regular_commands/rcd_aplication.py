@@ -46,7 +46,7 @@ class RcdDate(Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer(invisible=False)
+        await interaction.response.defer(invisible=False, ephemeral=True)
         date_str: str = str(self.children[0].value)
         date_pattern = r'^([0-2][0-9]|3[0-1])[.,/](0[1-9]|1[0-2])$'
         date_match = re.match(date_pattern, date_str)
@@ -71,8 +71,10 @@ class RcdDate(Modal):
             embed['final_rcd_list_embed'] = final_rcd_list_embed(convert_rcd_date)
             embed['second_final_rcd_list_embed'] = second_final_rcd_list_embed(convert_rcd_date)
             embed['rcd_list_embed'] = rcd_list_embed(convert_rcd_date)
-            await interaction.respond(embed=rcd_list_embed(convert_rcd_date), view=StartRCDButton())
+            await interaction.channel.send(embed=rcd_list_embed(convert_rcd_date), view=StartRCDButton())
+            await interaction.respond('✅', delete_after=1)
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При вводе даты РЧД возникла ошибка "{error}"'
             )
@@ -131,6 +133,7 @@ class RaidChampionDominionApplication(Modal):
             )
             logger.info(f'Принята заявка на РЧД от "{interaction.user.display_name}"')
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При отправке заявки на РЧД пользователем '
                 f'"{interaction.user.display_name}" произошла ошибка "{error}"'
@@ -161,6 +164,7 @@ class PrivateMessageView(View):
                 )
             await interaction.response.send_modal(RaidChampionDominionApplication())
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При нажатии на кнопку отправки заявки на РЧД '
                 f'пользователем "{interaction.user.display_name}" '
@@ -194,6 +198,7 @@ class PrivateMessageView(View):
             )
             logger.info(f'"{interaction.user.display_name}" отказался быть на РЧД')
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При отправке отказа пользователем "{interaction.user.display_name}" '
                 f'возникла ошибка "{error}"'
@@ -228,6 +233,7 @@ class RCDButton(View):
                 )
             await interaction.response.send_modal(RaidChampionDominionApplication())
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При нажатии на кнопку отправки заявки на РЧД '
                 f'пользователем "{interaction.user.display_name}" '
@@ -287,6 +293,7 @@ class SelectMemberToRCD(View):
                 set(select.values)
             )
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При выборе игроков возникла ошибка "{error}"'
             )
@@ -332,6 +339,7 @@ class SelectMemberToRCD(View):
             await message.edit(embed=embed_object)
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При обработке игроков возникла ошибка "{error}"'
             )
@@ -373,6 +381,7 @@ class AddMemberToListButton(discord.ui.Button):
                 index=self.index, item_list=self.create_rcd_view.children
             ))
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При нажатии на кнопку добавления игроков возникла ошибка "{error}"'
             )
@@ -398,7 +407,7 @@ class CreateRCDList(View):
         interaction: discord.Interaction
     ):
         try:
-            await interaction.response.defer(invisible=False)
+            await interaction.response.defer(invisible=False, ephemeral=True)
             if not has_required_role(interaction.user):
                 return await interaction.respond(
                     ANSWERS_IF_NO_ROLE,
@@ -419,7 +428,7 @@ class CreateRCDList(View):
                     self.children[index].style = discord.ButtonStyle.blurple
                     if index == 4:
                         self.children[index].style = discord.ButtonStyle.red
-                await interaction.respond(embed=embed.get('final_rcd_list_embed'))
+                await interaction.channel.send(embed=embed.get('final_rcd_list_embed'))
             else:
                 button.label = '⬇️ Списки созданы ниже ⬇️'
                 button.style = discord.ButtonStyle.gray
@@ -428,9 +437,11 @@ class CreateRCDList(View):
                 tumbler_button.label = 'СЕЙЧАС работа с 1️⃣ списком'
                 tumbler_button.style = discord.ButtonStyle.blurple
                 tumbler_button.disabled = False
-                await interaction.respond(embed=embed.get('second_final_rcd_list_embed'))
+                await interaction.channel.send(embed=embed.get('second_final_rcd_list_embed'))
             await interaction.message.edit(view=self)
+            await interaction.respond('✅', delete_after=1)
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При создании списка возникла ошибка "{error}"'
             )
@@ -461,6 +472,7 @@ class CreateRCDList(View):
                 button.style = discord.ButtonStyle.blurple
             await interaction.response.edit_message(view=self)
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При переключении списков возникла ошибка "{error}"'
             )
@@ -475,7 +487,7 @@ class CreateRCDList(View):
         self, button: discord.ui.Button, interaction: discord.Interaction
     ):
         try:
-            await interaction.response.defer(invisible=False)
+            await interaction.response.defer(invisible=False, ephemeral=True)
             if not has_required_role(interaction.user):
                 return await interaction.respond(
                     ANSWERS_IF_NO_ROLE,
@@ -534,7 +546,7 @@ class CreateRCDList(View):
         interaction: discord.Interaction
     ):
         try:
-            await interaction.response.defer(invisible=False)
+            await interaction.response.defer(invisible=False, ephemeral=True)
             sergaunt_role: discord.Role = discord.utils.get(interaction.guild.roles, name=SERGEANT_ROLE)
             channel: discord.TextChannel = rcd_application_channel.get('rcd_aplication_channel')
             permissions_for_sergaunt: discord.permissions = channel.permissions_for(sergaunt_role).read_messages
@@ -582,6 +594,7 @@ class CreateRCDList(View):
                 await interaction.message.edit(view=self)
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 'При отправке уведомлений пользователям из списка '
                 f'РЧД возникла ошибка: "{error}"!'
@@ -626,6 +639,7 @@ class CreateRCDList(View):
             await interaction.respond('✅', delete_after=1)
             logger.info(f'Пользователь "{interaction.user.display_name}" завершил работу с РЧД списками')
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При завершении работы с РЧД возникла ошибка "{error}"'
             )
@@ -656,7 +670,7 @@ class StartRCDButton(View):
     async def select_callback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):
-        await interaction.response.defer(invisible=False)
+        await interaction.response.defer(invisible=False, ephemeral=True)
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
@@ -670,7 +684,7 @@ class StartRCDButton(View):
                 embed=start_rcd_embed(rcd_date_list.get('convert_rcd_date')),
                 view=RCDButton()
             )
-            await interaction.respond(view=CreateRCDList())
+            await interaction.channel.send(view=CreateRCDList())
             self.children[0].disabled = True
             self.children[1].disabled = False
             self.remove_item(self.children[0])
@@ -679,7 +693,9 @@ class StartRCDButton(View):
                 f'Пользователь {interaction.user.display_name} запустил '
                 f'заявки на РЧД в канале "{channel.name}"'
             )
+            await interaction.respond('✅', delete_after=1)
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(f'При нажатии на кнопку StartRCDButton возникла ошибка {error}')
 
     @select(
@@ -718,6 +734,7 @@ class StartRCDButton(View):
             await interaction.message.edit(embed=embed.get('rcd_list_embed'), view=self)
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При опросе игроков возникла ошибка "{error}"'
             )

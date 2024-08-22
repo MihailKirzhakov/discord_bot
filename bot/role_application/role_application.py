@@ -76,18 +76,20 @@ class RoleButton(View):
                 view=self
             )
             await self.user.send(embed=access_embed())
-            app_list.remove(self.nickname)
             await interaction.respond('✅', delete_after=1)
             logger.info(
                 f'Пользователь {interaction.user.display_name} '
                 f'выдал роль пользователю "{self.nickname}"!'
             )
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                     f'При попытке выдать роль '
                     f'пользователю "{self.nickname}" возникла ошибка '
                     f'"{error}"'
                 )
+        finally:
+            app_list.remove(self.nickname)
 
     @button(
         label='Отправить в ЛС, что не подходит',
@@ -113,6 +115,7 @@ class RoleButton(View):
                 embed=self.embed
             ))
         except Exception as error:
+            await interaction.respond('❌', ephemeral=True, delete_after=1)
             logger.error(
                 f'При попытке вызвать модальное окно нажатием на кнопку '
                 f'"{button.label}" возникла ошибка "{error}"'
@@ -179,6 +182,7 @@ class DeniedRoleModal(Modal):
                 f'пользователю "{self.nickname}"!'
             )
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При попытке отправить форму после нажатия на кнопку в '
                 f'модальном окне "Отказ в заявке" возникла ошибка "{error}"'
@@ -259,6 +263,7 @@ class RoleApplication(Modal):
                     f'она была отправлена в канал "{self.channel}"'
                 )
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                     f'При попытке отказать пользователю в выдаче роли '
                     f'пользователю "{nickname}" возникла ошибка '
@@ -292,6 +297,7 @@ class ApplicationButton(View):
         try:
             await interaction.response.send_modal(RoleApplication(channel=self.channel))
         except Exception as error:
+            await interaction.respond('❌', ephemeral=True, delete_after=1)
             logger.error(
                 f'При попытке вызвать модальное окно нажатием на кнопку '
                 f'"{button.label}" возникла ошибка "{error}"'
@@ -345,6 +351,7 @@ async def role_application(
             f'"{channel}"!'
         )
     except Exception as error:
+        await ctx.respond('❌', ephemeral=True, delete_after=1)
         logger.error(
             f'При попытке вызвать команду /role_application'
             f'возникла ошибка "{error}". Команду попытался вызвать пользователь '
