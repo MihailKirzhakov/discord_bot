@@ -462,7 +462,7 @@ async def rename(
         discord.TextChannel,
         description='Куда отправить кнопку?',
         name_localizations={'ru':'текстовый_канал'}
-    ), # type: ignore
+    ),  # type: ignore
     message_id: discord.Option(
         str,
         description='ID сообщения, в котором есть кнопка кнопка',

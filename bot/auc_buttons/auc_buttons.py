@@ -16,7 +16,7 @@ from .functions import (
     seconds_until_date,
     convert_bid_back
 )
-from variables import (MIN_BID_VALUE, NOT_SOLD, LEADER_NICKNAME)
+from variables import MIN_BID_VALUE, NOT_SOLD, LEADER_NICKNAME, AUC_CHEAT
 
 
 final_time: dict[str, datetime] = {}
@@ -231,9 +231,6 @@ class BidButton(Button):
             self.label = f'{convert_bid(full_label_number + self.bid) if len(label_parts) > 1 else label_parts[0]} {interaction.user.display_name}'
             self.button_mentions[user_name] = user_mention
             self.bid_steps[self.index] = ((during_button_label, self.label))
-            logger.info(
-                f'Пользователь "{interaction.user.mention}" сделал ставку'
-            )
 
             if (final_time.get(self.name_auc) - nowtime) < sixty_seconds:
                 await interaction.message.edit(
@@ -248,6 +245,9 @@ class BidButton(Button):
                     )
                 )
                 final_time[self.name_auc] = plus_minute
+            logger.info(
+                f'Пользователь "{interaction.user.mention}" сделал ставку'
+            )
 
             if len(label_parts) > 1 and user_name not in during_button_label:
                 time_of_bid = None
@@ -274,6 +274,7 @@ class BidButton(Button):
             await interaction.message.edit(view=self.button_manager)
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При обработке нажатия на кнопку ставки '
                 f'возникла ошибка "{error}"'
@@ -323,10 +324,7 @@ class CancelBidButton(Button):
             for index, bid_tuple in self.bid_steps.items():
                 if bid_tuple[0].split()[1] == bid_tuple[0].split()[1]:
                     return await interaction.respond(
-                        '_Не дружище, это кнопка была сделана для того '
-                        'можно было отменить случайную ставку! 😊\n'
-                        'Абузить в обратную сторону эту механику не '
-                        'получится 😈_',
+                        AUC_CHEAT,
                         delete_after=10
                     )
                 if bid_tuple[1].split()[1] == interaction.user.display_name:
@@ -347,10 +345,14 @@ class CancelBidButton(Button):
                         )
                     )
                     final_time[self.name_auc] = plus_minute
+            logger.info(
+                f'Пользователь "{interaction.user.mention}" отменил свою ставку'
+            )
 
             await interaction.message.edit(view=self.button_manager)
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
+            await interaction.respond('❌', delete_after=1)
             logger.error(
                 f'При обработке нажатия на кнопку отмены ставки '
                 f'возникла ошибка "{error}"'
@@ -373,6 +375,7 @@ async def go_auc(
     try:
         await ctx.response.send_modal(StartAucModal(channel=channel))
     except Exception as error:
+        await ctx.respond('❌', delete_after=1)
         logger.error(
                 f'При попытке запустить аукцион командой /go_auc '
                 f'возникло исключение "{error}"'
