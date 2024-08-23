@@ -183,14 +183,16 @@ class PassBid(Modal):
         try:
             if not self.children[0].value.isdigit():
                 return await interaction.respond(
-                    '_Указанное значение не является числом! ❌_',
+                    '_Указанное значение не является положительным числом! ❌_',
                     delete_after=2
                 )
+
             if int(self.children[0].value) % 100_000 != 0:
                 return await interaction.respond(
                     '_Ставка должна быть кратна 100.000! ❌_',
                     delete_after=2
                 )
+
             select_bid: int = int(self.children[0].value)
             reserve_button_manager = self.button_manager
             user_name: str = interaction.user.display_name
@@ -223,12 +225,19 @@ class PassBid(Modal):
 
             label_parts = self.btn_label.split()
             full_label_number = convert_bid_back(label_parts[0])
-            if full_label_number >= select_bid:
+            error_response = '_Ставка должна быть большей текущей! ❌_'
+
+            if (
+                self.button_manager.children[self.index].style
+                == discord.ButtonStyle.green and full_label_number > select_bid
+            ) or (full_label_number >= select_bid and len(label_parts) > 1):
                 return await interaction.respond(
-                    '_Ставка должна быть большей текущей! ❌_',
+                    error_response,
                     delete_after=2
                 )
+
             self.button_manager.children[self.index].label = f'{convert_bid(select_bid)} {interaction.user.display_name}'
+            self.button_manager.children[self.index].style = discord.ButtonStyle.blurple
             self.button_mentions[user_name] = user_mention
 
             if (final_time.get(self.name_auc) - nowtime) < sixty_seconds:
@@ -258,13 +267,16 @@ class PassBid(Modal):
                 else:
                     time_of_bid = final_time.get(self.name_auc)
                     delete_after = 1800
-                await during_member.send(
-                    embed=outbid_embed(
-                        url=url, stop_time=time_of_bid,
+                try:
+                    await during_member.send(
+                        embed=outbid_embed(
+                            url=url, stop_time=time_of_bid,
+                            delete_after=delete_after
+                        ),
                         delete_after=delete_after
-                    ),
-                    delete_after=delete_after
-                )
+                    )
+                except discord.Forbidden:
+                    logger.warning(f'Пользователю "{during_member.display_name}" запрещено отправлять сообщения')
                 logger.info(
                     f'Ставку "{during_member.display_name}" перебил "{interaction.user.display_name}"!'
                 )
@@ -307,27 +319,19 @@ class BidButton(Button):
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            label_parts = self.label.split()
-            if len(label_parts) == 1:
-                await interaction.response.defer(invisible=False, ephemeral=True)
-                self.label = f'{label_parts[0]} {interaction.user.display_name}'
-                self.style = discord.ButtonStyle.blurple
-                await interaction.message.edit(view=self.button_manager)
-                return await interaction.respond('✅', delete_after=1)
-
             await interaction.response.send_modal(
-                    PassBid(
-                        btn_label=self.label,
-                        start_bid=self.start_bid,
-                        start_auc_user=self.start_auc_user,
-                        user_mention=self.user_mention,
-                        count=self.count,
-                        name_auc=self.name_auc,
-                        button_mentions=self.button_mentions,
-                        button_manager=self.button_manager,
-                        index=self.index,
-                        button_message=interaction.message
-                    ))
+                PassBid(
+                    btn_label=self.label,
+                    start_bid=self.start_bid,
+                    start_auc_user=self.start_auc_user,
+                    user_mention=self.user_mention,
+                    count=self.count,
+                    name_auc=self.name_auc,
+                    button_mentions=self.button_mentions,
+                    button_manager=self.button_manager,
+                    index=self.index,
+                    button_message=interaction.message
+                ))
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
             logger.error(

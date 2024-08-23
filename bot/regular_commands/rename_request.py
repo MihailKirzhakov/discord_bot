@@ -68,9 +68,12 @@ class AccessDeniedButton(View):
             await interaction.response.defer(invisible=False, ephemeral=True)
             self.disable_all_items()
             self.clear_items()
-            await self.user.send(
-                embed=denied_send_embed()
-            )
+            try:
+                await self.user.send(
+                    embed=denied_send_embed()
+                )
+            except discord.Forbidden:
+                logger.warning(f'Пользователю "{self.user.display_name}" запрещено отправлять сообщения')
             await interaction.message.edit(
                 embed=denied_rename_embed(user=self.user.display_name),
                 view=self

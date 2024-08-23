@@ -107,13 +107,16 @@ class StartRemindModal(Modal):
                 f'на {remind_date}!'
             )
             await discord.utils.sleep_until(remind_date)
-            await interaction.user.send(
-                embed=remind_send_embed(convert_remind_date, message),
-                delete_after=300
-            )
-            logger.info(
-                f'Пользователь {interaction.user.display_name} получил напоминалку!'
-            )
+            try:
+                await interaction.user.send(
+                    embed=remind_send_embed(convert_remind_date, message),
+                    delete_after=300
+                )
+                logger.info(
+                    f'Пользователь {interaction.user.display_name} получил напоминалку!'
+                )
+            except discord.Forbidden:
+                logger.warning(f'Пользователю "{interaction.user.display_name}" запрещено отправлять сообщения')
             delete_remind_from_db(interaction.user.id, remind_date)
         except Exception as error:
             await interaction.respond(

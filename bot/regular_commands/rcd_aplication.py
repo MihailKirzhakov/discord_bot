@@ -553,18 +553,21 @@ class CreateRCDList(View):
             jump_url = channel.jump_url if 'Список РЧД' in channel.last_message.embeds[0].title and permissions_for_sergaunt == True else None
 
             async def send_notification(member: discord.Member, rcd_role: str):
-                await member.send(
-                    embed=rcd_notification_embed(
-                        date=rcd_date_list.get('convert_rcd_date'),
-                        jump_url=jump_url,
-                        rcd_role=rcd_role
-                    ),
-                    delete_after=10800
-                )
-                logger.info(
-                    f'Пользователю {member.display_name} было отправлено '
-                    'оповещение об РЧД!'
-                )
+                try:
+                    await member.send(
+                        embed=rcd_notification_embed(
+                            date=rcd_date_list.get('convert_rcd_date'),
+                            jump_url=jump_url,
+                            rcd_role=rcd_role
+                        ),
+                        delete_after=10800
+                    )
+                    logger.info(
+                        f'Пользователю {member.display_name} было отправлено '
+                        'оповещение об РЧД!'
+                    )
+                except discord.Forbidden:
+                    logger.warning(f'Пользователю "{member.display_name}" запрещено отправлять сообщения')
 
             async def get_members_by_role(members_by_roles, pub_info_key):
                 if not members_by_roles:
@@ -721,14 +724,17 @@ class StartRCDButton(View):
                     continue
                 field_index = 0 if discord.utils.get(user.roles, name=VETERAN_ROLE) else 1
                 embed.get('rcd_list_embed').fields[field_index].value += (f'{user.mention}: 🟡\n')
-                await user.send(
-                    embed=ask_veteran_embed(
-                        member=interaction.user, date=rcd_date_list.get('convert_rcd_date')
-                    ),
-                    view=PrivateMessageView(),
-                    delete_after=86400
-                )
-                logger.info(f'Пользователю "{user.display_name}" был отправлен вопрос об РЧД')
+                try:
+                    await user.send(
+                        embed=ask_veteran_embed(
+                            member=interaction.user, date=rcd_date_list.get('convert_rcd_date')
+                        ),
+                        view=PrivateMessageView(),
+                        delete_after=86400
+                    )
+                    logger.info(f'Пользователю "{user.display_name}" был отправлен вопрос об РЧД')
+                except discord.Forbidden:
+                    logger.warning(f'Пользователю "{user.display_name}" запрещено отправлять сообщения')
             self.disable_all_items()
             self.clear_items()
             await interaction.message.edit(embed=embed.get('rcd_list_embed'), view=self)

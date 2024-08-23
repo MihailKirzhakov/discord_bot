@@ -75,7 +75,10 @@ class RoleButton(View):
                 embed=self.embed,
                 view=self
             )
-            await self.user.send(embed=access_embed())
+            try:
+                await self.user.send(embed=access_embed())
+            except discord.Forbidden:
+                logger.warning(f'Пользователю "{self.user.display_name}" запрещено отправлять сообщения')
             await interaction.respond('✅', delete_after=1)
             logger.info(
                 f'Пользователь {interaction.user.display_name} '
@@ -172,7 +175,10 @@ class DeniedRoleModal(Modal):
             )
         try:
             app_list.remove(self.nickname)
-            await self.user.send(embed=denied_embed(user, value))
+            try:
+                await self.user.send(embed=denied_embed(user, value))
+            except discord.Forbidden:
+                logger.warning(f'Пользователю "{self.user.display_name}" запрещено отправлять сообщения')
             self.view.disable_all_items()
             self.view.clear_items()
             await interaction.message.edit(embed=self.embed, view=self.view)
