@@ -10,8 +10,7 @@ def start_auc_embed(
     name_auc: str,
     stop_time: datetime,
     lot_count: int,
-    first_bid: str,
-    next_bid: str
+    first_bid: str
 ) -> discord.Embed:
     """
     Создает встраиваемое сообщение об открытии аукциона.
@@ -21,8 +20,7 @@ def start_auc_embed(
         description=(
             f'_**{user_mention} начал аукцион "{name_auc}"!**\n\n'
             f'Количество лотов: {lot_count}.\n'
-            f'Начальная ставка: {first_bid}.\n'
-            f'Шаг ставки: {next_bid}.\n\n'
+            f'Начальная ставка: {first_bid}.\n\n'
             f'**Аукцион закончится\n'
             f'<t:{int(stop_time.timestamp())}:R>!**_'
         ),
