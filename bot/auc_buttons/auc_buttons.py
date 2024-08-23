@@ -63,14 +63,6 @@ class StartAucModal(Modal):
         self.add_item(
             InputText(
                 style=discord.InputTextStyle.short,
-                label='Укажи шаг ставки',
-                placeholder='рекомендовано по дефолту 100000'
-            )
-        )
-
-        self.add_item(
-            InputText(
-                style=discord.InputTextStyle.short,
                 label='Укажи дату и время в формате ДД.ММ ЧЧ:ММ',
                 placeholder='ДД.ММ ЧЧ:ММ',
                 max_length=11
@@ -83,14 +75,12 @@ class StartAucModal(Modal):
         name_auc: str = str(self.children[0].value)
         count: int = int(self.children[1].value)
         start_bid: int = int(self.children[2].value)
-        bid: int = int(self.children[3].value)
-        target_date_time: str = str(self.children[4].value)
+        target_date_time: str = str(self.children[3].value)
         start_auc_user: discord.Member = interaction.user
         user_mention: str = interaction.user.mention
         button_manager = View(timeout=None)
         button_mentions: dict[str, str] = {}
         today: datetime = datetime.now()
-        bid_steps: dict[int, tuple[str, str]] = {}
 
         if count < 1 or count > 25:
             return await interaction.respond(
@@ -117,35 +107,21 @@ class StartAucModal(Modal):
         for index in range(count):
             button_manager.add_item(BidButton(
                 start_bid=start_bid,
-                bid=bid,
                 start_auc_user=start_auc_user,
                 user_mention=user_mention,
                 count=count,
                 name_auc=name_auc,
                 button_mentions=button_mentions,
                 button_manager=button_manager,
-                index=index,
-                bid_steps=bid_steps
+                index=index
             ))
-        button_manager.add_item(
-            CancelBidButton(
-                button_manager=button_manager,
-                bid_steps=bid_steps,
-                name_auc=name_auc,
-                user_mention=user_mention,
-                count=count,
-                start_bid=start_bid,
-                bid=bid
-            )
-        )
 
         await self.channel.send(embed=start_auc_embed(
                 user_mention=user_mention,
                 name_auc=name_auc,
                 stop_time=stop_time,
                 lot_count=count,
-                first_bid=convert_bid(start_bid),
-                next_bid=convert_bid(bid)
+                first_bid=convert_bid(start_bid)
             ),
             view=button_manager)
         await interaction.respond('✅', delete_after=1)
@@ -162,12 +138,11 @@ class StartAucModal(Modal):
         )
 
 
-class BidButton(Button):
-    """Кнопка со ставкой и никнеймом, сделавшего ставку"""
+class PassBid(Modal):
     def __init__(
         self,
+        btn_label: str,
         start_bid: int,
-        bid: int,
         start_auc_user: discord.Member,
         user_mention: str,
         count: int,
@@ -175,14 +150,11 @@ class BidButton(Button):
         button_mentions: dict[str, str],
         button_manager: View,
         index: int,
-        bid_steps: dict[int, tuple[str, str]]
+        button_message: discord.Message
     ):
-        super().__init__(
-            style=discord.ButtonStyle.green,
-            label=convert_bid(start_bid)
-        )
+        super().__init__(title='Укажи свою ставку', timeout=None)
+        self.btn_label = btn_label
         self.start_bid = start_bid
-        self.bid = bid
         self.start_auc_user = start_auc_user
         self.user_mention = user_mention
         self.count = count
@@ -190,23 +162,46 @@ class BidButton(Button):
         self.button_mentions = button_mentions
         self.button_manager = button_manager
         self.index = index
-        self.bid_steps = bid_steps
+        self.button_message = button_message
 
-    async def callback(self, interaction: discord.Interaction):
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.short,
+                label='Ставка кратная 100.000 и не более 10M',
+                placeholder='Укажи число без разделителей',
+                min_length=6,
+                max_length=8
+            )
+        )
+
+    async def callback(
+        self,
+        interaction: discord.Interaction
+    ):
+        await interaction.response.defer(invisible=False, ephemeral=True)
+
         try:
-            await interaction.response.defer(invisible=False, ephemeral=True)
-
-            self.style = discord.ButtonStyle.blurple
+            if not self.children[0].value.isdigit():
+                return await interaction.respond(
+                    '_Указанное значение не является числом! ❌_',
+                    delete_after=2
+                )
+            if int(self.children[0].value) % 100_000 != 0:
+                return await interaction.respond(
+                    '_Ставка должна быть кратна 100.000! ❌_',
+                    delete_after=2
+                )
+            select_bid: int = int(self.children[0].value)
             reserve_button_manager = self.button_manager
             user_name: str = interaction.user.display_name
             user_mention: str = interaction.user.mention
             nowtime: datetime = datetime.now()
             sixty_seconds: timedelta = timedelta(seconds=60)
             plus_minute: datetime = nowtime + sixty_seconds
-            during_button_label: str = self.label
+            during_button_label: str = self.btn_label
 
             if len(self.button_manager.children) == 0:
-                await interaction.message.edit(view=reserve_button_manager)
+                await self.button_message.edit(view=reserve_button_manager)
                 await interaction.respond(
                     f'В момент обработки, сделанной ставки возникла ошибка!'
                     f'Бот не сломался, попробуй сделать ставку снова. Если '
@@ -226,32 +221,35 @@ class BidButton(Button):
                     f'которая сносит кнопки. Во "view" сложили резервную копию.'
                 )
 
-            label_parts = self.label.split()
+            label_parts = self.btn_label.split()
             full_label_number = convert_bid_back(label_parts[0])
-            self.label = f'{convert_bid(full_label_number + self.bid) if len(label_parts) > 1 else label_parts[0]} {interaction.user.display_name}'
+            if full_label_number >= select_bid:
+                return await interaction.respond(
+                    '_Ставка должна быть большей текущей! ❌_',
+                    delete_after=2
+                )
+            self.button_manager.children[self.index].label = f'{convert_bid(select_bid)} {interaction.user.display_name}'
             self.button_mentions[user_name] = user_mention
-            self.bid_steps[self.index] = ((during_button_label, self.label))
 
             if (final_time.get(self.name_auc) - nowtime) < sixty_seconds:
-                await interaction.message.edit(
+                await self.button_message.edit(
                     view=self.button_manager,
                     embed=start_auc_embed(
                         user_mention=self.user_mention,
                         name_auc=self.name_auc,
                         stop_time=plus_minute,
                         lot_count=self.count,
-                        first_bid=convert_bid(self.start_bid),
-                        next_bid=convert_bid(self.bid)
+                        first_bid=convert_bid(self.start_bid)
                     )
                 )
                 final_time[self.name_auc] = plus_minute
             logger.info(
-                f'Пользователь "{interaction.user.mention}" сделал ставку'
+                f'Пользователь "{interaction.user.display_name}" сделал ставку'
             )
 
             if len(label_parts) > 1 and user_name not in during_button_label:
                 time_of_bid = None
-                url = interaction.message.jump_url
+                url = self.button_message.jump_url
                 take_during_nick = during_button_label.split()
                 during_member: discord.Member = discord.utils.get(interaction.guild.members, nick=take_during_nick[1])
                 if (datetime.now() + timedelta(seconds=60)) > final_time.get(self.name_auc) > datetime.now():
@@ -271,7 +269,7 @@ class BidButton(Button):
                     f'Ставку "{during_member.display_name}" перебил "{interaction.user.display_name}"!'
                 )
 
-            await interaction.message.edit(view=self.button_manager)
+            await self.button_message.edit(view=self.button_manager)
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
@@ -281,80 +279,59 @@ class BidButton(Button):
             )
 
 
-class CancelBidButton(Button):
-    """Кнопка для отмены ставки"""
+class BidButton(Button):
+    """Кнопка со ставкой и никнеймом, сделавшего ставку"""
     def __init__(
         self,
-        button_manager: View,
-        bid_steps: dict[int, tuple[str, str]],
-        name_auc: str,
+        start_bid: int,
+        start_auc_user: discord.Member,
         user_mention: str,
         count: int,
-        start_bid: int,
-        bid: int
+        name_auc: str,
+        button_mentions: dict[str, str],
+        button_manager: View,
+        index: int,
     ):
         super().__init__(
-            style=discord.ButtonStyle.red,
-            label='Отменить свою последнюю ставку'
+            style=discord.ButtonStyle.green,
+            label=convert_bid(start_bid)
         )
-        self.button_manager = button_manager
-        self.bid_steps = bid_steps
-        self.name_auc = name_auc
+        self.start_bid = start_bid
+        self.start_auc_user = start_auc_user
         self.user_mention = user_mention
         self.count = count
-        self.start_bid = start_bid
-        self.bid = bid
+        self.name_auc = name_auc
+        self.button_mentions = button_mentions
+        self.button_manager = button_manager
+        self.index = index
 
     async def callback(self, interaction: discord.Interaction):
         try:
-            await interaction.response.defer(invisible=False, ephemeral=True)
+            label_parts = self.label.split()
+            if len(label_parts) == 1:
+                await interaction.response.defer(invisible=False, ephemeral=True)
+                self.label = f'{label_parts[0]} {interaction.user.display_name}'
+                self.style = discord.ButtonStyle.blurple
+                await interaction.message.edit(view=self.button_manager)
+                return await interaction.respond('✅', delete_after=1)
 
-            button_list: list[Button] = self.button_manager.children
-            nowtime: datetime = datetime.now()
-            sixty_seconds: timedelta = timedelta(seconds=60)
-            plus_minute: datetime = nowtime + sixty_seconds
-            during_bid_names: list = [bid_tuple[1].split()[1] for bid_tuple in self.bid_steps.values()]
-
-            if interaction.user.display_name not in during_bid_names:
-                return await interaction.respond(
-                    '_Твоей ставки нет среди текущих 🤔_',
-                    delete_after=2
-                )
-
-            for index, bid_tuple in self.bid_steps.items():
-                if bid_tuple[0].split()[1] == bid_tuple[0].split()[1]:
-                    return await interaction.respond(
-                        AUC_CHEAT,
-                        delete_after=10
-                    )
-                if bid_tuple[1].split()[1] == interaction.user.display_name:
-                    button_list[index].label = bid_tuple[0]
-                    if len(bid_tuple[0].split()) == 1:
-                        button_list[index].style = discord.ButtonStyle.green
-
-            if (final_time.get(self.name_auc) - nowtime) < sixty_seconds:
-                    await interaction.message.edit(
-                        view=self.button_manager,
-                        embed=start_auc_embed(
-                            user_mention=self.user_mention,
-                            name_auc=self.name_auc,
-                            stop_time=plus_minute,
-                            lot_count=self.count,
-                            first_bid=convert_bid(self.start_bid),
-                            next_bid=convert_bid(self.bid)
-                        )
-                    )
-                    final_time[self.name_auc] = plus_minute
-            logger.info(
-                f'Пользователь "{interaction.user.mention}" отменил свою ставку'
-            )
-
-            await interaction.message.edit(view=self.button_manager)
-            await interaction.respond('✅', delete_after=1)
+            await interaction.response.send_modal(
+                    PassBid(
+                        btn_label=self.label,
+                        start_bid=self.start_bid,
+                        start_auc_user=self.start_auc_user,
+                        user_mention=self.user_mention,
+                        count=self.count,
+                        name_auc=self.name_auc,
+                        button_mentions=self.button_mentions,
+                        button_manager=self.button_manager,
+                        index=self.index,
+                        button_message=interaction.message
+                    ))
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
             logger.error(
-                f'При обработке нажатия на кнопку отмены ставки '
+                f'При обработке нажатия на кнопку ставки '
                 f'возникла ошибка "{error}"'
             )
 
