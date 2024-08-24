@@ -568,7 +568,7 @@ async def check_roles(
             if len(parts) > 2:
                 guild_member_list.append(parts[2])
         for member in members:
-            if (sergaunt_role in member.roles or veteran_role in member.roles) and re.sub(r'[^a-zA-Zа-яА-Я0-9]', '', member.display_name) not in guild_member_list:
+            if (sergaunt_role in member.roles or veteran_role in member.roles) and re.sub(r'[^a-zA-Zа-яА-ЯёЁ0-9]', '', member.display_name) not in guild_member_list:
                 removed_role_members.append(member.display_name)
                 await member.remove_roles(sergaunt_role)
                 await member.remove_roles(veteran_role)
