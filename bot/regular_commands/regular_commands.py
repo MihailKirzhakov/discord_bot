@@ -395,8 +395,7 @@ async def remind_error(
 
 @commands.slash_command()
 @commands.has_any_role(
-    CLOSED_JMURENSKAYA, CLOSED_ORTHODOX,
-    CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT
+    CLOSED_JMURENSKAYA, CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT
 )
 async def give_role_to(
     ctx: discord.ApplicationContext,
@@ -407,19 +406,16 @@ async def give_role_to(
     )  # type: ignore
 ) -> None:
     """
-    Команда для отправки кнопки на выдачу роли.
+    Команда для выдачи роли.
     """
     closed_jmurenskaya = discord.utils.get(
             ctx.guild.roles, name=CLOSED_JMURENSKAYA)
-    closed_orthodox = discord.utils.get(
-            ctx.guild.roles, name=CLOSED_ORTHODOX)
     closed_goose_home = discord.utils.get(
             ctx.guild.roles, name=CLOSED_GOOSE_HOME)
     closed_on_the_mind_aspect = discord.utils.get(
             ctx.guild.roles, name=CLOSED_ON_THE_MIND_ASPECT)
     check_group_leaders = {
         BUHLOID_ID: closed_jmurenskaya,
-        IDOL_ID: closed_orthodox,
         GOOSE_ID: closed_goose_home,
         KVAPA_ID: closed_on_the_mind_aspect
     }

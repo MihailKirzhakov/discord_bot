@@ -40,7 +40,7 @@ class AccessDeniedButton(View):
             await self.user.edit(nick=self.new_nickname)
             await interaction.message.edit(
                 embed=changed_rename_embed(
-                    user=self.user, nickname=self.new_nickname
+                    user=self.old_nickname, nickname=self.new_nickname
                 ),
                 view=self
             )
@@ -164,6 +164,8 @@ class RenameButton(View):
         interaction: discord.Interaction
     ):
         try:
-            await interaction.response.send_modal(RenameModal(channel=self.channel))
+            await interaction.response.send_modal(
+                RenameModal(channel=self.channel)
+            )
         except Exception as error:
             logger.error(f'При нажатии на кнопку RenameButton возникла ошибка {error}')
