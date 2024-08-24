@@ -562,14 +562,16 @@ async def check_roles(
         lines = (await attachment.read()).decode('windows-1251').splitlines()
         sergaunt_role: discord.Role = discord.utils.get(ctx.guild.roles, name=SERGEANT_ROLE)
         guest_role: discord.Role = discord.utils.get(ctx.guild.roles, name=GUEST_ROLE)
+        veteran_role: discord.Role = discord.utils.get(ctx.guild.roles, name=VETERAN_ROLE)
         for line in lines:
             parts = line.split(';')
             if len(parts) > 2:
                 guild_member_list.append(parts[2])
         for member in members:
-            if sergaunt_role in member.roles and member.display_name not in guild_member_list:
+            if (sergaunt_role in member.roles or veteran_role in member.roles) and re.sub(r'[^a-zA-Zа-яА-Я0-9]', '', member.display_name) not in guild_member_list:
                 removed_role_members.append(member.display_name)
                 await member.remove_roles(sergaunt_role)
+                await member.remove_roles(veteran_role)
                 await member.add_roles(guest_role)
                 logger.info(f'У пользователя {member.display_name} забрали старшину!')
         embed.description += '\n'.join(f'_{member}_' for member in removed_role_members)
