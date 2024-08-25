@@ -16,7 +16,7 @@ from .functions import (
     seconds_until_date,
     convert_bid_back
 )
-from variables import MIN_BID_VALUE, NOT_SOLD, LEADER_NICKNAME, AUC_CHEAT
+from variables import MIN_BID_VALUE, NOT_SOLD, LEADER_NICKNAME
 
 
 final_time: dict[str, datetime] = {}
@@ -168,9 +168,9 @@ class PassBid(Modal):
             InputText(
                 style=discord.InputTextStyle.short,
                 label='Ставка кратная 100.000 и не более 99M',
-                placeholder='Укажи число без разделителей',
+                placeholder='Внимательно считаем количество ноликов!',
                 min_length=6,
-                max_length=9
+                max_length=8
             )
         )
 
