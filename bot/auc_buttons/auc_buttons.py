@@ -167,7 +167,7 @@ class PassBid(Modal):
         self.add_item(
             InputText(
                 style=discord.InputTextStyle.short,
-                label='Ставка кратная 100.000 и не более 99M',
+                label='Ставка кратная 100.000 и не более 99.9M',
                 placeholder='Внимательно считаем количество ноликов!',
                 min_length=6,
                 max_length=8
