@@ -17,7 +17,7 @@ from variables import (
 )
 
 
-ask_member_list: list = []
+ask_member_list: list[int] = []
 member_list: list = []
 rcd_date_list: dict[str, str] = {}
 embed: dict[str, discord.Embed] = {}
@@ -557,6 +557,7 @@ class CreateRCDList(View):
                 try:
                     await member.send(
                         embed=rcd_notification_embed(
+                            interaction_user=interaction.user.display_name,
                             date=rcd_date_list.get('convert_rcd_date'),
                             jump_url=jump_url,
                             rcd_role=rcd_role
@@ -721,7 +722,7 @@ class StartRCDButton(View):
                 )
             ask_users: list[discord.Member] = [user for user in select.values]
             for user in ask_users:
-                if user.id in member_list and user.id in ask_member_list:
+                if user.id in member_list or user.id in ask_member_list:
                     continue
                 field_index = 0 if discord.utils.get(user.roles, name=VETERAN_ROLE) else 1
                 embed.get('rcd_list_embed').fields[field_index].value += (f'{user.mention}: 🟡\n')
@@ -733,11 +734,10 @@ class StartRCDButton(View):
                         view=PrivateMessageView(),
                         delete_after=86400
                     )
+                    ask_member_list.append(user.id)
                     logger.info(f'Пользователю "{user.display_name}" был отправлен вопрос об РЧД')
                 except discord.Forbidden:
                     logger.warning(f'Пользователю "{user.display_name}" запрещено отправлять сообщения')
-            self.disable_all_items()
-            self.clear_items()
             await interaction.message.edit(embed=embed.get('rcd_list_embed'), view=self)
             await interaction.respond('✅', delete_after=1)
         except Exception as error:

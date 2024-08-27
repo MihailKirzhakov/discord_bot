@@ -304,6 +304,7 @@ def publish_rcd_second_embed(date: str) -> discord.Embed:
 
 
 def rcd_notification_embed(
+    interaction_user: str,
     date: str,
     jump_url: str | None,
     rcd_role: str
@@ -316,7 +317,8 @@ def rcd_notification_embed(
         title=f'_**РЧД {date}**_',
         description=(
             '_**Сообщаем то, что тебя включили в список РЧД!**'
-            f'\nТребуемый класс: **{rcd_role[:-2]}**_'
+            f'\n\nТребуемый класс: **{rcd_role[:-2]}**_'
+            f'\n\nЕсли по какой-то причине ты не можешь присутствовать, отпишись {interaction_user} ❗'
             f'{
                 f"\n\n_Не забудь оставить реакцию, о прочтении ✅ в канале:\n{jump_url}_"
                 f"{delete_notification}" if jump_url else f"{delete_notification}"
