@@ -422,7 +422,7 @@ async def auto_stop_auc(
     Функция для автозавершения аукциона.
     """
     view.disable_all_items()
-    label_values = [btn.label for btn in view.children[:-1]]
+    label_values = [btn.label for btn in view.children]
     convert_label_values = convert_to_mention(
         label_values, button_mentions
     )

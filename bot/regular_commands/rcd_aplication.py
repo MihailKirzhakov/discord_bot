@@ -17,6 +17,7 @@ from variables import (
 )
 
 
+ask_member_list: list = []
 member_list: list = []
 rcd_date_list: dict[str, str] = {}
 embed: dict[str, discord.Embed] = {}
@@ -720,7 +721,7 @@ class StartRCDButton(View):
                 )
             ask_users: list[discord.Member] = [user for user in select.values]
             for user in ask_users:
-                if user.id in member_list:
+                if user.id in member_list and user.id in ask_member_list:
                     continue
                 field_index = 0 if discord.utils.get(user.roles, name=VETERAN_ROLE) else 1
                 embed.get('rcd_list_embed').fields[field_index].value += (f'{user.mention}: 🟡\n')
