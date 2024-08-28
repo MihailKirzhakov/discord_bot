@@ -588,11 +588,11 @@ class CreateRCDList(View):
                         await send_notification(member, index)
                         logger.info(f'"{member.display_name}" оповещён об РЧД')
             if self.children[1].style == discord.ButtonStyle.red:
-                await get_members_by_role(members_by_roles_deff, 'deff')
+                await get_members_by_role(members_by_roles_deff, 'ЗАЩИТА')
             else:
-                await get_members_by_role(members_by_roles_attack, 'atack')
+                await get_members_by_role(members_by_roles_attack, 'АТАКА')
 
-            if pub_info.get('deff') and pub_info.get('atack'):
+            if pub_info.get('ЗАЩИТА') and pub_info.get('АТАКА'):
                 button.label = 'Все оповещения были отправлены ✅'
                 button.style = discord.ButtonStyle.gray
                 button.disabled = True
