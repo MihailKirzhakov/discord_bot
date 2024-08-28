@@ -318,7 +318,7 @@ def rcd_notification_embed(
         description=(
             '_**Сообщаем то, что тебя включили в список РЧД!**'
             f'\n\nТребуемый класс: **{rcd_role[:-2]}**_'
-            f'\n\nЕсли по какой-то причине ты не можешь присутствовать, отпишись {interaction_user} ❗'
+            f'\n\n_Если по какой-то причине ты не можешь присутствовать, отпишись {interaction_user}❗_'
             f'{
                 f"\n\n_Не забудь оставить реакцию, о прочтении ✅ в канале:\n{jump_url}_"
                 f"{delete_notification}" if jump_url else f"{delete_notification}"
