@@ -420,7 +420,7 @@ async def give_role_to(
         KVAPA_ID: closed_on_the_mind_aspect
     }
     try:
-        if str(ctx.user.id) in check_group_leaders:
+        if ctx.user.id in check_group_leaders:
             await member.add_roles(check_group_leaders.get(str(ctx.user.id)))
             await ctx.respond(
                 f'_**Роль**\n{check_group_leaders.get(str(ctx.user.id)).mention}\n'
