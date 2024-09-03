@@ -653,11 +653,6 @@ class CreateRCDList(View):
 class StartRCDButton(View):
     """
     Кнопка для запуска РЧД заявок.
-
-    Attributes:
-    ----------
-        channel: discord.TextChannel
-            Канал в котором будет создан список РЧД.
     """
     def __init__(
         self,
