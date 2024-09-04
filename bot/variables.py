@@ -101,19 +101,19 @@ GUEST_ROLE: str = 'Гость'
 
 CLOSED_JMURENSKAYA: str = 'Закрытая Жмуренская комната'
 
-BUHLOID_ID: int = 896481846949445663
+BUHLOID_ID: str = '896481846949445663'
 
 CLOSED_GOOSE_HOME: str = 'Закрытая Гусиный дом'
 
-GOOSE_ID: int = 709371735992172557
+GOOSE_ID: str = '709371735992172557'
 
 CLOSED_ON_THE_MIND_ASPECT: str = 'Закрытая На аспекте ума'
 
-KVAPA_ID: int = 356014672450945034
+KVAPA_ID: str = '356014672450945034'
 
 CLOSED_ON_GOOD_MOVEMENTS = 'Закрытая На добрых движениях'
 
-DOBRYAK_ID = 280400231256817665
+DOBRYAK_ID: str = '280400231256817665'
 
 NOT_SOLD: str = 'Лот не был выкуплен'
 

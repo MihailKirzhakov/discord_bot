@@ -424,7 +424,7 @@ async def give_role_to(
         DOBRYAK_ID: closed_on_good_movements
     }
     try:
-        if ctx.user.id in check_group_leaders:
+        if str(ctx.user.id) in check_group_leaders:
             await member.add_roles(check_group_leaders.get(str(ctx.user.id)))
             await ctx.respond(
                 f'_**Роль**\n{check_group_leaders.get(str(ctx.user.id)).mention}\n'
