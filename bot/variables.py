@@ -111,6 +111,10 @@ CLOSED_ON_THE_MIND_ASPECT: str = 'Закрытая На аспекте ума'
 
 KVAPA_ID: int = 356014672450945034
 
+CLOSED_ON_GOOD_MOVEMENTS = 'Закрытая На добрых движениях'
+
+DOBRYAK_ID = 280400231256817665
+
 NOT_SOLD: str = 'Лот не был выкуплен'
 
 # URLS

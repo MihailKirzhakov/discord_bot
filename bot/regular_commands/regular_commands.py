@@ -19,7 +19,8 @@ from variables import (
     CLOSED_JMURENSKAYA,
     CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT,
     BUHLOID_ID, KVAPA_ID, GOOSE_ID,
-    SERGEANT_ROLE, VETERAN_ROLE, GUEST_ROLE
+    SERGEANT_ROLE, VETERAN_ROLE, GUEST_ROLE,
+    DOBRYAK_ID, CLOSED_ON_GOOD_MOVEMENTS
 )
 
 
@@ -414,10 +415,13 @@ async def give_role_to(
             ctx.guild.roles, name=CLOSED_GOOSE_HOME)
     closed_on_the_mind_aspect = discord.utils.get(
             ctx.guild.roles, name=CLOSED_ON_THE_MIND_ASPECT)
+    closed_on_good_movements = discord.utils.get(
+            ctx.guild.roles, name=CLOSED_ON_GOOD_MOVEMENTS)
     check_group_leaders = {
         BUHLOID_ID: closed_jmurenskaya,
         GOOSE_ID: closed_goose_home,
-        KVAPA_ID: closed_on_the_mind_aspect
+        KVAPA_ID: closed_on_the_mind_aspect,
+        DOBRYAK_ID: closed_on_good_movements
     }
     try:
         if ctx.user.id in check_group_leaders:
