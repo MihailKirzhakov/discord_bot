@@ -6,7 +6,7 @@ from loguru import logger
 from variables import (
     ANSWER_IF_DUPLICATE_APP, ANSWER_IF_DUPLICATE_NICK, ANSWER_IF_CHEAT,
     ANSWER_IF_CLICKED_THE_SAME_TIME, LEADER_ROLE, OFICER_ROLE,
-    TREASURER_ROLE, SERGEANT_ROLE, GUEST_ROLE, ANSWERS_IF_NO_ROLE
+    TREASURER_ROLE, SERGEANT_ROLE, GUEST_ROLE, ANSWERS_IF_NO_ROLE, LEADER_NICKNAME
 )
 from .embeds import (
     access_embed, denied_embed, application_embed, start_app_embed
@@ -224,6 +224,11 @@ class RoleApplication(Modal):
         )
         role = discord.utils.get(interaction.guild.roles, name=GUEST_ROLE)
         player_parms = character_lookup(1, nickname)
+        if player_parms == 'Bad site work':
+            return await interaction.respond(
+                    f'Упал сайт оружейки аллодов, обратись к {LEADER_NICKNAME}!',
+                    delete_after=10
+                )
         if not player_parms:
             return await interaction.respond(
                 ANSWER_IF_CHEAT,

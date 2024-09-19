@@ -1,5 +1,7 @@
 import discord
 import requests
+from json import JSONDecodeError
+from loguru import logger
 
 from variables import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
@@ -17,7 +19,13 @@ def character_lookup(server: int, name: str) -> dict | None:
         'https://api.allodswiki.ru/api/v1/armory/avatars',
         json={"filter": {"name": lookup_name, "server": server}}
     )
-    lookup_response = look_response.json()['data']
+    try:
+        lookup_response = look_response.json()['data']
+    except JSONDecodeError as e:
+        logger.info(
+            'Упал сайт оружейки аллодов!'
+        )
+        return 'Bad site work'
     data_id = 0
     if len(lookup_response) > 0:
         data_id = lookup_response[0]['id']
