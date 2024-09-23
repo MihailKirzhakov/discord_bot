@@ -1,12 +1,14 @@
 # Никнейм лидера гильдии
 LEADER_NICKNAME: str = 'ГайРичи'
 
+LEADER_ID: str = '362306074159611915'
+
 # Числовые переменные
 DEAFAULT_RANDOMISE_VALUE: str = '1-100'
 
 MIN_BID_VALUE: int = 100000
 
-APPLICATION_CHANNEL_ID = 1229511138954444890
+APPLICATION_CHANNEL_ID = 1231524306480140360
 
 # Текстовые переменные с фразами
 AUC_CHEAT: str = (

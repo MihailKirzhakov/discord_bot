@@ -326,7 +326,7 @@ async def role_application(
     ),  # type: ignore
     message_id: discord.Option(
         str,
-        description='ID сообщения, в котором есть кнопка кнопка',
+        description='ID сообщения, в котором есть кнопка',
         name_localizations={'ru':'id_сообщения'},
         required=False
     ),  # type: ignore

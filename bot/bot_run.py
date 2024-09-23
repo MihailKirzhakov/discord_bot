@@ -12,6 +12,7 @@ from regular_commands.rename_request import RenameButton
 from role_application.role_application import (
     ApplicationButton, has_required_role
 )
+from set_group.set_group import SetGroupButton, EditGroupButton
 from variables import APPLICATION_CHANNEL_ID, ANSWERS_IF_NO_ROLE
 
 load_dotenv()
@@ -35,6 +36,8 @@ async def on_ready() -> None:
     bot.add_view(RandomButton())
     bot.add_view(RenameButton(channel=app_channel))
     bot.add_view(ApplicationButton(channel=app_channel))
+    bot.add_view(SetGroupButton())
+    bot.add_view(EditGroupButton())
     logger.info('Бот запущен и готов к работе!')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS reminds
@@ -89,6 +92,7 @@ async def reload_extentions(ctx: discord.ApplicationContext):
     bot.reload_extension('regular_commands.regular_commands')
     bot.reload_extension('auc_buttons.auc_buttons')
     bot.reload_extension('role_application.role_application')
+    bot.reload_extension('set_group.set_group')
     await ctx.respond(
         '_Расширения перезагружены!_',
         ephemeral=True,
@@ -100,6 +104,7 @@ async def reload_extentions(ctx: discord.ApplicationContext):
 bot.load_extension('regular_commands.regular_commands')
 bot.load_extension('auc_buttons.auc_buttons')
 bot.load_extension('role_application.role_application')
+bot.load_extension('set_group.set_group')
 logger.info('Приложения запущены')
 
 

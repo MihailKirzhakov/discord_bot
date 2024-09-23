@@ -268,6 +268,7 @@ class SelectMemberToRCD(View):
         interaction: discord.Interaction
     ):
         try:
+            await interaction.response.defer(invisible=False, ephemeral=True)
             if not has_required_role(interaction.user):
                 return await interaction.respond(
                     ANSWERS_IF_NO_ROLE,
@@ -305,6 +306,7 @@ class SelectMemberToRCD(View):
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
+        await interaction.response.defer(invisible=False, ephemeral=True)
         if not has_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
@@ -319,7 +321,6 @@ class SelectMemberToRCD(View):
         members: set[discord.Member] | None
     ) -> None:
         try:
-            await interaction.response.defer(invisible=False, ephemeral=True)
             tumbler_button: discord.ui.Button = self.item_list[1]
             is_red = tumbler_button.style == discord.ButtonStyle.red
 
