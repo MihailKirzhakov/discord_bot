@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from discord.ui import Modal, InputText, View, button, select
+from discord.ui import View, button, select
 from loguru import logger
 
 from variables import (
@@ -11,9 +11,7 @@ from .embeds import set_group_embed, set_group_discription_embed
 
 
 class EditGroupButton(View):
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         super().__init__(timeout=None)
 
     @button(
@@ -26,14 +24,22 @@ class EditGroupButton(View):
         interaction: discord.Interaction
     ):
         try:
-            guild_leader = discord.utils.get(interaction.guild.members, id=int(LEADER_ID))
             interaction_message_embed: discord.Embed = interaction.message.embeds[0]
+            interaction_message: discord.Message = interaction.message
 
             if (
                 interaction.user.mention in interaction_message_embed.description
-                or interaction.user == guild_leader
+                or interaction.user.id == int(LEADER_ID)
             ):
-                return await interaction.response.send_modal(SetGroupModal(if_edit=True))
+                return await interaction.respond(
+                    view=SetGroup(
+                        if_edit=True,
+                        message_embed=interaction_message_embed,
+                        interaction_message=interaction_message
+                    ),
+                    ephemeral=True,
+                    delete_after=60
+                )
 
             await interaction.respond(
                 '_Редактировать группу может только КПЛ ❌_',
@@ -47,86 +53,52 @@ class EditGroupButton(View):
             )
 
 
-class LeaderSetGroup(View):
+class SetGroup(View):
     """Модальное окно для админа, чтобы создать КПла"""
-    def __init__(self):
+    def __init__(
+        self, if_edit: bool = False,
+        message_embed: discord.Embed = None,
+        interaction_message: discord.Message = None
+    ):
         super().__init__(timeout=None)
+        self.if_edit = if_edit
+        self.message_embed = message_embed
+        self.interaction_message = interaction_message
 
     @select(
         select_type=discord.ComponentType.user_select,
         min_values=1,
         max_values=6,
-        placeholder='Выбери КПла'
+        placeholder='Выбери игроков'
     )
     async def callback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
-            group_leader: discord.User = select.values[0]
             embed: discord.Embed = set_group_embed()
-            embed.description += f'1. {group_leader.mention}'
-
-            for i, child in enumerate(select.values, start=2):
-                user_nick: child.value
-                user_mention: str = user_nick.mention if user_nick else 'Вакансия'
-                embed.fields[0].value += f'{i}. {user_mention}\n'
-
-            await interaction.channel.send(
-                    view=EditGroupButton(),
-                    embed=embed
-                )
-
-            await interaction.respond('✅', delete_after=1)
-            logger.info(
-                f'Группа создана пользователем {interaction.user.display_name}'
-            )
-        except Exception as error:
-            logger.error(
-                f'При попытке создания группы пользователем {interaction.user.display_name} '
-                f'возникла ошибка {error}'
-            )
-
-
-class SetGroupModal(Modal):
-    """Модальное окно для указания игроков"""
-    def __init__(self, if_edit: bool = False):
-        super().__init__(
-            title='Впиши никнеймы своих соКП, себя НЕ надо!',
-            timeout=None
-        )
-        self.if_edit = if_edit
-
-        for i in range(5):
-            self.add_item(
-                    InputText(
-                        style=discord.InputTextStyle.short,
-                        label=f'{i + 2} игрок',
-                        placeholder='Длина никнейма как в игре 3-14 символов',
-                        min_length=3,
-                        max_length=14,
-                        required=False
-                    )
-                )
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            await interaction.response.defer(invisible=False, ephemeral=True)
-            group_leader: discord.User = interaction.user
-            embed: discord.Embed = set_group_embed()
-            embed.description += f'1. {group_leader.mention}'
-
             if self.if_edit:
-                embed: discord.Embed = interaction.message.embeds[0]
+                embed: discord.Embed = self.message_embed
                 embed.fields[0].value = ''
 
-            for i, child in enumerate(self.children, start=2):
-                user_nick: discord.User = discord.utils.get(interaction.guild.members, display_name=child.value)
-                user_mention: str = user_nick.mention if user_nick else 'Вакансия'
-                embed.fields[0].value += f'{i}. {user_mention}\n'
+            if not self.if_edit:
+                group_leader: discord.User = (
+                    select.values[0] if interaction.user.id == int(LEADER_ID) else interaction.user
+                )
+                embed.description += f'1. {group_leader.mention}'
+
+            members = [
+                value.mention for value in (
+                    select.values[1:] if interaction.user.id == int(LEADER_ID)
+                    and not self.if_edit else select.values
+                )
+            ]
+
+            member_list = '\n'.join(f'{i+2}. {member}' for i, member in enumerate(members))
+            embed.fields[0].value += member_list
 
             if self.if_edit:
-                await interaction.message.edit(embed=embed)
+                await self.interaction_message.edit(embed=embed)
             else:
                 await interaction.channel.send(
                     view=EditGroupButton(),
@@ -159,11 +131,7 @@ class SetGroupButton(View):
         interaction: discord.Interaction
     ):
         try:
-            if interaction.user.id == int(LEADER_ID):
-                await interaction.respond(
-                    view=LeaderSetGroup(), ephemeral=True
-                )
-            await interaction.response.send_modal(SetGroupModal())
+            await interaction.respond(view=SetGroup(), ephemeral=True)
         except Exception as error:
             logger.error(
                 f'При попытке вызвать модальное окно нажатием на кнопку '
