@@ -1,7 +1,7 @@
 # Никнейм лидера гильдии
 LEADER_NICKNAME: str = 'ГайРичи'
 
-LEADER_ID: str = '362306074159611915'
+LEADER_ID: str = '1229511138954444890'
 
 # Числовые переменные
 DEAFAULT_RANDOMISE_VALUE: str = '1-100'

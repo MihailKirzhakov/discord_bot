@@ -7,7 +7,9 @@ from variables import (
     LEADER_ROLE, TREASURER_ROLE, OFICER_ROLE,
     VETERAN_ROLE, SERGEANT_ROLE, LEADER_ID
 )
-from .embeds import set_group_embed, set_group_discription_embed
+from .embeds import (
+    set_group_embed, set_group_discription_embed, group_create_instruction_embed
+)
 
 
 class EditGroupButton(View):
@@ -18,12 +20,13 @@ class EditGroupButton(View):
         label='Редактировать группу', style=discord.ButtonStyle.blurple,
         emoji='🔁', custom_id='РедактированиеГруппы'
     )
-    async def callback(
+    async def edit_callback(
         self,
         button: discord.ui.Button,
         interaction: discord.Interaction
     ):
         try:
+            await interaction.response.defer(invisible=False, ephemeral=True)
             interaction_message_embed: discord.Embed = interaction.message.embeds[0]
             interaction_message: discord.Message = interaction.message
 
@@ -37,13 +40,39 @@ class EditGroupButton(View):
                         message_embed=interaction_message_embed,
                         interaction_message=interaction_message
                     ),
-                    ephemeral=True,
+                    embed=group_create_instruction_embed(),
                     delete_after=60
                 )
 
             await interaction.respond(
                 '_Редактировать группу может только КПЛ ❌_',
-                ephemeral=True,
+                delete_after=2
+            )
+        except Exception as error:
+            logger.error(
+                f'При попытке вызвать модальное окно нажатием на кнопку '
+                f'"{button.label}" возникла ошибка "{error}"'
+            )
+
+    @button(
+        label='Удалить группу', style=discord.ButtonStyle.red,
+        custom_id='УдалитьГруппу', emoji='❎'
+    )
+    async def delete_callback(
+        self,
+        button: discord.ui.Button,
+        interaction: discord.Interaction
+    ):
+        try:
+            await interaction.response.defer(invisible=False, ephemeral=True)
+            interaction_message_embed: discord.Embed = interaction.message.embeds[0]
+            interaction_message: discord.Message = interaction.message
+
+            if interaction.user.mention in interaction_message_embed.description:
+                await interaction_message.delete()
+                return await interaction.respond('✅', delete_after=1)
+            await interaction.respond(
+                '_Удалить группу может только КПЛ ❌_',
                 delete_after=2
             )
         except Exception as error:
@@ -54,7 +83,7 @@ class EditGroupButton(View):
 
 
 class SetGroup(View):
-    """Модальное окно для админа, чтобы создать КПла"""
+    """Меню выбора игроков"""
     def __init__(
         self, if_edit: bool = False,
         message_embed: discord.Embed = None,
@@ -94,8 +123,11 @@ class SetGroup(View):
                 )
             ]
 
-            member_list = '\n'.join(f'{i+2}. {member}' for i, member in enumerate(members))
-            embed.fields[0].value += member_list
+            for number, member in enumerate(members):
+                embed.fields[0].value += f'\n{number + 2}. {member}'
+            if len(members) < 5:
+                for extra_number in range(5 - len(members)):
+                    embed.fields[0].value += f'\n{extra_number + len(members) + 2}.'
 
             if self.if_edit:
                 await self.interaction_message.edit(embed=embed)
@@ -131,7 +163,12 @@ class SetGroupButton(View):
         interaction: discord.Interaction
     ):
         try:
-            await interaction.respond(view=SetGroup(), ephemeral=True)
+            await interaction.response.defer(invisible=False, ephemeral=True)
+            await interaction.respond(
+                view=SetGroup(),
+                embed=group_create_instruction_embed(),
+                delete_after=60
+            )
         except Exception as error:
             logger.error(
                 f'При попытке вызвать модальное окно нажатием на кнопку '
@@ -150,11 +187,11 @@ async def set_group(ctx: discord.ApplicationContext) -> None:
     """
     try:
         await ctx.respond(
-            embed=set_group_discription_embed(),
+            embed=set_group_discription_embed(guild_leader=ctx.user.mention),
             view=SetGroupButton()
         )
         await ctx.respond(
-            '_Кнопка подачи заявок запущена!_',
+            '_Кнопка для создания групп запущена!_',
             ephemeral=True,
             delete_after=2
         )

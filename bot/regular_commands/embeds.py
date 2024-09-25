@@ -68,7 +68,7 @@ def attention_embed(value: str) -> discord.Embed:
     """
     embed = discord.Embed(
         title=ATTENTION,
-        description=f'_**{value}!**_',
+        description=f'{value}',
         color=0xfffb00
     )
     embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)

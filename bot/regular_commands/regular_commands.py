@@ -120,10 +120,6 @@ class StartRemindModal(Modal):
                 logger.warning(f'Пользователю "{interaction.user.display_name}" запрещено отправлять сообщения')
             delete_remind_from_db(interaction.user.id, remind_date)
         except Exception as error:
-            await interaction.respond(
-                f'Произошла ошибка при создании напоминания. {error}',
-                ephemeral=True
-            )
             logger.error(
                 f'Пользователь {interaction.user.display_name} попытался сделать напоминание '
                 f'но получил ошибку {error}!'
@@ -204,6 +200,34 @@ async def technical_works_error(
     await command_error(ctx, error, "technical_works")
 
 
+class AttentionMessage(Modal):
+    """Модальное окно для отправки сообщения о важном сообщении."""
+    def __init__(self, channel: discord.TextChannel):
+        super().__init__(title='Важное сообщение', timeout=None)
+        self.channel = channel
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.multiline,
+                label='Укажи содержание сообщения',
+                placeholder='Не более 4000 символов',
+                max_length=4000
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.defer(invisible=False, ephemeral=True)
+            message: str = str(self.children[0].value)
+            await self.channel.send(embed=attention_embed(value=message))
+            await interaction.respond('✅', delete_after=1)
+        except Exception as error:
+            logger.error(
+                f'Пользователь {interaction.user.display_name} попытался сделать объявление '
+                f'но получил ошибку {error}!'
+            )
+
+
 @commands.slash_command()
 @commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def attention(
@@ -213,16 +237,11 @@ async def attention(
         description='Куда отправить сообщение?',
         name_localizations={'ru':'текстовый_канал'},
     ),  # type: ignore
-    value: discord.Option(
-        str,
-        description='Введи текст сообщения',
-        name_localizations={'ru':'текст'},
-    )  # type: ignore
 ) -> None:
     """
     Команда для отправки сообщения с пометкой 'Внимание!'.
     """
-    await channel.send(embed=attention_embed(value=value))
+    await ctx.response.send_modal(AttentionMessage(channel=channel))
     logger.info(
         f'Команда "/attention" вызвана пользователем '
         f'"{ctx.user.display_name}" в канал "{channel}"!'
@@ -287,11 +306,6 @@ async def random(
             f'"{ctx.user.display_name}" в канал "{channel}"!'
         )
     except Exception as error:
-        await ctx.respond(
-            'Неверные данные, попробуй снова!',
-            ephemeral=True,
-            delete_after=3
-        )
         logger.error(
             f'При запуске команды /random возникла ошибка '
             f'"{error}"!'
@@ -344,11 +358,6 @@ async def clear_all(
             delete_after=3
         )
     except Exception as error:
-        await ctx.respond(
-            f'_При использовании команды "clear_all" в канале '
-            f'{channel} возникла ошибка: "{error}"!_',
-            ephemeral=True
-        )
         logger.error(
             f'_При использовании команды "clear_all" в канале '
             f'{channel} возникла ошибка: "{error}"!_'
