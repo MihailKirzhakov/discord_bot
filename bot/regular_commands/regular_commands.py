@@ -600,6 +600,80 @@ async def check_roles_error(
     await command_error(ctx, error, "check_roles")
 
 
+class SetNewDescription(Modal):
+    """Модальное окно для установки нового"""
+    def __init__(self, message_id: int, channel: discord.TextChannel):
+        super().__init__(title='Укажи новое описание embed', timeout=None)
+        self.message_id = message_id
+        self.channel = channel
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.multiline,
+                label='Укажи содержание сообщения',
+                placeholder='Не более 4000 символов',
+                max_length=4000
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.defer(invisible=False, ephemeral=True)
+            message: discord.Message = await self.channel.fetch_message(self.message_id)
+            try:
+                embed: discord.Embed = message.embeds[0]
+            except Exception as error:
+                logger.error(f'Ошибка при поиске embed! "{error}"')
+            embed.description = self.children[0].value
+            await message.edit(embed=embed)
+            await interaction.respond('✅', delete_after=1)
+        except Exception as error:
+            logger.error(
+                f'Пользователь {interaction.user.display_name} попытался изменить embed '
+                f'но получил ошибку {error}!'
+            )
+
+
+@commands.slash_command()
+@commands.has_any_role(LEADER_ROLE)
+async def edit_embed(
+    ctx: discord.ApplicationContext,
+    message_id: discord.Option(
+        str,
+        description='ID сообщения, которое нужно изменить',
+        name_localizations={'ru':'id_сообщения'}
+    )  # type: ignore
+) -> None:
+    """
+    Команда для изменения embed description, написанное ботом.
+    """
+    try:
+        await ctx.response.send_modal(SetNewDescription(
+            message_id=int(message_id),
+            channel=ctx.channel
+        ))
+        logger.info(
+            f'Команда "/edit_embed" вызвана пользователем'
+            f'"{ctx.user.display_name}"!'
+        )
+    except Exception as error:
+        logger.error(
+            f'Ошибка при вызове команды "/edit_embed"! '
+            f'"{error}"'
+        )
+
+
+@edit_embed.error
+async def edit_embed_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+) -> None:
+    """
+    Обработчик ошибок для команды edit_embed.
+    """
+    await command_error(ctx, error, "edit_embed")
+
+
 def setup(bot: discord.Bot):
     bot.add_application_command(technical_works)
     bot.add_application_command(attention)
@@ -610,3 +684,4 @@ def setup(bot: discord.Bot):
     bot.add_application_command(rename)
     bot.add_application_command(rcd_application)
     bot.add_application_command(check_roles)
+    bot.add_application_command(edit_embed)
