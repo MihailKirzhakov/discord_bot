@@ -1,14 +1,14 @@
 # Никнейм лидера гильдии
 LEADER_NICKNAME: str = 'ГайРичи'
 
-LEADER_ID: str = '1229511138954444890'
+LEADER_ID: str = '362306074159611915'
 
 # Числовые переменные
 DEAFAULT_RANDOMISE_VALUE: str = '1-100'
 
 MIN_BID_VALUE: int = 100000
 
-APPLICATION_CHANNEL_ID = 1231524306480140360
+APPLICATION_CHANNEL_ID = 1229511138954444890
 
 # Текстовые переменные с фразами
 AUC_CHEAT: str = (
@@ -118,6 +118,8 @@ CLOSED_ON_GOOD_MOVEMENTS = 'Закрытая На добрых движения�
 DOBRYAK_ID: str = '280400231256817665'
 
 NOT_SOLD: str = 'Лот не был выкуплен'
+
+MIURKA_ID: str = '528276680909914153'
 
 # URLS
 ACCESS_IMAGE_URL: str = 'https://media.discordapp.net/attachments/1182584501147279491/1230181776870346802/Green-Check-PNG.png?ex=6632630f&is=661fee0f&hm=6cf4321094865e1b393274b680eadfc6c92fd283b16bb54d367047525751439c&=&format=webp&quality=lossless&width=350&height=350'

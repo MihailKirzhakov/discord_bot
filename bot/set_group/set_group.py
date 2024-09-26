@@ -1,11 +1,12 @@
 import discord
 from discord.ext import commands
-from discord.ui import View, button, select
+from discord.ui import View, button, Select
 from loguru import logger
 
 from variables import (
     LEADER_ROLE, TREASURER_ROLE, OFICER_ROLE,
-    VETERAN_ROLE, SERGEANT_ROLE, LEADER_ID
+    VETERAN_ROLE, SERGEANT_ROLE, LEADER_ID,
+    MIURKA_ID
 )
 from .embeds import (
     set_group_embed, set_group_discription_embed, group_create_instruction_embed
@@ -82,26 +83,31 @@ class EditGroupButton(View):
             )
 
 
-class SetGroup(View):
+class SetGroup(Select):
     """Меню выбора игроков"""
     def __init__(
-        self, if_edit: bool = False,
+        self,
+        select_type=discord.ComponentType.user_select,
+        min_values=1,
+        max_values=6,
+        placeholder='Выбери игроков',
+        if_edit: bool = False,
         message_embed: discord.Embed = None,
         interaction_message: discord.Message = None
     ):
-        super().__init__(timeout=None)
+        super().__init__(
+            select_type=select_type,
+            min_values=min_values,
+            max_values=max_values,
+            placeholder=placeholder
+        )
         self.if_edit = if_edit
         self.message_embed = message_embed
         self.interaction_message = interaction_message
 
-    @select(
-        select_type=discord.ComponentType.user_select,
-        min_values=1,
-        max_values=6,
-        placeholder='Выбери игроков'
-    )
     async def callback(
-        self, select: discord.ui.Select, interaction: discord.Interaction
+        self,
+        interaction: discord.Interaction
     ):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
@@ -112,14 +118,14 @@ class SetGroup(View):
 
             if not self.if_edit:
                 group_leader: discord.User = (
-                    select.values[0] if interaction.user.id == int(LEADER_ID) else interaction.user
+                    self.values[0] if interaction.user.id == int(LEADER_ID) else interaction.user
                 )
                 embed.description += f'1. {group_leader.mention}'
 
             members = [
                 value.mention for value in (
-                    select.values[1:] if interaction.user.id == int(LEADER_ID)
-                    and not self.if_edit else select.values
+                    self.values[1:] if interaction.user.id == int(LEADER_ID)
+                    and not self.if_edit else self.values
                 )
             ]
 
@@ -164,8 +170,10 @@ class SetGroupButton(View):
     ):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
+            max_values: int = 7 if interaction.user.id == int(MIURKA_ID) or interaction.user.id == int(LEADER_ID) else 6
+            view = View(SetGroup(max_values=max_values))
             await interaction.respond(
-                view=SetGroup(),
+                view=view,
                 embed=group_create_instruction_embed(),
                 delete_after=60
             )
