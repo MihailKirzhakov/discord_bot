@@ -5,10 +5,10 @@ import discord
 from dotenv import load_dotenv
 from loguru import logger
 
-from regular_commands.embeds import remind_send_embed
-from regular_commands.functions import delete_remind_from_db, cursor
-from regular_commands.randomaizer import RandomButton
-from regular_commands.rename_request import RenameButton
+from reminder.embeds import remind_send_embed
+from reminder.functions import delete_remind_from_db, cursor
+from randomaizer.randomaizer import RandomButton
+from rename_request.rename_request import RenameButton
 from role_application.role_application import (
     ApplicationButton, has_required_role
 )
@@ -90,6 +90,11 @@ async def reload_extentions(ctx: discord.ApplicationContext):
             delete_after=15
         )
     bot.reload_extension('regular_commands.regular_commands')
+    bot.reload_extension('rename_request.rename_request')
+    bot.reload_extension('embed_manager.embed_manager')
+    bot.reload_extension('randomaizer.randomaizer')
+    bot.reload_extension('reminder.reminder')
+    bot.reload_extension('rcd_aplication.rcd_aplication')
     bot.reload_extension('auc_buttons.auc_buttons')
     bot.reload_extension('role_application.role_application')
     bot.reload_extension('set_group.set_group')
@@ -102,6 +107,11 @@ async def reload_extentions(ctx: discord.ApplicationContext):
 
 
 bot.load_extension('regular_commands.regular_commands')
+bot.load_extension('rename_request.rename_request')
+bot.load_extension('embed_manager.embed_manager')
+bot.load_extension('rcd_aplication.rcd_aplication')
+bot.load_extension('reminder.reminder')
+bot.load_extension('randomaizer.randomaizer')
 bot.load_extension('auc_buttons.auc_buttons')
 bot.load_extension('role_application.role_application')
 bot.load_extension('set_group.set_group')

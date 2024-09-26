@@ -1,4 +1,5 @@
 import discord
+from discord.ext import commands
 from discord.ui import Modal, InputText, View, button
 from loguru import logger
 
@@ -6,7 +7,7 @@ from .embeds import (
     rename_embed, changed_rename_embed,
     denied_rename_embed, denied_send_embed
 )
-
+from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
 
 que_request: dict = {}
 
@@ -169,3 +170,72 @@ class RenameButton(View):
             )
         except Exception as error:
             logger.error(f'При нажатии на кнопку RenameButton возникла ошибка {error}')
+
+
+@commands.slash_command()
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
+async def rename(
+    ctx: discord.ApplicationContext,
+    channel: discord.Option(
+        discord.TextChannel,
+        description='Куда отправить кнопку?',
+        name_localizations={'ru':'текстовый_канал'}
+    ),  # type: ignore
+    message_id: discord.Option(
+        str,
+        description='ID сообщения, в котором есть кнопка кнопка',
+        name_localizations={'ru':'id_сообщения'},
+        required=False
+    )  # type: ignore
+) -> None:
+    """
+    Команда для отправки кнопки рандомайзера.
+    """
+    if message_id:
+        message = ctx.channel.get_partial_message(int(message_id))
+        await message.edit(view=RenameButton(channel=channel))
+        await ctx.respond(
+            '_Кнопка ренеймера обновлена и снова работает!_',
+            ephemeral=True,
+            delete_after=3
+        )
+    else:
+        await ctx.respond(view=RenameButton(channel=channel))
+        await ctx.respond(
+            '_Кнопка ренеймера запущена!_',
+            ephemeral=True,
+            delete_after=3
+        )
+    logger.info(
+        f'Команда "/rename" вызвана пользователем'
+        f'"{ctx.user.display_name}" в канал "{channel}"!'
+    )
+
+
+@rename.error
+async def role_application_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+) -> None:
+    """
+    Обрабатывать ошибки, возникающие
+    при выполнении команды запросов на ренейм.
+    """
+    if isinstance(error, commands.errors.MissingAnyRole):
+        await ctx.respond(
+            'Команду может вызвать только "Лидер, Кизначей или Офицер"!',
+            ephemeral=True,
+            delete_after=10
+        )
+    elif isinstance(error, commands.errors.PrivateMessageOnly):
+        await ctx.respond(
+            'Команду нельзя вызывать в личные сообщения бота!',
+            ephemeral=True,
+            delete_after=10
+        )
+    else:
+        raise error
+
+
+def setup(bot: discord.Bot):
+    bot.add_application_command(rename)

@@ -2,6 +2,7 @@ from datetime import datetime
 import re
 
 import discord
+from discord.ext import commands
 from discord.ui import Modal, InputText, View, button, select
 from loguru import logger
 
@@ -13,7 +14,7 @@ from .embeds import (
 from role_application.functions import has_required_role
 from variables import (
     VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE,
-    SERGEANT_ROLE
+    SERGEANT_ROLE, LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
 )
 
 
@@ -741,3 +742,51 @@ class StartRCDButton(View):
             logger.error(
                 f'При опросе игроков возникла ошибка "{error}"'
             )
+
+
+@commands.slash_command()
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
+async def rcd_application(ctx: discord.ApplicationContext) -> None:
+    """
+    Команда для запуска кнопки старта РЧД заявок.
+    """
+    try:
+        await ctx.response.send_modal(RcdDate())
+        logger.info(
+            f'Команда "/rcd_application" вызвана пользователем'
+            f'"{ctx.user.display_name}"!'
+        )
+    except Exception as error:
+        logger.error(
+            f'Ошибка при вызове команды "/rcd_application"! '
+            f'"{error}"'
+        )
+
+
+@rcd_application.error
+async def rcd_application_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+) -> None:
+    """
+    Обрабатывать ошибки, возникающие
+    при выполнении команды заявок на РЧД.
+    """
+    if isinstance(error, commands.errors.MissingAnyRole):
+        await ctx.respond(
+            'Команду может вызвать только "Лидер, Казначей или Офицер"!',
+            ephemeral=True,
+            delete_after=10
+        )
+    elif isinstance(error, commands.errors.PrivateMessageOnly):
+        await ctx.respond(
+            'Команду нельзя вызывать в личные сообщения бота!',
+            ephemeral=True,
+            delete_after=10
+        )
+    else:
+        raise error
+
+
+def setup(bot: discord.Bot):
+    bot.add_application_command(rcd_application)

@@ -1,4 +1,3 @@
-from datetime import datetime
 import re
 
 import discord
@@ -6,14 +5,7 @@ from discord.ext import commands
 from discord.ui import InputText, Modal
 from loguru import logger
 
-from .functions import add_remind_to_db, delete_remind_from_db
-from .embeds import (
-    technical_works_embed, attention_embed, remind_embed,
-    remind_send_embed, removed_role_list_embed
-)
-from .randomaizer import RandomButton
-from .rename_request import RenameButton
-from .rcd_aplication import RcdDate
+from .embeds import technical_works_embed, removed_role_list_embed
 from variables import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
     CLOSED_JMURENSKAYA,
@@ -22,108 +14,6 @@ from variables import (
     SERGEANT_ROLE, VETERAN_ROLE, GUEST_ROLE,
     DOBRYAK_ID, CLOSED_ON_GOOD_MOVEMENTS
 )
-
-
-class StartRemindModal(Modal):
-    """
-    Модальное окно для ввода данных напоминания.
-    """
-    def __init__(self):
-        super().__init__(title='Параметры напоминания', timeout=None)
-
-        self.add_item(
-            InputText(
-                style=discord.InputTextStyle.multiline,
-                label='Укажи содержание сообщения',
-                placeholder='Не более 500 символов',
-                max_length=500
-            )
-        )
-
-        self.add_item(
-            InputText(
-                style=discord.InputTextStyle.short,
-                label='Укажи дату отправки в формате "ДД.ММ"',
-                placeholder='ДД.ММ',
-                max_length=5
-            )
-        )
-
-        self.add_item(
-            InputText(
-                style=discord.InputTextStyle.short,
-                label='Укажи время отправки в формате "ЧЧ:ММ"',
-                placeholder='ЧЧ:ММ',
-                max_length=5
-            )
-        )
-
-    async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer(invisible=False, ephemeral=True)
-        message: str = str(self.children[0].value)
-        date_str: str = str(self.children[1].value)
-        time_str: str = str(self.children[2].value)
-
-        # Регулярное выражение для проверки даты в формате ДД.ММ
-        date_pattern = r'^([0-2][0-9]|3[0-1])[.,/](0[1-9]|1[0-2])$'
-        date_match = re.match(date_pattern, date_str)
-
-        # Регулярное выражение для проверки времени в формате ЧЧ:ММ
-        time_pattern = r'^([0-1][0-9]|2[0-3])[:;]([0-5][0-9])$'
-        time_match = re.match(time_pattern, time_str)
-
-        if not date_match:
-            return await interaction.respond(
-                'Неправильный формат даты. Пожалуйста, используйте формат ДД.ММ',
-                delete_after=10
-            )
-
-        if not time_match:
-            return await interaction.respond(
-                'Неправильный формат времени. Пожалуйста, используйте формат ЧЧ:ММ',
-                delete_after=10
-            )
-
-        try:
-            day, month = map(int, date_match.groups())
-            hour, minute = map(int, time_match.groups())
-            current_year = datetime.now().year
-            remind_date = datetime(
-                year=current_year,
-                month=month,
-                day=day,
-                hour=hour,
-                minute=minute,
-            )
-            if remind_date < datetime.now():
-                remind_date = remind_date.replace(year=current_year + 1)
-            convert_remind_date = discord.utils.format_dt(remind_date, style="F")
-            add_remind_to_db(interaction.user.id, message, remind_date)
-            await interaction.respond(
-                embed=remind_embed(convert_remind_date, message),
-                delete_after=20
-            )
-            logger.info(
-                f'Пользователь {interaction.user.display_name} создал напоминалку'
-                f'на {remind_date}!'
-            )
-            await discord.utils.sleep_until(remind_date)
-            try:
-                await interaction.user.send(
-                    embed=remind_send_embed(convert_remind_date, message),
-                    delete_after=300
-                )
-                logger.info(
-                    f'Пользователь {interaction.user.display_name} получил напоминалку!'
-                )
-            except discord.Forbidden:
-                logger.warning(f'Пользователю "{interaction.user.display_name}" запрещено отправлять сообщения')
-            delete_remind_from_db(interaction.user.id, remind_date)
-        except Exception as error:
-            logger.error(
-                f'Пользователь {interaction.user.display_name} попытался сделать напоминание '
-                f'но получил ошибку {error}!'
-            )
 
 
 async def command_error(
@@ -200,127 +90,7 @@ async def technical_works_error(
     await command_error(ctx, error, "technical_works")
 
 
-class AttentionMessage(Modal):
-    """Модальное окно для отправки сообщения о важном сообщении."""
-    def __init__(self, channel: discord.TextChannel):
-        super().__init__(title='Важное сообщение', timeout=None)
-        self.channel = channel
 
-        self.add_item(
-            InputText(
-                style=discord.InputTextStyle.multiline,
-                label='Укажи содержание сообщения',
-                placeholder='Не более 4000 символов',
-                max_length=4000
-            )
-        )
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            await interaction.response.defer(invisible=False, ephemeral=True)
-            message: str = str(self.children[0].value)
-            await self.channel.send(embed=attention_embed(value=message))
-            await interaction.respond('✅', delete_after=1)
-        except Exception as error:
-            logger.error(
-                f'Пользователь {interaction.user.display_name} попытался сделать объявление '
-                f'но получил ошибку {error}!'
-            )
-
-
-@commands.slash_command()
-@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
-async def attention(
-    ctx: discord.ApplicationContext,
-    channel: discord.Option(
-        discord.TextChannel,
-        description='Куда отправить сообщение?',
-        name_localizations={'ru':'текстовый_канал'},
-    ),  # type: ignore
-) -> None:
-    """
-    Команда для отправки сообщения с пометкой 'Внимание!'.
-    """
-    await ctx.response.send_modal(AttentionMessage(channel=channel))
-    logger.info(
-        f'Команда "/attention" вызвана пользователем '
-        f'"{ctx.user.display_name}" в канал "{channel}"!'
-    )
-    await ctx.respond(
-        f'_Сообщение отправлено в канал {channel.mention}!_',
-        ephemeral=True,
-        delete_after=3
-    )
-
-
-@attention.error
-async def attention_error(
-    ctx: discord.ApplicationContext,
-    error: Exception
-) -> None:
-    """
-    Обработчик ошибок для команды attention.
-    """
-    await command_error(ctx, error, "attention")
-
-
-@commands.slash_command()
-@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
-async def random(
-    ctx: discord.ApplicationContext,
-    channel: discord.Option(
-        discord.TextChannel,
-        description='Куда отправить кнопку?',
-        name_localizations={'ru':'текстовый_канал'}
-    ), # type: ignore
-    message_id: discord.Option(
-        str,
-        description='ID сообщения, в котором есть кнопка кнопка',
-        name_localizations={'ru':'id_сообщения'},
-        required=False
-    )  # type: ignore
-) -> None:
-    """
-    Команда для отправки кнопки рандомайзера.
-    """
-    try:
-        if message_id:
-            message = ctx.channel.get_partial_message(int(message_id))
-            await message.edit(view=RandomButton())
-            await ctx.respond(
-                f'_Кнопка рандомайзера обновлена и снова работает в '
-                f'канале {channel.mention}!_',
-                ephemeral=True,
-                delete_after=3
-            )
-        else:
-            await channel.send(view=RandomButton())
-            await ctx.respond(
-                f'_Кнопка рандомайзера отправлена в канал '
-                f'{channel.mention}!_',
-                ephemeral=True,
-                delete_after=3
-            )
-        logger.info(
-            f'Команда "/random" вызвана пользователем'
-            f'"{ctx.user.display_name}" в канал "{channel}"!'
-        )
-    except Exception as error:
-        logger.error(
-            f'При запуске команды /random возникла ошибка '
-            f'"{error}"!'
-        )
-
-
-@random.error
-async def random_error(
-    ctx: discord.ApplicationContext,
-    error: Exception
-) -> None:
-    """
-    Обработчик ошибок для команды random.
-    """
-    await command_error(ctx, error, "random")
 
 
 @commands.slash_command()
@@ -373,34 +143,6 @@ async def clear_all_error(
     Обработчик ошибок для команды clear_all.
     """
     await command_error(ctx, error, "clear_all")
-
-
-@commands.slash_command()
-@commands.has_any_role(
-    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE, SERGEANT_ROLE, VETERAN_ROLE
-)
-async def remind(ctx: discord.ApplicationContext) -> None:
-    """
-    Команда для отправки сообщения с напоминанием.
-    """
-    try:
-        await ctx.response.send_modal(StartRemindModal())
-    except Exception as error:
-        logger.error(
-                f'При попытке запустить аукцион командой /remind '
-                f'возникло исключение "{error}"'
-            )
-
-
-@remind.error
-async def remind_error(
-    ctx: discord.ApplicationContext,
-    error: Exception
-) -> None:
-    """
-    Обработчик ошибок для команды remind.
-    """
-    await command_error(ctx, error, "remind")
 
 
 @commands.slash_command()
@@ -467,87 +209,6 @@ async def give_role_to_error(
 
 
 @commands.slash_command()
-@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
-async def rename(
-    ctx: discord.ApplicationContext,
-    channel: discord.Option(
-        discord.TextChannel,
-        description='Куда отправить кнопку?',
-        name_localizations={'ru':'текстовый_канал'}
-    ),  # type: ignore
-    message_id: discord.Option(
-        str,
-        description='ID сообщения, в котором есть кнопка кнопка',
-        name_localizations={'ru':'id_сообщения'},
-        required=False
-    )  # type: ignore
-) -> None:
-    """
-    Команда для отправки кнопки рандомайзера.
-    """
-    if message_id:
-        message = ctx.channel.get_partial_message(int(message_id))
-        await message.edit(view=RenameButton(channel=channel))
-        await ctx.respond(
-            '_Кнопка ренеймера обновлена и снова работает!_',
-            ephemeral=True,
-            delete_after=3
-        )
-    else:
-        await ctx.respond(view=RenameButton(channel=channel))
-        await ctx.respond(
-            '_Кнопка ренеймера запущена!_',
-            ephemeral=True,
-            delete_after=3
-        )
-    logger.info(
-        f'Команда "/rename" вызвана пользователем'
-        f'"{ctx.user.display_name}" в канал "{channel}"!'
-    )
-
-
-@rename.error
-async def rename_error(
-    ctx: discord.ApplicationContext,
-    error: Exception
-) -> None:
-    """
-    Обработчик ошибок для команды rename.
-    """
-    await command_error(ctx, error, "rename")
-
-
-@commands.slash_command()
-@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
-async def rcd_application(ctx: discord.ApplicationContext) -> None:
-    """
-    Команда для запуска кнопки старта РЧД заявок.
-    """
-    try:
-        await ctx.response.send_modal(RcdDate())
-        logger.info(
-            f'Команда "/rcd_application" вызвана пользователем'
-            f'"{ctx.user.display_name}"!'
-        )
-    except Exception as error:
-        logger.error(
-            f'Ошибка при вызове команды "/rcd_application"! '
-            f'"{error}"'
-        )
-
-
-@rcd_application.error
-async def rcd_application_error(
-    ctx: discord.ApplicationContext,
-    error: Exception
-) -> None:
-    """
-    Обработчик ошибок для команды rcd_application.
-    """
-    await command_error(ctx, error, "rcd_application")
-
-
-@commands.slash_command()
 @commands.has_any_role(LEADER_ROLE)
 async def check_roles(
     ctx: discord.ApplicationContext,
@@ -577,7 +238,11 @@ async def check_roles(
             if len(parts) > 2:
                 guild_member_list.append(parts[2])
         for member in members:
-            if (sergaunt_role in member.roles or veteran_role in member.roles) and re.sub(r'[^a-zA-Zа-яА-ЯёЁ0-9]', '', member.display_name) not in guild_member_list:
+            if (
+                (sergaunt_role in member.roles or veteran_role in member.roles)
+                and re.sub(r'[^a-zA-Zа-яА-ЯёЁ0-9]', '', member.display_name)
+                not in guild_member_list
+            ):
                 removed_role_members.append(member.display_name)
                 await member.remove_roles(sergaunt_role)
                 await member.remove_roles(veteran_role)
@@ -600,88 +265,8 @@ async def check_roles_error(
     await command_error(ctx, error, "check_roles")
 
 
-class SetNewDescription(Modal):
-    """Модальное окно для установки нового"""
-    def __init__(self, message_id: int, channel: discord.TextChannel):
-        super().__init__(title='Укажи новое описание embed', timeout=None)
-        self.message_id = message_id
-        self.channel = channel
-
-        self.add_item(
-            InputText(
-                style=discord.InputTextStyle.multiline,
-                label='Укажи содержание сообщения',
-                placeholder='Не более 4000 символов',
-                max_length=4000
-            )
-        )
-
-    async def callback(self, interaction: discord.Interaction):
-        try:
-            await interaction.response.defer(invisible=False, ephemeral=True)
-            message: discord.Message = await self.channel.fetch_message(self.message_id)
-            try:
-                embed: discord.Embed = message.embeds[0]
-            except Exception as error:
-                logger.error(f'Ошибка при поиске embed! "{error}"')
-            embed.description = self.children[0].value
-            await message.edit(embed=embed)
-            await interaction.respond('✅', delete_after=1)
-        except Exception as error:
-            logger.error(
-                f'Пользователь {interaction.user.display_name} попытался изменить embed '
-                f'но получил ошибку {error}!'
-            )
-
-
-@commands.slash_command()
-@commands.has_any_role(LEADER_ROLE)
-async def edit_embed(
-    ctx: discord.ApplicationContext,
-    message_id: discord.Option(
-        str,
-        description='ID сообщения, которое нужно изменить',
-        name_localizations={'ru':'id_сообщения'}
-    )  # type: ignore
-) -> None:
-    """
-    Команда для изменения embed description, написанное ботом.
-    """
-    try:
-        await ctx.response.send_modal(SetNewDescription(
-            message_id=int(message_id),
-            channel=ctx.channel
-        ))
-        logger.info(
-            f'Команда "/edit_embed" вызвана пользователем'
-            f'"{ctx.user.display_name}"!'
-        )
-    except Exception as error:
-        logger.error(
-            f'Ошибка при вызове команды "/edit_embed"! '
-            f'"{error}"'
-        )
-
-
-@edit_embed.error
-async def edit_embed_error(
-    ctx: discord.ApplicationContext,
-    error: Exception
-) -> None:
-    """
-    Обработчик ошибок для команды edit_embed.
-    """
-    await command_error(ctx, error, "edit_embed")
-
-
 def setup(bot: discord.Bot):
     bot.add_application_command(technical_works)
-    bot.add_application_command(attention)
-    bot.add_application_command(random)
     bot.add_application_command(clear_all)
-    bot.add_application_command(remind)
     bot.add_application_command(give_role_to)
-    bot.add_application_command(rename)
-    bot.add_application_command(rcd_application)
     bot.add_application_command(check_roles)
-    bot.add_application_command(edit_embed)
