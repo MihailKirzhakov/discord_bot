@@ -35,12 +35,14 @@ class EditGroupButton(View):
                 interaction.user.mention in interaction_message_embed.description
                 or interaction.user.id == int(LEADER_ID)
             ):
-                return await interaction.respond(
-                    view=SetGroup(
+                view = View(SetGroup(
                         if_edit=True,
                         message_embed=interaction_message_embed,
                         interaction_message=interaction_message
-                    ),
+                    )
+                )
+                return await interaction.respond(
+                    view=view,
                     embed=group_create_instruction_embed(),
                     delete_after=60
                 )
