@@ -108,7 +108,7 @@ class SetNewDescription(Modal):
 
 @commands.slash_command()
 @commands.has_any_role(LEADER_ROLE)
-async def edit_embed(
+async def edit_embed_description(
     ctx: discord.ApplicationContext,
     message_id: discord.Option(
         str,
@@ -125,25 +125,25 @@ async def edit_embed(
             channel=ctx.channel
         ))
         logger.info(
-            f'Команда "/edit_embed" вызвана пользователем'
+            f'Команда "/edit_embed_description" вызвана пользователем'
             f'"{ctx.user.display_name}"!'
         )
     except Exception as error:
         logger.error(
-            f'Ошибка при вызове команды "/edit_embed"! '
+            f'Ошибка при вызове команды "/edit_embed_description"! '
             f'"{error}"'
         )
 
 
-@edit_embed.error
+@edit_embed_description.error
 async def edit_embed_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ) -> None:
     """
-    Обработчик ошибок для команды edit_embed.
+    Обработчик ошибок для команды edit_embed_description.
     """
-    await command_error(ctx, error, "edit_embed")
+    await command_error(ctx, error, "edit_embed_description")
 
 
 class CreateOrEditSymbolsList(View):
@@ -174,12 +174,11 @@ class CreateOrEditSymbolsList(View):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             select_value: list[discord.User] = select.values
-            self.banner_list: str = '\n'.join(
-                f"{number}. {user.name}" for number, user
+            self.banner_list: str = '_' + '\n'.join(
+                f'{number}. {user.mention}' for number, user
                 in enumerate(select_value, start=1)
-            )
-            select.disabled = True
-            await interaction.respond('✅')
+            ) + '_'
+            await interaction.respond('✅', delete_after=1)
         except Exception as error:
             logger.error(
                 f'При оформлении списка знамён вышла "{error}"'
@@ -197,19 +196,18 @@ class CreateOrEditSymbolsList(View):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             select_value: list[discord.User] = select.values
-            self.cape_list: str = '\n'.join(
-                f"{number}. {user.name}" for number, user
+            self.cape_list: str = '_' + '\n'.join(
+                f'{number}. {user.mention}' for number, user
                 in enumerate(select_value, start=1)
-            )
-            select.disabled = True
-            await interaction.respond('✅')
+            ) + '_'
+            await interaction.respond('✅', delete_after=1)
         except Exception as error:
             logger.error(
                 f'При оформлении списка накидок вышла "{error}"'
             )
 
     @button(
-        label='Создать',
+        label='Опубликовать',
         style=discord.ButtonStyle.green,
         emoji='📨'
     )
@@ -222,14 +220,11 @@ class CreateOrEditSymbolsList(View):
             await interaction.response.defer(invisible=False, ephemeral=True)
             if self.lookup_message:
                 embed: discord.Embed = self.lookup_message.embeds[0]
-                banner_fieild: discord.EmbedField = embed.fields[0]
-                cape_field = 
-                await self.lookup_message.edit(
-                    embed=symbols_list_embed(
-                        banner_list=self.banner_list,
-                        cape_list=self.cape_list
-                    )
-                )
+                banner_field: discord.EmbedField = embed.fields[0]
+                cape_field: discord.EmbedField = embed.fields[1]
+                banner_field.value = self.banner_list
+                cape_field.value = self.cape_list
+                await self.lookup_message.edit(embed=embed)
             else:
                 await interaction.channel.send(
                     embed=symbols_list_embed(
@@ -237,7 +232,7 @@ class CreateOrEditSymbolsList(View):
                         cape_list=self.cape_list
                     )
                 )
-            await interaction.respond('✅')
+            await interaction.respond('✅', delete_after=1)
         except Exception as error:
             logger.error(
                 f'При создании списка знамён/накидок вышла "{error}"'
@@ -246,7 +241,7 @@ class CreateOrEditSymbolsList(View):
 
 @commands.slash_command()
 @commands.has_any_role(LEADER_ROLE)
-async def embed_manager(
+async def symbols_list(
     ctx: discord.ApplicationContext,
     message_id: discord.Option(
         str,
@@ -274,7 +269,6 @@ async def embed_manager(
             await ctx.respond(view=CreateOrEditSymbolsList(lookup_message=lookup_message))
         else:
             await ctx.respond(view=CreateOrEditSymbolsList())
-        await ctx.respond('✅')
         logger.info(
             f'Команда "/embed_manager" вызвана пользователем'
             f'"{ctx.user.display_name}"!'
@@ -286,18 +280,18 @@ async def embed_manager(
         )
 
 
-@embed_manager.error
+@symbols_list.error
 async def embed_manager_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ) -> None:
     """
-    Обработчик ошибок для команды embed_manager.
+    Обработчик ошибок для команды symbols_list.
     """
-    await command_error(ctx, error, "embed_manager")
+    await command_error(ctx, error, "symbols_list")
 
 
 def setup(bot: discord.Bot):
     bot.add_application_command(attention)
-    bot.add_application_command(edit_embed)
-    bot.add_application_command(embed_manager)
+    bot.add_application_command(edit_embed_description)
+    bot.add_application_command(symbols_list)

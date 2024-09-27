@@ -28,13 +28,13 @@ def symbols_list_embed(
         color=0x00ff29
     )
     embed.add_field(
-        name='_Знамёна_',
-        value=f'_{banner_list}_',
+        name='_Знамёна:_',
+        value=f'{banner_list}',
         inline=True
     )
     embed.add_field(
-        name='_Накидки_',
-        value=f'_{cape_list}_',
+        name='_Накидки:_',
+        value=f'{cape_list}',
         inline=True
     )
     embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
