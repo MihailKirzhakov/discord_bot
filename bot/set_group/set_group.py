@@ -35,7 +35,9 @@ class EditGroupButton(View):
                 interaction.user.mention in interaction_message_embed.description
                 or interaction.user.id == int(LEADER_ID)
             ):
+                max_values: int = 7 if interaction.user.id == int(MIURKA_ID) or interaction.user.id == int(LEADER_ID) else 6
                 view = View(SetGroup(
+                        max_values=max_values,
                         if_edit=True,
                         message_embed=interaction_message_embed,
                         interaction_message=interaction_message
@@ -114,22 +116,24 @@ class SetGroup(Select):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             embed: discord.Embed = set_group_embed()
+            members = []
+
             if self.if_edit:
-                embed: discord.Embed = self.message_embed
+                embed = self.message_embed
                 embed.fields[0].value = ''
 
-            if not self.if_edit:
-                group_leader: discord.User = (
-                    self.values[0] if interaction.user.id == int(LEADER_ID) else interaction.user
-                )
+            group_leader: discord.User = None
+            if interaction.user.id == int(LEADER_ID):
+                group_leader = self.values[0]
+                embed.description = ''
+            else:
+                if not self.if_edit:
+                    group_leader = interaction.user
+
+            if group_leader:
                 embed.description += f'1. {group_leader.mention}'
 
-            members = [
-                value.mention for value in (
-                    self.values[1:] if interaction.user.id == int(LEADER_ID)
-                    and not self.if_edit else self.values
-                )
-            ]
+            members = [value.mention for value in (self.values[1:] if interaction.user.id == int(LEADER_ID) else self.values)]
 
             for number, member in enumerate(members):
                 embed.fields[0].value += f'\n{number + 2}. {member}'
