@@ -5,8 +5,7 @@ import discord
 from dotenv import load_dotenv
 from loguru import logger
 
-from reminder.embeds import remind_send_embed
-from reminder.functions import delete_remind_from_db, cursor
+from reminder.functions import send_reminders, cursor
 from randomaizer.randomaizer import RandomButton
 from rename_request.rename_request import RenameButton
 from role_application.role_application import (
@@ -40,33 +39,18 @@ async def on_ready() -> None:
     bot.add_view(EditGroupButton())
     logger.info('Бот запущен и готов к работе!')
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS reminds
-        (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, message TEXT, remind_date TEXT)
+        CREATE TABLE IF NOT EXISTS date_info
+        (date_name TEXT UNIQUE, date TEXT)
     ''')
-    cursor.execute('SELECT * FROM reminds ORDER BY remind_date ASC')
-    reminds = cursor.fetchall()
-
-    for remind in reminds:
-        _, user_id, message, remind_date = remind
-        remind_date = datetime.strptime(remind_date, '%Y-%m-%d %H:%M:%S')
-        if remind_date < datetime.now():
-            remind_date = remind_date.replace(year=(datetime.now().year) + 1)
-        await discord.utils.sleep_until(remind_date)
-        user = await bot.fetch_user(user_id)
-        if user:
-            await user.send(
-                embed=remind_send_embed(
-                    discord.utils.format_dt(remind_date, style="F"), message
-                ),
-                delete_after=300
-            )
-            logger.info(
-                f'Напоминание отправлено пользователю {user.display_name} '
-                f'после проверки БД.'
-            )
-            delete_remind_from_db(user_id, remind_date)
-        else:
-            logger.error(f'Пользователь с данным ID {user_id} не найден')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS rcd_application
+        (message_name TEXT UNIQUE, message_id INTEGER)
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS reminds
+        (user_id INTEGER, message TEXT UNIQUE, remind_date TEXT)
+    ''')
+    await send_reminders(bot, cursor, logger)
 
 
 @bot.command()

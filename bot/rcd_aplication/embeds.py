@@ -27,7 +27,7 @@ def start_rcd_embed(date: str) -> discord.Embed:
     return embed
 
 
-def rcd_list_embed(date: str) -> discord.Embed:
+def app_list_embed(date: str) -> discord.Embed:
     """
     Функция для создания вложения о списке поданных РЧД заявок.
     """
@@ -67,12 +67,12 @@ def ask_veteran_embed(member: discord.Member, date: str) -> discord.Embed:
     return embed
 
 
-def final_rcd_list_embed(date: str) -> discord.Embed:
+def rcd_list_embed(date: str, action: str) -> discord.Embed:
     """
     Функция для создания вложения о финальном списке РЧД.
     """
     embed = discord.Embed(
-        title=f'_**Список РЧД (АТАКА) {date}**_',
+        title=f'_**Список РЧД ({action}) {date}**_',
         color=0xfffb00
     )
     for role in INDEX_CLASS_ROLE.values():
@@ -85,7 +85,7 @@ def final_rcd_list_embed(date: str) -> discord.Embed:
     return embed
 
 
-def second_final_rcd_list_embed(date: str) -> discord.Embed:
+def defence_rcd_list_embed(date: str) -> discord.Embed:
     """
     Функция для создания вложения о финальном списке РЧД.
     """
