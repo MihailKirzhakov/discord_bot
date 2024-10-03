@@ -47,6 +47,10 @@ async def on_ready() -> None:
         (message_name TEXT UNIQUE, message_id INTEGER)
     ''')
     cursor.execute('''
+        CREATE TABLE IF NOT EXISTS notice_list
+        (action TEXT, role TEXT, members_id TEXT, UNIQUE (action, role) ON CONFLICT REPLACE)
+    ''')
+    cursor.execute('''
         CREATE TABLE IF NOT EXISTS reminds
         (user_id INTEGER, message TEXT UNIQUE, remind_date TEXT)
     ''')
