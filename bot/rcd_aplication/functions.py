@@ -34,18 +34,20 @@ def delete_from_notice_list(action: str, role: str):
     conn.commit()
 
 
-def get_notice_list_data():
+def get_notice_list_data(action: str):
     """Получает информацию о списках уведомлений"""
-    cursor.execute('SELECT * FROM notice_list')
+    cursor.execute('SELECT * FROM notice_list WHERE action = ?', (action,))
     rows = cursor.fetchall()
-    notice_list_data = {}
+    notice_list_data = []
     for row in rows:
         action, role, members_id = row
         members_id_list = [int(member_id) for member_id in members_id.split(',')]
-        notice_list_data[role] = {
+        notice_dict_data = {
+            'role': role,
             'action': action,
             'members_id': members_id_list
         }
+        notice_list_data.append(notice_dict_data)
     return notice_list_data
 
 

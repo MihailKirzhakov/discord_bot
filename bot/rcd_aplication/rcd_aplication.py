@@ -14,7 +14,8 @@ from .embeds import (
 from .functions import (
     add_message_id, add_date_info, get_data_from_table,
     clear_rcd_application_table, clear_date_info_table,
-    add_members_to_notice_list, delete_from_notice_list
+    add_members_to_notice_list, delete_from_notice_list,
+    get_notice_list_data
 )
 from role_application.functions import has_required_role
 from variables import (
@@ -37,18 +38,13 @@ class StaticNames:
     RCD_APPLICATION: str = 'rcd_application'
     MESSAGE_ID: str = 'message_id'
     MESSAGE_NAME: str = 'message_name'
+    START_RCD_MESSAGE: str = 'start_rcd_message'
 
 
 ask_member_list: list[int] = []
 member_list: list = []
 embed: dict[str, discord.Embed] = {}
 last_message_to_finish: dict[str, discord.Message] = {}
-rcd_application_channel: dict[str, discord.TextChannel] = {}
-publish_embed: dict[str, discord.Embed] = {}
-members_by_roles_attack: dict[str, set[discord.Member]] = {}
-members_by_roles_deff: dict[str, set[discord.Member]] = {}
-rcd_application_last_message: dict[str, discord.Message] = {}
-pub_info: dict[str, bool] = {}
 
 
 class RcdDate(Modal):
@@ -91,12 +87,8 @@ class RcdDate(Modal):
                 rcd_date = rcd_date.replace(year=current_year + 1)
             convert_rcd_date = discord.utils.format_dt(rcd_date, style="D")
             add_date_info(StaticNames.RCD_DATE, convert_rcd_date)
-            embed['rcd_list_embed'] = rcd_list_embed(convert_rcd_date, StaticNames.ATACK)
-            embed['defence_rcd_list_embed'] = defence_rcd_list_embed(convert_rcd_date)
-            embed['app_list_embed'] = app_list_embed(convert_rcd_date)
             await interaction.channel.send(embed=app_list_embed(convert_rcd_date), view=StartRCDButton())
             await rcd_app_channel.send(embed=start_rcd_embed(convert_rcd_date), view=RCDButton())
-            await interaction.channel.send(view=CreateRCDList())
             add_message_id(StaticNames.RCD_APPCHANNEL_MESSAGE, rcd_app_channel.last_message_id)
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
@@ -297,11 +289,26 @@ class SelectMemberToRCD(View):
                     ANSWERS_IF_NO_ROLE,
                     delete_after=2
                 )
-            f_embed: discord.Embed = embed.get('rcd_list_embed')
-            s_embed: discord.Embed = embed.get('defence_rcd_list_embed')
+            rcd_list_message_id = get_data_from_table(
+                table_name=StaticNames.RCD_APPLICATION,
+                columns=StaticNames.MESSAGE_ID,
+                condition=f"{StaticNames.MESSAGE_NAME} = '{StaticNames.RCD_LIST_MESSAGE}'"
+            )
+            rcd_list_message: discord.Message = (
+                await interaction.channel.fetch_message(rcd_list_message_id)
+            )
+            rcd_list_message_embeds = rcd_list_message.embeds
+            f_embed: discord.Embed = rcd_list_message_embeds[0]
+            s_embed: discord.Embed = (
+                rcd_list_message_embeds[1] if len(rcd_list_message_embeds) > 1 else None
+            )
+            during_embed_list: list[discord.Embed] = [f_embed]
             check_set: set[str] = set()
 
-            for each_embed in [f_embed, s_embed]:
+            if s_embed:
+                during_embed_list.append(s_embed)
+
+            for each_embed in during_embed_list:
                 for field in each_embed.fields:
                     for value in field.value.split(','):
                         check_set.add(value.strip())
@@ -349,7 +356,9 @@ class SelectMemberToRCD(View):
                 columns=StaticNames.MESSAGE_ID,
                 condition=f"{StaticNames.MESSAGE_NAME} = '{StaticNames.RCD_LIST_MESSAGE}'"
             )
-            rcd_list_message: discord.Message = await interaction.channel.fetch_message(rcd_list_message_id)
+            rcd_list_message: discord.Message = (
+                await interaction.channel.fetch_message(rcd_list_message_id)
+            )
             tumbler_button: discord.ui.Button = rcd_list_message.components[0].children[1]
             is_red = tumbler_button.style == discord.ButtonStyle.red
 
@@ -535,51 +544,53 @@ class CreateRCDList(View):
                 columns=StaticNames.MESSAGE_ID,
                 condition=f"{StaticNames.MESSAGE_NAME} = '{StaticNames.RCD_APPCHANNEL_MESSAGE}'"
             )
-            rcd_app_channel: discord.TextChannel = interaction.guild.get_channel(RCD_APPLICATION_CHANNEL_ID)
+            rcd_app_channel: discord.TextChannel = (
+                interaction.guild.get_channel(RCD_APPLICATION_CHANNEL_ID)
+            )
             rcd_app_message: discord.Message = await rcd_app_channel.fetch_message(
                 rcd_appchannel_message_id
             )
-            f_embed: discord.Embed = interaction.message.embeds[0]
-            s_embed: discord.Embed = interaction.message.embeds[1]
+            rcd_app_message_embeds: list[discord.Embed] = rcd_app_message.embeds
+            during_embed_list: list[discord.Embed] = interaction.message.embeds
+            f_embed: discord.Embed = during_embed_list[0]
+            if len(during_embed_list) > 1:
+                s_embed: discord.Embed = during_embed_list[1]
             date_data = get_data_from_table(
                 table_name=StaticNames.DATE_INFO,
                 columns=StaticNames.DATE,
                 condition=f"{StaticNames.DATE_NAME} = '{StaticNames.RCD_DATE}'"
             )
-            publish_embed: discord.Embed = publish_rcd_embed(date=date_data)
-            publish_second_embed: discord.Embed = publish_rcd_second_embed(date=date_data)
-            # if '(АТАКА)' in rcd_app_message.embeds[0].title and not rcd_application_last_message.get('attack'):
-            #     rcd_application_last_message['attack'] = channel.last_message
+            atack_embed: discord.Embed = publish_rcd_embed(date=date_data)
+            defense_embed: discord.Embed = publish_rcd_second_embed(date=date_data)
             if self.children[1].style == discord.ButtonStyle.red:
-                for field in [field for field in s_embed.fields if field.value != '']:
-                    name, value, inline = field.name, field.value, field.inline
-                    publish_second_embed.add_field(name=name, value=value, inline=inline)
-                if '(АТАКА)' in channel.last_message.embeds[0].title:
-                    await channel.send(embed=publish_second_embed)
-                    logger.info(f'Список "ЗАЩИТА" опубликован в {channel.name} пользователем {interaction.user.display_name}')
-                elif 'Заявки на РЧД' in channel.last_message.embeds[0].title:
+                if 'Заявки на РЧД' in rcd_app_message_embeds[0].title:
                     return await interaction.respond(
                         '_Сначала нужно отправить список "АТАКА"! ❌_',
                         delete_after=3
                     )
+                for field in [field for field in s_embed.fields if field.value != '']:
+                    name, value, inline = field.name, field.value, field.inline
+                    defense_embed.add_field(name=name, value=value, inline=inline)
+
+                if len(rcd_app_message_embeds) > 1:
+                    rcd_app_message_embeds[1] = defense_embed
                 else:
-                    await channel.last_message.edit(embed=publish_second_embed)
-                    logger.info(f'Список "ЗАЩИТА" изменён в {channel.name} пользователем {interaction.user.display_name}')
+                    rcd_app_message_embeds.append(defense_embed)
+                await rcd_app_message.edit(embeds=rcd_app_message_embeds)
+                logger.info(
+                    f'Список "ЗАЩИТА" изменён в {rcd_app_channel.name} '
+                    f'пользователем {interaction.user.display_name}'
+                )
             else:
                 for field in [field for field in f_embed.fields if field.value != '']:
                     name, value, inline = field.name, field.value, field.inline
-                    publish_embed.add_field(name=name, value=value, inline=inline)
-                if not last_message_to_finish.get('final_rcd_list_message'):
-                    last_message_to_finish['final_rcd_list_message'] = interaction.channel.last_message
-                    self.children[0].disabled = False
-                    await interaction.message.edit(view=self)
-                if 'Заявки на РЧД' in channel.last_message.embeds[0].title:
-                    await channel.last_message.delete()
-                    await channel.send(embed=publish_embed)
-                    logger.info(f'Список "АТАКА" опубликован в {channel.name} пользователем {interaction.user.display_name}')
-                else:
-                    await rcd_application_last_message.get('attack').edit(embed=publish_embed)
-                    logger.info(f'Список "АТАКА" изменён в {channel.name} пользователем {interaction.user.display_name}')
+                    atack_embed.add_field(name=name, value=value, inline=inline)
+                rcd_app_message_embeds[0] = atack_embed
+                await rcd_app_message.edit(embeds=rcd_app_message_embeds, view=None)
+                logger.info(
+                    f'Список "АТАКА" изменён в {rcd_app_channel.name} '
+                    f'пользователем {interaction.user.display_name}'
+                )
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
             logger.error(
@@ -598,9 +609,26 @@ class CreateRCDList(View):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             sergaunt_role: discord.Role = discord.utils.get(interaction.guild.roles, name=SERGEANT_ROLE)
-            channel: discord.TextChannel = rcd_application_channel.get('rcd_aplication_channel')
-            permissions_for_sergaunt: discord.permissions = channel.permissions_for(sergaunt_role).read_messages
-            jump_url = channel.jump_url if 'Список РЧД' in channel.last_message.embeds[0].title and permissions_for_sergaunt == True else None
+            rcd_appchannel_message_id = get_data_from_table(
+                table_name=StaticNames.RCD_APPLICATION,
+                columns=StaticNames.MESSAGE_ID,
+                condition=f"{StaticNames.MESSAGE_NAME} = '{StaticNames.RCD_APPCHANNEL_MESSAGE}'"
+            )
+            rcd_app_channel: discord.TextChannel = (
+                interaction.guild.get_channel(RCD_APPLICATION_CHANNEL_ID)
+            )
+            rcd_app_message: discord.Message = await rcd_app_channel.fetch_message(
+                rcd_appchannel_message_id
+            )
+            permissions_for_sergaunt: discord.permissions = (
+                rcd_app_channel.permissions_for(sergaunt_role).read_messages
+            )
+            jump_url = (
+                rcd_app_channel.jump_url if 'Список РЧД'
+                in rcd_app_message.embeds[0].title
+                and permissions_for_sergaunt == True else None
+            )
+            unique_values: set[str] = set()
 
             async def send_notification(member: discord.Member, rcd_role: str):
                 try:
@@ -624,28 +652,43 @@ class CreateRCDList(View):
                 except discord.Forbidden:
                     logger.warning(f'Пользователю "{member.display_name}" запрещено отправлять сообщения')
 
-            async def get_members_by_role(members_by_roles, pub_info_key):
-                if not members_by_roles:
-                    return await interaction.respond(
-                        '_Дядь, в списке пусто 🤔_',
-                        delete_after=3
-                    )
-                if pub_info.get(pub_info_key):
-                    return await interaction.respond(
-                        f'_Опевещения из списка {pub_info_key} уже были отправлены! ❌_',
-                        delete_after=3
-                    )
-                for index, member_set in members_by_roles.items():
-                    pub_info[pub_info_key] = True
-                    for member in member_set:
-                        await send_notification(member, index)
-                        logger.info(f'"{member.display_name}" оповещён об РЧД')
-            if self.children[1].style == discord.ButtonStyle.red:
-                await get_members_by_role(members_by_roles_deff, 'ЗАЩИТА')
-            else:
-                await get_members_by_role(members_by_roles_attack, 'АТАКА')
+            async def get_members_by_role(notice_data_list, action_name):
+                during_embeds = interaction.message.embeds
+                during_embed = during_embeds[0] if action_name == StaticNames.ATACK else during_embeds[1]
+                unique_values.clear()
+                for field in during_embed.fields:
+                    for value in field.value.split(','):
+                        unique_values.add(value.strip())
 
-            if pub_info.get('ЗАЩИТА') and pub_info.get('АТАКА'):
+                if not notice_data_list:
+                    return await interaction.channel.send(
+                        '_Дядь, в списке пусто 🤔\n'
+                        f'Или всем людям из списка {action_name} уже были отправлены оповещения 👌_',
+                        delete_after=3,
+                        ephemeral=True
+                    )
+
+                for dict_item in notice_data_list:
+                    action = dict_item.get('action')
+                    role = dict_item.get('role')
+                    members_id = dict_item.get('members_id')
+
+                    delete_from_notice_list(action=action, role=role)
+
+                    for member_id in members_id:
+                        member = await interaction.guild.fetch_member(member_id)
+                        await send_notification(member, role)
+                        logger.info(f'"{member.display_name}" оповещён об РЧД')
+
+            if self.children[1].style == discord.ButtonStyle.red:
+                await get_members_by_role(get_notice_list_data(StaticNames.DEFENCE), StaticNames.DEFENCE)
+            else:
+                await get_members_by_role(get_notice_list_data(StaticNames.ATACK), StaticNames.ATACK)
+
+            if (
+                len(unique_values) > 1 and not get_notice_list_data(StaticNames.ATACK)
+                and not get_notice_list_data(StaticNames.DEFENCE)
+            ):
                 button.label = 'Все оповещения были отправлены ✅'
                 button.style = discord.ButtonStyle.gray
                 button.disabled = True
@@ -692,12 +735,6 @@ class CreateRCDList(View):
             member_list.clear()
             embed.clear()
             last_message_to_finish.clear()
-            rcd_application_channel.clear()
-            publish_embed.clear()
-            members_by_roles_attack.clear()
-            members_by_roles_deff.clear()
-            rcd_application_last_message.clear()
-            pub_info.clear()
             await interaction.respond('✅', delete_after=1)
             logger.info(f'Пользователь "{interaction.user.display_name}" завершил работу с РЧД списками')
         except Exception as error:
@@ -717,54 +754,39 @@ class StartRCDButton(View):
     ):
         super().__init__(timeout=timeout)
 
-    # @select(
-    #     select_type=discord.ComponentType.channel_select,
-    #     min_values=1,
-    #     max_values=1,
-    #     placeholder='Выбери канал, в котором будет кнопка для заявок РЧД',
-    #     channel_types=[discord.ChannelType.text]
-    # )
-    # async def select_callback(
-    #     self, select: discord.ui.Select, interaction: discord.Interaction
-    # ):
-    #     await interaction.response.defer(invisible=False, ephemeral=True)
-    #     if not has_required_role(interaction.user):
-    #         return await interaction.respond(
-    #             ANSWERS_IF_NO_ROLE,
-    #             delete_after=2
-    #         )
-    #     last_message_to_finish['start_RCD_button_message'] = interaction.message
-    #     channel: discord.TextChannel = select.values[0]
-    #     rcd_application_channel['rcd_aplication_channel'] = channel
-    #     try:
-    #         await channel.send(
-                # embed=start_rcd_embed(get_data_from_table(
-                #     table_name=StaticNames.DATE_INFO,
-                #     columns=StaticNames.DATE,
-                #     condition=f"{StaticNames.DATE_NAME} = '{StaticNames.RCD_DATE}'"
-                # )),
-    #             view=RCDButton()
-    #         )
-    #         await interaction.channel.send(view=CreateRCDList())
-    #         self.children[0].disabled = True
-    #         self.children[1].disabled = False
-    #         self.remove_item(self.children[0])
-    #         await interaction.message.edit(view=self)
-    #         logger.info(
-    #             f'Пользователь {interaction.user.display_name} запустил '
-    #             f'заявки на РЧД в канале "{channel.name}"'
-    #         )
-    #         await interaction.respond('✅', delete_after=1)
-    #     except Exception as error:
-    #         await interaction.respond('❌', delete_after=1)
-    #         logger.error(f'При нажатии на кнопку StartRCDButton возникла ошибка {error}')
+    @button(
+        label='Стартуем!',
+        style=discord.ButtonStyle.green
+    )
+    async def lets_start(
+        self,
+        button: discord.ui.Button,
+        interaction: discord.Interaction
+    ):
+        try:
+            await interaction.response.defer(invisible=False, ephemeral=True)
+            add_message_id(
+                message_name=StaticNames.START_RCD_MESSAGE,
+                message_id=interaction.message.id
+            )
+            button.disabled = True
+            self.children[1].disabled = False
+            self.remove_item(button)
+            await interaction.message.edit(view=self)
+            await interaction.channel.send(view=CreateRCDList())
+            await interaction.respond('✅', delete_after=1)
+        except Exception as error:
+            await interaction.respond('❌', delete_after=1)
+            logger.error(
+                f'При старте программы РЧД возникла ошибка "{error}"'
+            )
 
     @select(
         select_type=discord.ComponentType.user_select,
         min_values=1,
         max_values=24,
         placeholder='Выбери игроков, которых спросить об РЧД',
-        disabled=False
+        disabled=True
     )
     async def ask_callback(
         self, select: discord.ui.Select, interaction: discord.Interaction
