@@ -229,7 +229,7 @@ async def check_roles(
         members: list[discord.Member] = await ctx.guild.fetch_members(limit=None).flatten()
         checking_message: discord.Message = await ctx.channel.fetch_message(int(message_id))
         attachment = checking_message.attachments[0]
-        lines = (await attachment.read()).decode('windows-1251').splitlines()
+        lines = (await attachment.read()).decode('utf-8').splitlines()
         sergaunt_role: discord.Role = discord.utils.get(ctx.guild.roles, name=SERGEANT_ROLE)
         guest_role: discord.Role = discord.utils.get(ctx.guild.roles, name=GUEST_ROLE)
         veteran_role: discord.Role = discord.utils.get(ctx.guild.roles, name=VETERAN_ROLE)

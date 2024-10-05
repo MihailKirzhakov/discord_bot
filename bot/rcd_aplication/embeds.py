@@ -36,13 +36,13 @@ def app_list_embed(date: str) -> discord.Embed:
         color=0xfffb00
     )
     embed.add_field(
-        name='------------------------------',
-        value='**Ветераны:**\n\n',
+        name='-------------------- **Ветераны** --------------------',
+        value='',
         inline=False
     )
     embed.add_field(
-        name='------------------------------',
-        value='**Старшины:**\n\n',
+        name='-------------------- **Старшины** --------------------',
+        value='',
         inline=False
     )
     embed.set_thumbnail(url=RCD_LIST_IMAGE_URL)
@@ -73,24 +73,6 @@ def rcd_list_embed(date: str, action: str) -> discord.Embed:
     """
     embed = discord.Embed(
         title=f'_**Список РЧД ({action}) {date}**_',
-        color=0xfffb00
-    )
-    for role in INDEX_CLASS_ROLE.values():
-        embed.add_field(
-            name=role,
-            value='',
-            inline=False
-        )
-    embed.set_thumbnail(url=RCD_LIST_IMAGE_URL)
-    return embed
-
-
-def defence_rcd_list_embed(date: str) -> discord.Embed:
-    """
-    Функция для создания вложения о финальном списке РЧД.
-    """
-    embed = discord.Embed(
-        title=f'_**Список РЧД (ЗАЩИТА) {date}**_',
         color=0xfffb00
     )
     for role in INDEX_CLASS_ROLE.values():

@@ -1,7 +1,7 @@
 from reminder.functions import cursor, conn
 
 
-def add_message_id(message_name, message_id):
+def add_message_id(message_name: str, message_id: int):
     """Добавляет или обновляет ID сообщения в котором хранятся заявки на РЧД"""
     cursor.execute(
         'INSERT OR REPLACE INTO rcd_application (message_name, message_id) VALUES (?, ?)',
@@ -26,6 +26,38 @@ def add_members_to_notice_list(action: str, role: str, members_id: str):
         (action, role, members_id, members_id)
     )
     conn.commit()
+
+
+def add_appmember_id(member_id: int):
+    """Добавляет ID пользователя, подавщего заявку"""
+    cursor.execute(
+        'INSERT INTO appmember_list (member_id) VALUES (?)',
+        (member_id,)
+    )
+    conn.commit()
+
+
+def add_askmember_id(member_id: int):
+    """Добавляет ID пользователя, подавщего заявку"""
+    cursor.execute(
+        'INSERT INTO askmember_list (member_id) VALUES (?)',
+        (member_id,)
+    )
+    conn.commit()
+
+
+def get_all_member_ids():
+    """Возвращает список всех ID пользователей, подавших заявку"""
+    cursor.execute('SELECT member_id FROM appmember_list')
+    result = cursor.fetchall()
+    return [row[0] for row in result]
+
+
+def get_all_ask_member_ids():
+    """Возвращает список всех ID пользователей, подавших заявку"""
+    cursor.execute('SELECT member_id FROM askmember_list')
+    result = cursor.fetchall()
+    return [row[0] for row in result]
 
 
 def delete_from_notice_list(action: str, role: str):
@@ -75,13 +107,10 @@ def get_data_from_table(table_name: str, columns: str = '*', condition: str = No
         return None
 
 
-def clear_rcd_application_table():
-    """Очищает таблицу rcd_application в базе данных"""
+def clear_rcd_data():
+    """Очищает таблицы rcd_app в базе данных"""
     cursor.execute('DELETE FROM rcd_application')
-    conn.commit()
-
-
-def clear_date_info_table():
-    """Очищает таблицу rcd_application в базе данных"""
     cursor.execute('DELETE FROM date_info')
+    cursor.execute('DELETE FROM appmember_list')
+    cursor.execute('DELETE FROM notice_list')
     conn.commit()

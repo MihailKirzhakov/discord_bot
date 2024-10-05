@@ -9,13 +9,14 @@ from loguru import logger
 from .embeds import (
     start_rcd_embed, app_list_embed, ask_veteran_embed,
     rcd_list_embed, publish_rcd_embed, rcd_notification_embed,
-    defence_rcd_list_embed, publish_rcd_second_embed
+    publish_rcd_second_embed
 )
 from .functions import (
     add_message_id, add_date_info, get_data_from_table,
-    clear_rcd_application_table, clear_date_info_table,
+    clear_rcd_data, get_all_member_ids,
     add_members_to_notice_list, delete_from_notice_list,
-    get_notice_list_data
+    get_notice_list_data, add_appmember_id, add_askmember_id,
+    get_all_ask_member_ids
 )
 from role_application.functions import has_required_role
 from variables import (
@@ -39,12 +40,7 @@ class StaticNames:
     MESSAGE_ID: str = 'message_id'
     MESSAGE_NAME: str = 'message_name'
     START_RCD_MESSAGE: str = 'start_rcd_message'
-
-
-ask_member_list: list[int] = []
-member_list: list = []
-embed: dict[str, discord.Embed] = {}
-last_message_to_finish: dict[str, discord.Message] = {}
+    RCD_LIST_CHANNEL: str = 'rcd_list_channel'
 
 
 class RcdDate(Modal):
@@ -90,6 +86,17 @@ class RcdDate(Modal):
             await interaction.channel.send(embed=app_list_embed(convert_rcd_date), view=StartRCDButton())
             await rcd_app_channel.send(embed=start_rcd_embed(convert_rcd_date), view=RCDButton())
             add_message_id(StaticNames.RCD_APPCHANNEL_MESSAGE, rcd_app_channel.last_message_id)
+            add_message_id(StaticNames.START_RCD_MESSAGE, interaction.guild.get_channel(interaction.channel_id).last_message_id)
+            rcd_buttons_embed_list: list[discord.Embed] = [rcd_list_embed(convert_rcd_date, StaticNames.ATACK)]
+            view: discord.ui.View = CreateRCDList()
+            for index, role in INDEX_CLASS_ROLE.items():
+                view.add_item(AddMemberToListButton(
+                    label=f'Редактировать "{role[:-2]}ов"',
+                    custom_id=f'{index}КнопкаДобавления'
+                ))
+            await interaction.channel.send(view=view, embeds=rcd_buttons_embed_list)
+            add_message_id(StaticNames.RCD_LIST_MESSAGE, interaction.guild.get_channel(interaction.channel_id).last_message_id)
+            add_message_id(StaticNames.RCD_LIST_CHANNEL, interaction.guild.get_channel(interaction.channel_id).id)
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
@@ -133,16 +140,31 @@ class RaidChampionDominionApplication(Modal):
             guild = interaction.user.mutual_guilds[0]
             member = guild.get_member(interaction.user.id)
             field_index = 0 if discord.utils.get(member.roles, name=VETERAN_ROLE) else 1
-            field_value = embed.get('app_list_embed').fields[field_index].value
-            pattern = re.compile(rf'{member.mention}: (🟡|🔴)\n')
+            start_rcd_message_id = get_data_from_table(
+                table_name=StaticNames.RCD_APPLICATION,
+                columns=StaticNames.MESSAGE_ID,
+                condition=f"{StaticNames.MESSAGE_NAME} = '{StaticNames.START_RCD_MESSAGE}'"
+            )
+            rcd_list_channel_id = get_data_from_table(
+                table_name=StaticNames.RCD_APPLICATION,
+                columns=StaticNames.MESSAGE_ID,
+                condition=f"{StaticNames.MESSAGE_NAME} = '{StaticNames.RCD_LIST_CHANNEL}'"
+            )
+            rcd_list_channel: discord.TextChannel = guild.get_channel(rcd_list_channel_id)
+            start_rcd_message: discord.Message = (
+                await rcd_list_channel.fetch_message(start_rcd_message_id)
+            )
+            during_embed: discord.Embed = start_rcd_message.embeds[0]
+            field_value = during_embed.fields[field_index].value
+            pattern = re.compile(rf'{member.mention}: (🟡|🔴)')
             match = pattern.search(field_value)
             if match:
-                new_value = field_value.replace(match.group(0), f'{member.mention}: {class_role} ({honor})\n')
+                new_value = field_value.replace(match.group(0), f'{member.mention}: {class_role} ({honor})')
             else:
-                new_value = field_value + f'{member.mention}: {class_role} ({honor})\n'
-            embed.get('app_list_embed').fields[field_index].value = new_value
-            await last_message_to_finish.get('start_RCD_button_message').edit(embed=embed.get('app_list_embed'))
-            member_list.append(interaction.user.id)
+                new_value = field_value + f'\n{member.mention}: {class_role} ({honor})'
+            during_embed.fields[field_index].value = new_value
+            await start_rcd_message.edit(embed=during_embed)
+            add_appmember_id(member_id=interaction.user.id)
             if interaction.channel.type.value == 1:
                 await interaction.message.delete()
             await interaction.respond(
@@ -175,7 +197,7 @@ class PrivateMessageView(View):
         interaction: discord.Interaction
     ):
         try:
-            if interaction.user.id in member_list:
+            if interaction.user.id in get_all_member_ids():
                 return await interaction.respond(
                     '_Ты уже подал заявку! ✅_',
                     delete_after=1
@@ -204,11 +226,26 @@ class PrivateMessageView(View):
             guild = interaction.user.mutual_guilds[0]
             member = guild.get_member(interaction.user.id)
             field_index = 0 if discord.utils.get(member.roles, name=VETERAN_ROLE) else 1
-            field_value = embed.get('app_list_embed').fields[field_index].value
+            start_rcd_message_id = get_data_from_table(
+                table_name=StaticNames.RCD_APPLICATION,
+                columns=StaticNames.MESSAGE_ID,
+                condition=f"{StaticNames.MESSAGE_NAME} = '{StaticNames.START_RCD_MESSAGE}'"
+            )
+            rcd_list_channel_id = get_data_from_table(
+                table_name=StaticNames.RCD_APPLICATION,
+                columns=StaticNames.MESSAGE_ID,
+                condition=f"{StaticNames.MESSAGE_NAME} = '{StaticNames.RCD_LIST_CHANNEL}'"
+            )
+            rcd_list_channel: discord.TextChannel = guild.get_channel(rcd_list_channel_id)
+            start_rcd_message: discord.Message = (
+                await rcd_list_channel.fetch_message(start_rcd_message_id)
+            )
+            during_embed: discord.Embed = start_rcd_message.embeds[0]
+            field_value = during_embed.fields[field_index].value
             if member.mention in field_value:
-                new_value = field_value.replace(f'{member.mention}: 🟡\n', f'{member.mention}: 🔴\n')
-                embed.get('app_list_embed').fields[field_index].value = new_value
-                await last_message_to_finish.get('start_RCD_button_message').edit(embed=embed.get('app_list_embed'))
+                new_value = field_value.replace(f'{member.mention}: 🟡', f'{member.mention}: 🔴')
+                during_embed.fields[field_index].value = new_value
+                await start_rcd_message.edit(embed=during_embed)
             await interaction.message.delete()
             await interaction.respond(
                 '_Принято ✅_',
@@ -243,7 +280,7 @@ class RCDButton(View):
         interaction: discord.Interaction
     ):
         try:
-            if interaction.user.id in member_list:
+            if interaction.user.id in get_all_member_ids():
                 return await interaction.respond(
                     '_Ты уже подал заявку! ✅_',
                     delete_after=1,
@@ -394,12 +431,14 @@ class AddMemberToListButton(discord.ui.Button):
 
     def __init__(
         self,
+        custom_id: str,
         label: str,
-        style=discord.ButtonStyle.green
+        style=discord.ButtonStyle.green,
     ):
         super().__init__(
             label=label,
-            style=style
+            style=style,
+            custom_id=custom_id
         )
 
     async def callback(self, interaction: discord.Interaction):
@@ -432,7 +471,7 @@ class CreateRCDList(View):
         super().__init__(timeout=timeout)
 
     @button(
-        label='Создать список', style=discord.ButtonStyle.blurple,
+        label='Создать второй список', style=discord.ButtonStyle.green,
         custom_id='СоздатьСписок'
     )
     async def create_list_callback(
@@ -447,46 +486,24 @@ class CreateRCDList(View):
                     ANSWERS_IF_NO_ROLE,
                     delete_after=2
                 )
-            add_message_id(
-                message_name=StaticNames.RCD_LIST_MESSAGE,
-                message_id=interaction.message.id
-            )
             date_data = get_data_from_table(
                 table_name=StaticNames.DATE_INFO,
                 columns=StaticNames.DATE,
                 condition=f"{StaticNames.DATE_NAME} = '{StaticNames.RCD_DATE}'"
             )
-            if len(interaction.message.embeds) < 1:
-                for index, role in INDEX_CLASS_ROLE.items():
-                    self.add_item(AddMemberToListButton(
-                        label=f'Редактировать "{role[:-2]}ов"'
-                    ))
-                button.label = 'Создать второй список'
-                button.style = discord.ButtonStyle.green
-                for index in range(2, 5):
-                    self.children[index].disabled = False
-                    self.children[index].style = discord.ButtonStyle.blurple
-                    if index == 4:
-                        self.children[index].style = discord.ButtonStyle.red
-                adding_embed: list[discord.Embed] = [rcd_list_embed(date_data, StaticNames.ATACK)]
-                await interaction.message.edit(
-                    embeds=adding_embed,
-                    view=self
-                )
-            else:
-                button.label = '⬆️ Списки созданы выше ⬆️'
-                button.style = discord.ButtonStyle.gray
-                button.disabled = True
-                tumbler_button: discord.ui.Button = self.children[1]
-                tumbler_button.label = 'СЕЙЧАС работа с 1️⃣ списком'
-                tumbler_button.style = discord.ButtonStyle.blurple
-                tumbler_button.disabled = False
-                during_embeds = interaction.message.embeds
-                during_embeds.append(rcd_list_embed(date_data, StaticNames.DEFENCE))
-                await interaction.message.edit(
-                    embeds=during_embeds,
-                    view=self
-                )
+            button.label = '⬆️ Списки созданы выше ⬆️'
+            button.style = discord.ButtonStyle.gray
+            button.disabled = True
+            tumbler_button: discord.ui.Button = self.children[1]
+            tumbler_button.label = 'СЕЙЧАС работа с 1️⃣ списком'
+            tumbler_button.style = discord.ButtonStyle.blurple
+            tumbler_button.disabled = False
+            during_embeds = interaction.message.embeds
+            during_embeds.append(rcd_list_embed(date_data, StaticNames.DEFENCE))
+            await interaction.message.edit(
+                embeds=during_embeds,
+                view=self
+            )
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
@@ -525,9 +542,8 @@ class CreateRCDList(View):
 
     @button(
         label='Опубликовать 📨',
-        style=discord.ButtonStyle.gray,
+        style=discord.ButtonStyle.blurple,
         custom_id='Опубликовать',
-        disabled=True
     )
     async def publish_callback(
         self, button: discord.ui.Button, interaction: discord.Interaction
@@ -598,8 +614,8 @@ class CreateRCDList(View):
             )
 
     @button(
-        label='Оповестить об РЧД из списка 📣', style=discord.ButtonStyle.gray,
-        custom_id='ОповеститьОСписке', disabled=True
+        label='Оповестить об РЧД из списка 📣', style=discord.ButtonStyle.blurple,
+        custom_id='ОповеститьОСписке'
     )
     async def notification_callback(
         self,
@@ -702,8 +718,8 @@ class CreateRCDList(View):
             )
 
     @button(
-        label='Завершить работу со списком РЧД', style=discord.ButtonStyle.gray,
-        custom_id='ЗавершитьРЧДСписок', disabled=True
+        label='Завершить работу со списком РЧД', style=discord.ButtonStyle.red,
+        custom_id='ЗавершитьРЧДСписок'
     )
     async def stop_callback(
         self,
@@ -727,14 +743,18 @@ class CreateRCDList(View):
             rcd_app_message: discord.Message = await rcd_app_channel.fetch_message(
                 rcd_appchannel_message_id
             )
-            if rcd_app_message.embeds[0].title:
+            if 'Заявки на РЧД' in rcd_app_message.embeds[0].title:
                 await rcd_app_message.delete()
-            await interaction.message.edit(view=None)
-            clear_rcd_application_table()
-            clear_date_info_table()
-            member_list.clear()
-            embed.clear()
-            last_message_to_finish.clear()
+            start_rcd_message_id = get_data_from_table(
+                table_name=StaticNames.RCD_APPLICATION,
+                columns=StaticNames.MESSAGE_ID,
+                condition=f"{StaticNames.MESSAGE_NAME} = '{StaticNames.START_RCD_MESSAGE}'"
+            )
+            start_rcd_message: discord.Message = await interaction.channel.fetch_message(
+                start_rcd_message_id
+            )
+            await start_rcd_message.edit(view=None)
+            clear_rcd_data()
             await interaction.respond('✅', delete_after=1)
             logger.info(f'Пользователь "{interaction.user.display_name}" завершил работу с РЧД списками')
         except Exception as error:
@@ -754,39 +774,13 @@ class StartRCDButton(View):
     ):
         super().__init__(timeout=timeout)
 
-    @button(
-        label='Стартуем!',
-        style=discord.ButtonStyle.green
-    )
-    async def lets_start(
-        self,
-        button: discord.ui.Button,
-        interaction: discord.Interaction
-    ):
-        try:
-            await interaction.response.defer(invisible=False, ephemeral=True)
-            add_message_id(
-                message_name=StaticNames.START_RCD_MESSAGE,
-                message_id=interaction.message.id
-            )
-            button.disabled = True
-            self.children[1].disabled = False
-            self.remove_item(button)
-            await interaction.message.edit(view=self)
-            await interaction.channel.send(view=CreateRCDList())
-            await interaction.respond('✅', delete_after=1)
-        except Exception as error:
-            await interaction.respond('❌', delete_after=1)
-            logger.error(
-                f'При старте программы РЧД возникла ошибка "{error}"'
-            )
-
     @select(
         select_type=discord.ComponentType.user_select,
         min_values=1,
         max_values=24,
         placeholder='Выбери игроков, которых спросить об РЧД',
-        disabled=True
+        disabled=False,
+        custom_id='ВыберитеИгроков'
     )
     async def ask_callback(
         self, select: discord.ui.Select, interaction: discord.Interaction
@@ -798,29 +792,30 @@ class StartRCDButton(View):
                     ANSWERS_IF_NO_ROLE,
                     delete_after=2
                 )
+            during_embed: discord.Embed = interaction.message.embeds[0]
             ask_users: list[discord.Member] = [user for user in select.values]
             for user in ask_users:
-                if user.id in member_list or user.id in ask_member_list:
+                if user.id in get_all_ask_member_ids() or user.id in get_all_member_ids():
                     continue
                 field_index = 0 if discord.utils.get(user.roles, name=VETERAN_ROLE) else 1
-                embed.get('app_list_embed').fields[field_index].value += (f'{user.mention}: 🟡\n')
+                during_embed.fields[field_index].value += (f'\n{user.mention}: 🟡')
                 try:
                     await user.send(
                         embed=ask_veteran_embed(
                             member=interaction.user, date=get_data_from_table(
                                 table_name=StaticNames.DATE_INFO,
                                 columns=StaticNames.DATE,
-                                condition=f"{StaticNames.DATE_NAME} = {StaticNames.RCD_DATE}"
+                                condition=f"{StaticNames.DATE_NAME} = '{StaticNames.RCD_DATE}'"
                             )
                         ),
                         view=PrivateMessageView(),
                         delete_after=86400
                     )
-                    ask_member_list.append(user.id)
+                    add_askmember_id(member_id=user.id)
                     logger.info(f'Пользователю "{user.display_name}" был отправлен вопрос об РЧД')
                 except discord.Forbidden:
                     logger.warning(f'Пользователю "{user.display_name}" запрещено отправлять сообщения')
-            await interaction.message.edit(embed=embed.get('app_list_embed'), view=self)
+            await interaction.message.edit(embed=during_embed)
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
             await interaction.respond('❌', delete_after=1)

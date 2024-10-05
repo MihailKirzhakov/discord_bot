@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 
 import discord
 from dotenv import load_dotenv
@@ -11,8 +10,9 @@ from rename_request.rename_request import RenameButton
 from role_application.role_application import (
     ApplicationButton, has_required_role
 )
+from rcd_aplication.rcd_aplication import StartRCDButton, CreateRCDList, AddMemberToListButton
 from set_group.set_group import SetGroupButton, EditGroupButton
-from variables import APPLICATION_CHANNEL_ID, ANSWERS_IF_NO_ROLE
+from variables import APPLICATION_CHANNEL_ID, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE
 
 load_dotenv()
 
@@ -37,6 +37,14 @@ async def on_ready() -> None:
     bot.add_view(ApplicationButton(channel=app_channel))
     bot.add_view(SetGroupButton())
     bot.add_view(EditGroupButton())
+    bot.add_view(StartRCDButton())
+    create_rcd_list_view = CreateRCDList()
+    for index, role in INDEX_CLASS_ROLE.items():
+        create_rcd_list_view.add_item(AddMemberToListButton(
+            label=f'Редактировать "{role[:-2]}ов"',
+            custom_id=f'{index}КнопкаДобавления'
+        ))
+    bot.add_view(create_rcd_list_view)
     logger.info('Бот запущен и готов к работе!')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS date_info
@@ -45,6 +53,14 @@ async def on_ready() -> None:
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS rcd_application
         (message_name TEXT UNIQUE, message_id INTEGER)
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS appmember_list
+        (member_id INTEGER)
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS askmember_list
+        (member_id INTEGER)
     ''')
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS notice_list
