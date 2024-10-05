@@ -10,7 +10,7 @@ from rename_request.rename_request import RenameButton
 from role_application.role_application import (
     ApplicationButton, has_required_role
 )
-from rcd_aplication.rcd_aplication import StartRCDButton, CreateRCDList, AddMemberToListButton
+from rcd_aplication.rcd_aplication import StartRCDButton, CreateRCDList, AddMemberToListButton, PrivateMessageView
 from set_group.set_group import SetGroupButton, EditGroupButton
 from variables import APPLICATION_CHANNEL_ID, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE
 
@@ -38,6 +38,7 @@ async def on_ready() -> None:
     bot.add_view(SetGroupButton())
     bot.add_view(EditGroupButton())
     bot.add_view(StartRCDButton())
+    bot.add_view(PrivateMessageView())
     create_rcd_list_view = CreateRCDList()
     for index, role in INDEX_CLASS_ROLE.items():
         create_rcd_list_view.add_item(AddMemberToListButton(

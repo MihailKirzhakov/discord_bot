@@ -189,7 +189,7 @@ class PrivateMessageView(View):
 
     @button(
             label='Отправить заявку на РЧД', style=discord.ButtonStyle.green,
-            emoji='📋', custom_id='ЗаявкаРЧД'
+            emoji='📋', custom_id='ЗаявкаРЧДприват'
     )
     async def acces_callback(
         self,
