@@ -112,5 +112,6 @@ def clear_rcd_data():
     cursor.execute('DELETE FROM rcd_application')
     cursor.execute('DELETE FROM date_info')
     cursor.execute('DELETE FROM appmember_list')
+    cursor.execute('DELETE FROM askmember_list')
     cursor.execute('DELETE FROM notice_list')
     conn.commit()
