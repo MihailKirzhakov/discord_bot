@@ -66,18 +66,18 @@ def application_embed(
         name=nickname,
         icon_url=member.avatar
     )
-    embed.add_field(
-        name='Гирскор',
-        value=player_parms['gear_score'],
-        inline=True
-    )
-    art_lvl = 'Нет'
-    if 'artifact' in player_parms:
-        art_lvl = player_parms['artifact']['level']
-    embed.add_field(name='Уровень НБ', value=art_lvl, inline=True)
-    embed.set_thumbnail(url=player_parms['class_icon'])
-    if 'emblem' in player_parms:
-        embed.set_image(url=player_parms['emblem']['image_url'])
+    # embed.add_field(
+    #     name='Гирскор',
+    #     value=player_parms['gear_score'],
+    #     inline=True
+    # )
+    # art_lvl = 'Нет'
+    # if 'artifact' in player_parms:
+    #     art_lvl = player_parms['artifact']['level']
+    # embed.add_field(name='Уровень НБ', value=art_lvl, inline=True)
+    # embed.set_thumbnail(url=player_parms['class_icon'])
+    # if 'emblem' in player_parms:
+    #     embed.set_image(url=player_parms['emblem']['image_url'])
     return embed
 
 

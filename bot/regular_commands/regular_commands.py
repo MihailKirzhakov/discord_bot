@@ -229,7 +229,11 @@ async def check_roles(
         members: list[discord.Member] = await ctx.guild.fetch_members(limit=None).flatten()
         checking_message: discord.Message = await ctx.channel.fetch_message(int(message_id))
         attachment = checking_message.attachments[0]
-        lines = (await attachment.read()).decode('utf-8').splitlines()
+        try:
+            lines = (await attachment.read()).decode('windows-1251').splitlines()
+        except UnicodeDecodeError as e:
+            logger.error(f"Ошибка декодирования файла: {e}")
+            return await ctx.respond("Ошибка: файл не может быть прочитан. Проверьте кодировку файла.")
         sergaunt_role: discord.Role = discord.utils.get(ctx.guild.roles, name=SERGEANT_ROLE)
         guest_role: discord.Role = discord.utils.get(ctx.guild.roles, name=GUEST_ROLE)
         veteran_role: discord.Role = discord.utils.get(ctx.guild.roles, name=VETERAN_ROLE)
@@ -240,7 +244,7 @@ async def check_roles(
         for member in members:
             if (
                 (sergaunt_role in member.roles or veteran_role in member.roles)
-                and re.sub(r'[^a-zA-Zа-яА-ЯёЁ0-9]', '', member.display_name)
+                and re.sub(r'[^a-zA-Zа-яА-ЯеЕёЁ0-9]', '', member.display_name)
                 not in guild_member_list
             ):
                 removed_role_members.append(member.display_name)
