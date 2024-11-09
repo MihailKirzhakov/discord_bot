@@ -223,17 +223,17 @@ class RoleApplication(Modal):
             interaction.guild.members, display_name=nickname
         )
         role = discord.utils.get(interaction.guild.roles, name=GUEST_ROLE)
-        player_parms = character_lookup(1, nickname)
-        if player_parms == 'Bad site work':
-            return await interaction.respond(
-                    f'Упал сайт оружейки аллодов, обратись к {LEADER_NICKNAME}!',
-                    delete_after=10
-                )
-        if not player_parms:
-            return await interaction.respond(
-                ANSWER_IF_CHEAT,
-                delete_after=15
-            )
+        # player_parms = character_lookup(1, nickname)
+        # if player_parms == 'Bad site work':
+        #     return await interaction.respond(
+        #             f'Упал сайт оружейки аллодов, обратись к {LEADER_NICKNAME}!',
+        #             delete_after=10
+        #         )
+        # if not player_parms:
+        #     return await interaction.respond(
+        #         ANSWER_IF_CHEAT,
+        #         delete_after=15
+        #     )
         if nickname in app_list:
             return await interaction.respond(
                 ANSWER_IF_DUPLICATE_APP,
@@ -247,21 +247,21 @@ class RoleApplication(Modal):
                 )
         description = (
             f'Профиль Discord: {user.mention}\n'
-            f'Гильдия: {player_parms['guild']}'
+            # f'Гильдия: {player_parms['guild']}'
         )
-        if 'dragon_emblem' in player_parms:
-            description += f'\nДраконий амулет: {player_parms['dragon_emblem']['name']}'
+        # if 'dragon_emblem' in player_parms:
+        #     description += f'\nДраконий амулет: {player_parms['dragon_emblem']['name']}'
         try:
             await self.channel.send(
                 view=RoleButton(
                     nickname=nickname,
                     user=user,
                     embed=application_embed(
-                        description, nickname, member, player_parms
+                        description, nickname, member, player_parms=None
                     )
                 ),
                 embed=application_embed(
-                    description, nickname, member, player_parms
+                    description, nickname, member, player_parms=None
                 )
             )
             app_list.append(nickname)
