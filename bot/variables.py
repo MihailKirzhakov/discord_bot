@@ -103,9 +103,9 @@ VETERAN_ROLE: str = 'Ветеран'
 
 GUEST_ROLE: str = 'Гость'
 
-CLOSED_JMURENSKAYA: str = 'Закрытая Жмуренская комната'
+CLOSED_TOP_4_ICD: str = 'Закрытая Топ 4 МЧД'
 
-BUHLOID_ID: str = '896481846949445663'
+IDOL_ID: str = '341543573159936005'
 
 CLOSED_GOOSE_HOME: str = 'Закрытая Гусиный дом'
 
@@ -118,6 +118,10 @@ KVAPA_ID: str = '356014672450945034'
 CLOSED_ON_GOOD_MOVEMENTS = 'Закрытая На добрых движениях'
 
 DOBRYAK_ID: str = '280400231256817665'
+
+CLOSED_MOTHERS: str = 'Закрытая Мамина'
+
+AMARELLA_ID: str = '429669376405536781'
 
 NOT_SOLD: str = 'Лот не был выкуплен'
 

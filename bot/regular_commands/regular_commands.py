@@ -8,9 +8,9 @@ from loguru import logger
 from .embeds import technical_works_embed, removed_role_list_embed
 from variables import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
-    CLOSED_JMURENSKAYA,
+    CLOSED_TOP_4_ICD, CLOSED_MOTHERS, AMARELLA_ID,
     CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT,
-    BUHLOID_ID, KVAPA_ID, GOOSE_ID,
+    IDOL_ID, KVAPA_ID, GOOSE_ID,
     SERGEANT_ROLE, VETERAN_ROLE, GUEST_ROLE,
     DOBRYAK_ID, CLOSED_ON_GOOD_MOVEMENTS
 )
@@ -147,7 +147,7 @@ async def clear_all_error(
 
 @commands.slash_command()
 @commands.has_any_role(
-    CLOSED_JMURENSKAYA, CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT
+    CLOSED_TOP_4_ICD, CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT, CLOSED_MOTHERS
 )
 async def give_role_to(
     ctx: discord.ApplicationContext,
@@ -160,19 +160,22 @@ async def give_role_to(
     """
     Команда для выдачи роли.
     """
-    closed_jmurenskaya = discord.utils.get(
-            ctx.guild.roles, name=CLOSED_JMURENSKAYA)
+    closed_top_4_ICD = discord.utils.get(
+            ctx.guild.roles, name=CLOSED_TOP_4_ICD)
     closed_goose_home = discord.utils.get(
             ctx.guild.roles, name=CLOSED_GOOSE_HOME)
     closed_on_the_mind_aspect = discord.utils.get(
             ctx.guild.roles, name=CLOSED_ON_THE_MIND_ASPECT)
     closed_on_good_movements = discord.utils.get(
             ctx.guild.roles, name=CLOSED_ON_GOOD_MOVEMENTS)
+    closed_mothers = discord.utils.get(
+            ctx.guild.roles, name=CLOSED_MOTHERS)
     check_group_leaders = {
-        BUHLOID_ID: closed_jmurenskaya,
+        IDOL_ID: closed_top_4_ICD,
         GOOSE_ID: closed_goose_home,
         KVAPA_ID: closed_on_the_mind_aspect,
-        DOBRYAK_ID: closed_on_good_movements
+        DOBRYAK_ID: closed_on_good_movements,
+        AMARELLA_ID: closed_mothers
     }
     try:
         if str(ctx.user.id) in check_group_leaders:
