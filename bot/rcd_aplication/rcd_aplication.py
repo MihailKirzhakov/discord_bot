@@ -659,7 +659,7 @@ class CreateRCDList(View):
                             jump_url=jump_url,
                             rcd_role=rcd_role
                         ),
-                        delete_after=10800
+                        delete_after=64800
                     )
                     logger.info(
                         f'Пользователю {member.display_name} было отправлено '
