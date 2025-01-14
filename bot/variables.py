@@ -151,3 +151,5 @@ CROSSED_SWORDS_IMAGE_URL: str = 'https://media.discordapp.net/attachments/118258
 RCD_LIST_IMAGE_URL: str = 'https://media.discordapp.net/attachments/1182584501147279491/1269955937477595186/53ceb6140f73a909.png?ex=66b1f222&is=66b0a0a2&hm=e4ca7be4622f4f57266d1de76d976dfef5cc35d5ea271690e2ba16197988e2b7&=&format=webp&quality=lossless&width=655&height=655'
 
 QUESTION_IMAGE_URL: str = 'https://media.discordapp.net/attachments/1182584501147279491/1269967902736515192/ad65f1ccea7e0e37.png?ex=66b1fd46&is=66b0abc6&hm=bbd1f02d4997fc7652427d220754cb689456635c9d9c4dea8fd84e4a2e998121&=&format=webp&quality=lossless&width=492&height=655'
+
+EXCLAMATION_MARK_URL: str = 'https://media.discordapp.net/attachments/1182584501147279491/1325499380530155533/f5b7291bcb61c1e7.png?ex=678737be&is=6785e63e&hm=0cdca1d7ab1fb488ded414967772933f73ee97ee665c342fe6cb40d1cf5e64f6&=&format=webp&quality=lossless&width=787&height=525'

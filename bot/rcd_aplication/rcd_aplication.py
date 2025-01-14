@@ -9,7 +9,7 @@ from loguru import logger
 from .embeds import (
     start_rcd_embed, app_list_embed, ask_veteran_embed,
     rcd_list_embed, publish_rcd_embed, rcd_notification_embed,
-    publish_rcd_second_embed
+    publish_rcd_second_embed, mailing_notification_embed
 )
 from .functions import (
     add_message_id, add_date_info, get_data_from_table,
@@ -22,7 +22,7 @@ from role_application.functions import has_required_role
 from variables import (
     VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE,
     SERGEANT_ROLE, LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
-    RCD_APPLICATION_CHANNEL_ID
+    RCD_APPLICATION_CHANNEL_ID, ATTENTION
 )
 
 
@@ -634,6 +634,11 @@ class CreateRCDList(View):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             sergaunt_role: discord.Role = discord.utils.get(interaction.guild.roles, name=SERGEANT_ROLE)
+            date_data = get_data_from_table(
+                table_name=StaticNames.DATE_INFO,
+                columns=StaticNames.DATE,
+                condition=f"{StaticNames.DATE_NAME} = '{StaticNames.RCD_DATE}'"
+            )
             rcd_appchannel_message_id = get_data_from_table(
                 table_name=StaticNames.RCD_APPLICATION,
                 columns=StaticNames.MESSAGE_ID,
@@ -669,10 +674,6 @@ class CreateRCDList(View):
                             rcd_role=rcd_role
                         ),
                         delete_after=64800
-                    )
-                    logger.info(
-                        f'Пользователю {member.display_name} было отправлено '
-                        'оповещение об РЧД!'
                     )
                 except discord.Forbidden:
                     logger.warning(f'Пользователю "{member.display_name}" запрещено отправлять сообщения')
@@ -718,6 +719,7 @@ class CreateRCDList(View):
                 button.style = discord.ButtonStyle.gray
                 button.disabled = True
                 await interaction.message.edit(view=self)
+            await rcd_app_channel.send(embed=mailing_notification_embed(date=date_data))
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
@@ -752,8 +754,11 @@ class CreateRCDList(View):
             rcd_app_message: discord.Message = await rcd_app_channel.fetch_message(
                 rcd_appchannel_message_id
             )
+            attention_embed: discord.Embed = rcd_app_channel.last_message.embeds[0]
             if 'Заявки на РЧД' in rcd_app_message.embeds[0].title:
                 await rcd_app_message.delete()
+            if ATTENTION in attention_embed.title:
+                await rcd_app_channel.last_message.delete()
             start_rcd_message_id = get_data_from_table(
                 table_name=StaticNames.RCD_APPLICATION,
                 columns=StaticNames.MESSAGE_ID,
