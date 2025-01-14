@@ -52,7 +52,7 @@ class RcdDate(Modal):
 
         self.add_item(
             InputText(
-                style=discord.InputTextStyle.multiline,
+                style=discord.InputTextStyle.short,
                 label='Укажи дату в формате ДД.ММ',
                 placeholder='ДД.ММ',
                 max_length=5
@@ -114,19 +114,21 @@ class RaidChampionDominionApplication(Modal):
 
         self.add_item(
             InputText(
-                style=discord.InputTextStyle.multiline,
+                style=discord.InputTextStyle.short,
                 label='Укажи количество чести',
-                placeholder='0-500',
+                placeholder='Если не указать, то 0 по дефолту',
+                required=False,
                 max_length=3
             )
         )
 
         self.add_item(
             InputText(
-                style=discord.InputTextStyle.short,
+                style=discord.InputTextStyle.multiline,
                 label='Укажи классы, на которых хочешь идти на РЧД',
                 placeholder='Если не заполнять, значит любой класс',
-                required=False
+                required=False,
+                max_length=80
             )
         )
 
@@ -134,6 +136,13 @@ class RaidChampionDominionApplication(Modal):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             honor: str = str(self.children[0].value)
+            if not honor:
+                honor = '0'
+            if not honor.isdigit():
+                return await interaction.respond(
+                    '_Строка для ввода чести принимает только целые числа, повтори снова ⚠️_',
+                    delete_after=2
+                )
             class_role: str = str(self.children[1].value)
             if not class_role:
                 class_role = 'Любой класс'
