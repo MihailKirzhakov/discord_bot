@@ -719,7 +719,8 @@ class CreateRCDList(View):
                 button.style = discord.ButtonStyle.gray
                 button.disabled = True
                 await interaction.message.edit(view=self)
-            await rcd_app_channel.send(embed=mailing_notification_embed(date=date_data))
+            if rcd_app_channel.last_message.embeds[0].title != ATTENTION:
+                await rcd_app_channel.send(embed=mailing_notification_embed(date=date_data))
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
