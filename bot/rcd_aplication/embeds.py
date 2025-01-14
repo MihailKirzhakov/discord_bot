@@ -150,7 +150,7 @@ def mailing_notification_embed(date: str) -> discord.Embed:
     embed = discord.Embed(
         title=ATTENTION,
         description=(
-            f'_**Сообщаем то, уведомления участникам РЧД из списка на {date} были разосланы! '
+            f'_**Сообщаем то, что уведомления участникам РЧД из списка на {date} были разосланы! '
             'Если бот не прислал вам сообщение, значит вы не попали в список!**_'
         ),
         color=0xfffb00
