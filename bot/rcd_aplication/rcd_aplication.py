@@ -824,7 +824,7 @@ class StartRCDButton(View):
                             )
                         ),
                         view=PrivateMessageView(),
-                        delete_after=86400
+                        delete_after=90000
                     )
                     add_askmember_id(member_id=user.id)
                     logger.info(f'Пользователю "{user.display_name}" был отправлен вопрос об РЧД')
