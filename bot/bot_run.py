@@ -1,20 +1,19 @@
-import os
-
 import discord
-from dotenv import load_dotenv
 from loguru import logger
 
+from core.config import settings
 from reminder.functions import send_reminders, cursor
 from randomaizer.randomaizer import RandomButton
 from rename_request.rename_request import RenameButton
 from role_application.role_application import (
     ApplicationButton, has_required_role
 )
-from rcd_aplication.rcd_aplication import StartRCDButton, CreateRCDList, AddMemberToListButton, PrivateMessageView
+from rcd_aplication.rcd_aplication import (
+    StartRCDButton, CreateRCDList, AddMemberToListButton, PrivateMessageView
+)
 from set_group.set_group import SetGroupButton, EditGroupButton
 from variables import APPLICATION_CHANNEL_ID, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE
 
-load_dotenv()
 
 logger.remove()
 logger.add(
@@ -24,8 +23,8 @@ logger.add(
 intents = discord.Intents.all()
 
 bot = discord.Bot(intents=intents)
-if os.getenv('DEBUG_SERVER_ID'):
-    bot = discord.Bot(intents=intents, debug_guilds=[int(os.getenv('DEBUG_SERVER_ID'))])
+if settings.debug_server_id:
+    bot = discord.Bot(intents=intents, debug_guilds=[settings.debug_server_id])
 
 
 @bot.event
@@ -124,4 +123,4 @@ logger.info('Приложения запущены')
 
 
 if __name__ == '__main__':
-    bot.run(os.getenv('TOKEN'))
+    bot.run(settings.token)
