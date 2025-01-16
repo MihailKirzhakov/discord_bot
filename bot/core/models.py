@@ -22,9 +22,11 @@ class UserBid(Base):
 
 class AuctionDataInfo(Base):
 
-    name: Mapped[strpk]
+    name_auc: Mapped[strpk]
     data: Mapped[str]
     start_auc_user_id: Mapped[int_uniq]
+    start_bid: Mapped[int]
+    lot_amount: Mapped[int]
     bids: Mapped[list["UserBid"]] = relationship('UserBid', back_populates='auction')
 
 

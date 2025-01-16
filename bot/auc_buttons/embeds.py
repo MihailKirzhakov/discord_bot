@@ -34,7 +34,7 @@ def results_embed(
         results_message: str,
         user_mention: discord.abc.User.mention,
         name_auc: str,
-        count: int
+        lot_amount: int
 ) -> discord.Embed:
     """
     Создает встраиваемое сообщение с результатами аукциона.
@@ -44,7 +44,7 @@ def results_embed(
         description=(
             f'_**{user_mention} провёл аукцион "{name_auc}"!\n\n'
             f'Аукцион был завершён в {discord.utils.format_dt(datetime.now(), style="F")}!**\n\n'
-            f'Количество лотов: {count}.\n\n'
+            f'Количество лотов: {lot_amount}.\n\n'
             f'**Результаты аукциона:**\n'
             f'{results_message}_'
         ),
