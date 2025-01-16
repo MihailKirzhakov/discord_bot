@@ -73,8 +73,11 @@ async def on_ready() -> None:
     # ''')
     # await send_reminders(bot, cursor, logger)
     await AsyncORM.create_tables()
-    await AsyncORM.insert_bid_data()
-    await AsyncORM.insert_message_data()
+    # await AsyncORM.insert_bid_data(12345678, 300000, 1)
+    # await AsyncORM.insert_message_data(12345678, 'kek')
+    # if await AsyncORM.get_id_data(12345678):
+    #     await AsyncORM.update_bid_data(12345678, 400000)
+    # await AsyncORM.clear_tables()
 
 
 

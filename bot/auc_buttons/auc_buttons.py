@@ -77,7 +77,7 @@ class StartAucModal(Modal):
         start_bid: int = int(self.children[2].value)
         target_date_time: str = str(self.children[3].value)
         start_auc_user: discord.Member = interaction.user
-        user_mention: str = interaction.user.mention
+        user_mention: str = start_auc_user.mention
         button_manager = View(timeout=None)
         button_mentions: dict[str, str] = {}
         today: datetime = datetime.now()
