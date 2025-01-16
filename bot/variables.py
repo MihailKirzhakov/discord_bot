@@ -1,3 +1,5 @@
+from core.config import settings
+
 # Никнейм лидера гильдии
 LEADER_NICKNAME: str = 'ГайРичи'
 
@@ -8,9 +10,9 @@ DEAFAULT_RANDOMISE_VALUE: str = '1-100'
 
 MIN_BID_VALUE: int = 100000
 
-APPLICATION_CHANNEL_ID = 1229511138954444890
+APPLICATION_CHANNEL_ID = settings.application_channel_id
 
-RCD_APPLICATION_CHANNEL_ID = 1271460370166321263
+RCD_APPLICATION_CHANNEL_ID = settings.rcd_application_channel_id
 
 # Текстовые переменные с фразами
 AUC_CHEAT: str = (
