@@ -1,0 +1,1 @@
+from bot.core.db import Base  # noqa

@@ -1,12 +1,10 @@
-from typing import Optional
-
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: Optional[str] = 'sqlite+aiosqlite:///./discord_bot.db'
-    token: Optional[str] = None
-    debug_server_id: Optional[int] = None
+    database_url: str | None = 'sqlite+aiosqlite:///./discord_bot.db'
+    token: str | None = None
+    debug_server_id: int | None = None
 
     class Config:
         env_file = '.env'
