@@ -280,7 +280,7 @@ async def clear_db_data(ctx: discord.ApplicationContext) -> None:
     clear_rcd_data()
     await ctx.respond('_Почистил_ ✅', delete_after=2)
     logger.info(
-        f'Команда "{clear_db_data.__name__}" вызвана пользователем '
+        'Команда "/clear_db_data" вызвана пользователем '
         f'"{ctx.user.display_name}"!'
     )
 
