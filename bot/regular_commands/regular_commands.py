@@ -277,12 +277,16 @@ async def clear_db_data(ctx: discord.ApplicationContext) -> None:
     Команда для очистки базы данных.
     """
     await ctx.defer(ephemeral=True)
-    clear_rcd_data()
-    await ctx.respond('_Почистил_ ✅', delete_after=2)
-    logger.info(
-        'Команда "/clear_db_data" вызвана пользователем '
-        f'"{ctx.user.display_name}"!'
-    )
+    try:
+        clear_rcd_data()
+        await ctx.respond('_Почистил_ ✅', delete_after=2)
+        logger.info(
+            'Команда "/clear_db_data" вызвана пользователем '
+            f'"{ctx.user.display_name}"!'
+        )
+    except Exception as error:
+        await ctx.respond(f'_Ошибка ❌: {error}_')
+        logger.error(f'Ошибка при вызове команды "/clear_db_datas"! "{error}"')
 
 
 @clear_db_data.error
