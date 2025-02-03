@@ -673,7 +673,7 @@ class CreateRCDList(View):
                             jump_url=jump_url,
                             rcd_role=rcd_role
                         ),
-                        delete_after=64800
+                        delete_after=86400
                     )
                 except discord.Forbidden:
                     logger.warning(f'Пользователю "{member.display_name}" запрещено отправлять сообщения')
@@ -824,7 +824,7 @@ class StartRCDButton(View):
                             )
                         ),
                         view=PrivateMessageView(),
-                        delete_after=10
+                        delete_after=86400
                     )
                     add_askmember_id(member_id=user.id)
                     logger.info(f'Пользователю "{user.display_name}" был отправлен вопрос об РЧД')
