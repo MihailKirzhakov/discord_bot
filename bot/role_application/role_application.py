@@ -6,7 +6,7 @@ from loguru import logger
 from variables import (
     ANSWER_IF_DUPLICATE_APP, ANSWER_IF_DUPLICATE_NICK, ANSWER_IF_CHEAT,
     ANSWER_IF_CLICKED_THE_SAME_TIME, LEADER_ROLE, OFICER_ROLE,
-    TREASURER_ROLE, SERGEANT_ROLE, GUEST_ROLE, ANSWERS_IF_NO_ROLE, LEADER_NICKNAME
+    TREASURER_ROLE, SERGEANT_ROLE, GUEST_ROLE, ANSWERS_IF_NO_ROLE
 )
 from .embeds import (
     access_embed, denied_embed, application_embed, start_app_embed
@@ -27,14 +27,12 @@ class RoleButton(View):
     def __init__(
             self,
             nickname: str,
-            embed: discord.Embed,
             user: discord.Member | discord.User,
             timeout: float | None = None
     ):
         super().__init__(timeout=timeout)
         self.nickname = nickname
         self.user = user
-        self.embed = embed
 
     @button(label='Выдать старшину', style=discord.ButtonStyle.green)
     async def callback_accept(
@@ -64,7 +62,8 @@ class RoleButton(View):
             await self.user.edit(nick=self.nickname)
             await self.user.add_roles(role_sergeant)
             await self.user.remove_roles(role_guest)
-            self.embed.add_field(
+            curent_embed = interaction.message.embeds[0]
+            curent_embed.add_field(
                 name='_Результат рассмотрения_ ✅',
                 value=f'_{interaction.user.mention} выдал роль!_',
                 inline=False
@@ -72,7 +71,7 @@ class RoleButton(View):
             self.disable_all_items()
             self.clear_items()
             await interaction.message.edit(
-                embed=self.embed,
+                embed=curent_embed,
                 view=self
             )
             try:
@@ -219,67 +218,68 @@ class RoleApplication(Modal):
         nickname: str = self.children[0].value
         user = interaction.user
         member = discord.utils.get(interaction.guild.members, id=user.id)
-        member_by_display_name = discord.utils.get(
-            interaction.guild.members, display_name=nickname
-        )
+        member_by_display_name = discord.utils.get(interaction.guild.members, display_name=nickname)
         role = discord.utils.get(interaction.guild.roles, name=GUEST_ROLE)
-        player_parms = character_lookup(1, nickname)
-        if player_parms == 'Bad site work':
-            return await interaction.respond(
-                    f'Упал сайт оружейки аллодов, обратись к {LEADER_NICKNAME}!',
-                    delete_after=10
-                )
-        if not player_parms:
-            return await interaction.respond(
-                ANSWER_IF_CHEAT,
-                delete_after=15
-            )
-        if nickname in app_list:
-            return await interaction.respond(
-                ANSWER_IF_DUPLICATE_APP,
-                delete_after=10
-            )
-        if member_by_display_name:
-            if role not in member_by_display_name.roles:
-                return await interaction.respond(
-                    ANSWER_IF_DUPLICATE_NICK,
-                    delete_after=10
-                )
-        description = (
-            f'Профиль Discord: {user.mention}\n'
-            f'Гильдия: {player_parms['guild']}'
-        )
-        if 'dragon_emblem' in player_parms:
-            description += f'\nДраконий амулет: {player_parms['dragon_emblem']['name']}'
+
         try:
-            await self.channel.send(
-                view=RoleButton(
-                    nickname=nickname,
-                    user=user,
-                    embed=application_embed(
-                        description, nickname, member, player_parms=None
-                    )
-                ),
-                embed=application_embed(
-                    description, nickname, member, player_parms=None
-                )
-            )
-            app_list.append(nickname)
-            await interaction.respond(
-                '👍\n_Твой запрос принят! Дождись выдачи роли_',
-                delete_after=5
-            )
-            logger.info(
-                    f'Пользователь {interaction.user.display_name} заполнил форму, '
-                    f'она была отправлена в канал "{self.channel}"'
-                )
+            player_parms = character_lookup(1, nickname)
+            if player_parms == 'Bad site work':
+                await self.handle_bad_site_work(interaction, nickname, user, member)
+                return
+
+            if not player_parms:
+                return await self.respond_with_message(interaction, ANSWER_IF_CHEAT, 15)
+
+            if nickname in app_list:
+                return await self.respond_with_message(interaction, ANSWER_IF_DUPLICATE_APP, 10)
+
+            if member_by_display_name and role not in member_by_display_name.roles:
+                return await self.respond_with_message(interaction, ANSWER_IF_DUPLICATE_NICK, 10)
+
+            description = self.build_description(player_parms)
+            await self.send_application(interaction, nickname, user, member, player_parms, description)
+
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
             logger.error(
-                    f'При попытке отказать пользователю в выдаче роли '
-                    f'пользователю "{nickname}" возникла ошибка '
-                    f'"{error}"'
-                )
+                f'При попытке отказать пользователю в выдаче роли '
+                f'пользователю "{nickname}" возникла ошибка '
+                f'"{error}"'
+            )
+
+    async def handle_bad_site_work(self, interaction, nickname, user, member):
+        description = f'Профиль Discord: {user.mention}\n'
+        await self.channel.send(
+            view=RoleButton(nickname=nickname, user=user),
+            embed=application_embed(description, nickname, member, player_parms=None)
+        )
+        app_list.append(nickname)
+        await self.respond_with_message(interaction, '👍\n_Твой запрос принят! Дождись выдачи роли_', 5)
+        logger.info(
+            f'Пользователь {interaction.user.display_name} заполнил форму, '
+            f'она была отправлена в канал "{self.channel}"'
+        )
+
+    async def respond_with_message(self, interaction, message, delete_after):
+        await interaction.respond(message, delete_after=delete_after)
+
+    def build_description(self, player_parms):
+        description = f'Гильдия: {player_parms["guild"]}'
+        if 'dragon_emblem' in player_parms:
+            description += f'\nДраконий амулет: {player_parms["dragon_emblem"]["name"]}'
+        return description
+
+    async def send_application(self, interaction, nickname, user, member, player_parms, description):
+        await self.channel.send(
+            view=RoleButton(nickname=nickname, user=user),
+            embed=application_embed(description, nickname, member, player_parms=player_parms)
+        )
+        app_list.append(nickname)
+        await self.respond_with_message(interaction, '👍\n_Твой запрос принят! Дождись выдачи роли_', 5)
+        logger.info(
+            f'Пользователь {interaction.user.display_name} заполнил форму, '
+            f'она была отправлена в канал "{self.channel}"'
+        )
 
 
 class ApplicationButton(View):

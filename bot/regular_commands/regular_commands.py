@@ -90,7 +90,6 @@ async def technical_works_error(
     await command_error(ctx, error, "technical_works")
 
 
-
 @commands.slash_command()
 @commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def clear_all(
