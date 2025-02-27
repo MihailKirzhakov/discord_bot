@@ -238,6 +238,10 @@ class RoleApplication(Modal):
 
             description = self.build_description(player_parms)
             await self.send_application(interaction, nickname, user, member, player_parms, description)
+            logger.info(
+                f'Пользователь {interaction.user.display_name} заполнил форму, '
+                f'она была отправлена в канал "{self.channel}"'
+            )
 
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
