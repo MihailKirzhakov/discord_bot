@@ -6,7 +6,6 @@ Discord бот для автоматизированного администр�
 
 ![Python 3.12](https://img.shields.io/badge/Python-3.12-brightgreen.svg?style=flat&logo=python&logoColor=white)
 ![Pycord-2.6.0](https://img.shields.io/badge/Pycord-2.6.0-brightgreen.svg?style=flat)
-![Python 3.12](https://img.shields.io/badge/Pydantic-2.10.5-brightgreen.svg?style=flat&logo=pydantic&logoColor=white)
 
 ## Для чего создан бот:
 
