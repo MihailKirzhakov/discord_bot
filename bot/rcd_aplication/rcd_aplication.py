@@ -633,6 +633,11 @@ class CreateRCDList(View):
     ):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
+            if self.children[1].style == discord.ButtonStyle.red:
+                return await interaction.respond(
+                        '_Сначала нужно оповестить из списка "АТАКА"! ❌_',
+                        delete_after=3
+                    )
             sergaunt_role: discord.Role = discord.utils.get(interaction.guild.roles, name=SERGEANT_ROLE)
             date_data = get_data_from_table(
                 table_name=StaticNames.DATE_INFO,
