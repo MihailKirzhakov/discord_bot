@@ -238,9 +238,7 @@ async def check_roles(
         guest_role: discord.Role = discord.utils.get(ctx.guild.roles, name=GUEST_ROLE)
         veteran_role: discord.Role = discord.utils.get(ctx.guild.roles, name=VETERAN_ROLE)
         for line in lines:
-            parts = line.split(';')
-            if len(parts) > 2:
-                guild_member_list.append(parts[2])
+            guild_member_list.append(line)
         for member in members:
             if (
                 (sergaunt_role in member.roles or veteran_role in member.roles)
