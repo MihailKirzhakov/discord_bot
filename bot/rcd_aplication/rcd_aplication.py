@@ -707,6 +707,11 @@ class CreateRCDList(View):
                         logger.info(f'"{member.display_name}" оповещён об РЧД')
 
             if self.children[1].style == discord.ButtonStyle.red:
+                if get_notice_list_data(StaticNames.ATACK):
+                    return await interaction.respond(
+                        '❌\n_Сперва отправь оповещения из списка АТАКИ_',
+                        delete_after=3
+                    )
                 await get_members_by_role(get_notice_list_data(StaticNames.DEFENCE), StaticNames.DEFENCE)
             else:
                 await get_members_by_role(get_notice_list_data(StaticNames.ATACK), StaticNames.ATACK)
