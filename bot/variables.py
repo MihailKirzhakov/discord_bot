@@ -93,11 +93,11 @@ INDEX_CLASS_ROLE: dict[int, str] = {
 # Роли на сервере Discord для проверки
 AUCTIONEER_ROLE: str = 'Аукцион'
 
-LEADER_ROLE: str = '🌀Лидер гильдии🌀'
+LEADER_ROLE: str = 'Лидер гильдии'
 
-OFICER_ROLE: str = '🛡️Офицер🛡️'
+OFICER_ROLE: str = 'Офицер'
 
-TREASURER_ROLE: str = '📣Казначей📣'
+TREASURER_ROLE: str = 'Казначей'
 
 SERGEANT_ROLE: str = 'Старшина'
 

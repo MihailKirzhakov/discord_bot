@@ -236,7 +236,7 @@ class RoleApplication(Modal):
             if member_by_display_name and role not in member_by_display_name.roles:
                 return await self.respond_with_message(interaction, ANSWER_IF_DUPLICATE_NICK, 10)
 
-            description = self.build_description(player_parms)
+            description = self.build_description(player_parms, user)
             await self.send_application(interaction, nickname, user, member, player_parms, description)
             logger.info(
                 f'Пользователь {interaction.user.display_name} заполнил форму, '
@@ -267,8 +267,11 @@ class RoleApplication(Modal):
     async def respond_with_message(self, interaction, message, delete_after):
         await interaction.respond(message, delete_after=delete_after)
 
-    def build_description(self, player_parms):
-        description = f'Гильдия: {player_parms["guild"]}'
+    def build_description(self, player_parms, user):
+        description = (
+            f'Профиль Discord: {user.mention}\n'
+            f'Гильдия: {player_parms["guild"]}'
+        )
         if 'dragon_emblem' in player_parms:
             description += f'\nДраконий амулет: {player_parms["dragon_emblem"]["name"]}'
         return description
