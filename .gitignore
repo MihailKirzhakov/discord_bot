@@ -7,4 +7,4 @@ to_json.py
 ban_words.txt
 check_algs.py
 *.log
-/.vscode/launch.json
+/.vscode

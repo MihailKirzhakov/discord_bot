@@ -1,5 +1,6 @@
 from core.config import settings
 
+
 # Никнейм лидера гильдии
 LEADER_NICKNAME: str = 'ГайРичи'
 
