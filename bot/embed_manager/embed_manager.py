@@ -1,8 +1,11 @@
+import json
+
 import discord
 from discord.ext import commands
 from discord.ui import Modal, InputText, View, select, button
 from loguru import logger
 
+from .functions import validate_amount, generate_member_list, handle_selection
 from .embeds import attention_embed, symbols_list_embed
 from regular_commands.regular_commands import command_error
 from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
@@ -107,7 +110,7 @@ class SetNewDescription(Modal):
 
 
 @commands.slash_command()
-@commands.has_any_role(LEADER_ROLE)
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def edit_embed_description(
     ctx: discord.ApplicationContext,
     message_id: discord.Option(
@@ -153,58 +156,39 @@ class CreateOrEditSymbolsList(View):
     """
     banner_list: str | None = None
     cape_list: str | None = None
+    select_type: discord.ComponentType = discord.ComponentType.user_select
+    min_values: int = 1
+    max_values: int = 24
+    placeholder: str = 'Выбери игроков'
 
     def __init__(
         self,
-        timeout: float | None = None,
         lookup_message: discord.Message | None = None
     ) -> None:
-        super().__init__(timeout=timeout)
+        super().__init__(timeout=None)
         self.lookup_message = lookup_message
 
     @select(
-        select_type=discord.ComponentType.user_select,
-        min_values=1,
-        max_values=24,
-        placeholder='Выбери игроков'
+        select_type=select_type,
+        min_values=min_values,
+        max_values=max_values,
+        placeholder=placeholder
     )
     async def banner_callback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):
-        try:
-            await interaction.response.defer(invisible=False, ephemeral=True)
-            select_value: list[discord.User] = select.values
-            self.banner_list: str = '_' + '\n'.join(
-                f'{number}. {user.mention}' for number, user
-                in enumerate(select_value, start=1)
-            ) + '_'
-            await interaction.respond('✅', delete_after=1)
-        except Exception as error:
-            logger.error(
-                f'При оформлении списка знамён вышла "{error}"'
-            )
+        await handle_selection(self, select, interaction, 'banner')
 
     @select(
-        select_type=discord.ComponentType.user_select,
-        min_values=1,
-        max_values=24,
-        placeholder='Выбери игроков'
+        select_type=select_type,
+        min_values=min_values,
+        max_values=max_values,
+        placeholder=placeholder
     )
     async def cape_callback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):
-        try:
-            await interaction.response.defer(invisible=False, ephemeral=True)
-            select_value: list[discord.User] = select.values
-            self.cape_list: str = '_' + '\n'.join(
-                f'{number}. {user.mention}' for number, user
-                in enumerate(select_value, start=1)
-            ) + '_'
-            await interaction.respond('✅', delete_after=1)
-        except Exception as error:
-            logger.error(
-                f'При оформлении списка накидок вышла "{error}"'
-            )
+        await handle_selection(self, select, interaction, 'cape')
 
     @button(
         label='Опубликовать',
@@ -240,7 +224,7 @@ class CreateOrEditSymbolsList(View):
 
 
 @commands.slash_command()
-@commands.has_any_role(LEADER_ROLE)
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def symbols_list(
     ctx: discord.ApplicationContext,
     message_id: discord.Option(
@@ -258,15 +242,23 @@ async def symbols_list(
 
         if message_id:
             try:
-                lookup_message: discord.Message = await ctx.channel.fetch_message(int(message_id))
+                lookup_message: discord.Message = (
+                    await ctx.channel.fetch_message(int(message_id))
+                )
             except discord.NotFound:
-                await ctx.respond('_Сообщение не найдено по этому ID_', delete_after=2)
+                await ctx.respond(
+                    '_Сообщение не найдено по этому ID_', delete_after=2
+                )
                 logger.warning(f'Не найдено сообщение по id = {message_id}')
 
             if not lookup_message.embeds[0]:
-                await ctx.respond('_У этого сообщения нет embed!_', delete_after=2)
+                await ctx.respond(
+                    '_У этого сообщения нет embed!_', delete_after=2
+                )
 
-            await ctx.respond(view=CreateOrEditSymbolsList(lookup_message=lookup_message))
+            await ctx.respond(
+                view=CreateOrEditSymbolsList(lookup_message=lookup_message)
+            )
         else:
             await ctx.respond(view=CreateOrEditSymbolsList())
         logger.info(
@@ -291,7 +283,137 @@ async def embed_manager_error(
     await command_error(ctx, error, "symbols_list")
 
 
+class ChooseSimbolsAmount(Modal):
+    """Модальное окно для выбора количества топ за символы."""
+    def __init__(
+        self,
+        ctx: discord.ApplicationContext,
+        message_id: str
+    ):
+        super().__init__(
+            title='Укажи сколько знамён и чемпионок',
+            timeout=None
+        )
+        self.ctx = ctx
+        self.message_id = message_id
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.short,
+                label='Укажи количество победителей для знамён',
+                placeholder='Не более 30',
+                max_length=2
+            )
+        )
+
+        self.add_item(
+            InputText(
+                style=discord.InputTextStyle.short,
+                label='Укажи количество победителей для чемпионок',
+                placeholder='Не более 10',
+                max_length=2,
+                required=False
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            await interaction.response.defer(invisible=False, ephemeral=True)
+            checking_message: discord.Message = (
+                await self.ctx.channel.fetch_message(int(self.message_id))
+            )
+            attachment = checking_message.attachments[0]
+            content = (await attachment.read()).decode('windows-1251')
+            data_start = content.find('[')  # Находим начало JSON-данных
+            data_end = content.rfind(']') + 1  # Находим конец JSON-данных
+            json_data = content[data_start:data_end]
+            data_list = json.loads(json_data)
+            result: list[str] = [item['name'] for item in data_list]
+
+            banner_amount: str | None = self.children[0].value
+            cape_amount: str | None = self.children[1].value
+
+            # Валидируем вводимое значение пользователем для знамён
+            validated_banner_amount = await validate_amount(
+                value=banner_amount,
+                interaction=interaction
+            )
+            # Генерируем список знамён
+            banner_list = await generate_member_list(
+                result[:validated_banner_amount],
+                interaction=interaction
+            )
+            # Валидируем вводимое значение пользователем для накидок
+            if cape_amount:
+                validated_cape_amount = await validate_amount(
+                    value=cape_amount,
+                    interaction=interaction,
+                    is_banner=False
+                )
+                # Генерируем список накидок, если нужно
+                cape_list = await generate_member_list(
+                    result[
+                        validated_banner_amount:validated_cape_amount
+                        + validated_banner_amount
+                    ],
+                    interaction=interaction
+                )
+
+            await interaction.channel.send(
+                embed=symbols_list_embed(
+                    banner_list=banner_list,
+                    cape_list=cape_list if cape_amount else None
+                )
+            )
+            await interaction.respond('✅', delete_after=1)
+        except Exception as error:
+            logger.error(
+                f'Пользователь {interaction.user.display_name} попытался выбрать кол-во '
+                f'за накидки/чемпы, но получил ошибку {error}!'
+            )
+
+
+@commands.slash_command()
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
+async def auto_simbols_list(
+    ctx: discord.ApplicationContext,
+    message_id: discord.Option(
+        str,
+        description='ID сообщения, в котором есть файл',
+        name_localizations={'ru':'id_сообщения'}
+    )  # type: ignore
+) -> None:
+    """
+    Команда для автоматического вывода списка топ за символы.
+    """
+    try:
+        if not message_id.isdigit():
+            ctx.respond('❌\n_Введи ID сообщения с файлом!_')
+        await ctx.response.send_modal(ChooseSimbolsAmount(
+            ctx=ctx, message_id=message_id
+        ))
+        logger.info(
+            'Команда "/auto_simbols_list" вызвана пользователем '
+            f'"{ctx.user.display_name}"!'
+        )
+    except Exception as error:
+        await ctx.respond(f'_Ошибка ❌: {error}_')
+        logger.error(f'Ошибка при вызове команды "/auto_simbols_list"! "{error}"')
+
+
+@auto_simbols_list.error
+async def auto_simbols_list_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+) -> None:
+    """
+    Обработчик ошибок для команды auto_simbols_list.
+    """
+    await command_error(ctx, error, "auto_simbols_list")
+
+
 def setup(bot: discord.Bot):
     bot.add_application_command(attention)
     bot.add_application_command(edit_embed_description)
     bot.add_application_command(symbols_list)
+    bot.add_application_command(auto_simbols_list)

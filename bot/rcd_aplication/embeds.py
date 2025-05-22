@@ -2,7 +2,8 @@ import discord
 
 from variables import (
     ATTENTION, CROSSED_SWORDS_IMAGE_URL,
-    RCD_LIST_IMAGE_URL, QUESTION_IMAGE_URL, INDEX_CLASS_ROLE
+    RCD_LIST_IMAGE_URL, QUESTION_IMAGE_URL, INDEX_CLASS_ROLE,
+    EXCLAMATION_MARK_URL, ATTENTION
 )
 
 
@@ -139,4 +140,20 @@ def rcd_notification_embed(
         color=0xfffb00
     )
     embed.set_thumbnail(url=CROSSED_SWORDS_IMAGE_URL)
+    return embed
+
+
+def mailing_notification_embed(date: str) -> discord.Embed:
+    """
+    Функция для отправки уведомления о рассылке.
+    """
+    embed = discord.Embed(
+        title=ATTENTION,
+        description=(
+            f'_**Сообщаем то, что уведомления участникам РЧД из списка на {date} были разосланы! '
+            'Если бот не прислал вам сообщение, значит вы не попали в список!**_'
+        ),
+        color=0xfffb00
+    )
+    embed.set_thumbnail(url=EXCLAMATION_MARK_URL)
     return embed

@@ -8,7 +8,7 @@ from variables import (
 )
 
 
-def character_lookup(server: int, name: str) -> dict | None:
+def character_lookup(server: int, name: str) -> dict | str | None:
     """
     Функция для получения информации об игроке через оружейку.
     """
@@ -23,7 +23,7 @@ def character_lookup(server: int, name: str) -> dict | None:
         lookup_response = look_response.json()['data']
     except JSONDecodeError as e:
         logger.info(
-            'Упал сайт оружейки аллодов!'
+            f'Упал сайт оружейки аллодов! {e}'
         )
         return 'Bad site work'
     data_id = 0

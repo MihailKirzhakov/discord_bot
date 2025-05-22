@@ -17,8 +17,8 @@ def attention_embed(value: str) -> discord.Embed:
 
 
 def symbols_list_embed(
-        banner_list: str = '',
-        cape_list: str = ''
+    banner_list: str = '',
+    cape_list: str | None = None
 ) -> discord.Embed:
     """
     Функция для создания вложения с со списком за символы славы.
@@ -29,13 +29,14 @@ def symbols_list_embed(
     )
     embed.add_field(
         name='_Знамёна:_',
-        value=f'{banner_list}',
+        value=f'_{banner_list}_',
         inline=True
     )
-    embed.add_field(
-        name='_Накидки:_',
-        value=f'{cape_list}',
-        inline=True
-    )
+    if cape_list:
+        embed.add_field(
+            name='_Накидки:_',
+            value=f'_{cape_list}_',
+            inline=True
+        )
     embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
     return embed

@@ -222,15 +222,29 @@ class PassBid(Modal):
 
             label_parts = self.btn_label.split()
             full_label_number = convert_bid_back(label_parts[0])
-            error_response = '_Ставка должна быть большей текущей! ❌_'
+            error_response = {
+                'low_bid': '_Ставка должна быть большей текущей! ❌_',
+                'large_bid': (
+                    '_Сработала защита, твоя ставка больше текущей на 5 000 000.⚠️\n'
+                    'Ты точно не указал не ошибся с лишним ноликом?\n'
+                    'Сделай ставку меньше, разница с текущей ставкой должна быть '
+                    'не более 5 миллионов!👌_'
+                )
+            }
 
             if (
                 self.button_manager.children[self.index].style
                 == discord.ButtonStyle.green and full_label_number > select_bid
             ) or (full_label_number >= select_bid and len(label_parts) > 1):
                 return await interaction.respond(
-                    error_response,
-                    delete_after=2
+                    error_response.get('low_bid'),
+                    delete_after=5
+                )
+
+            if (select_bid - full_label_number) > 5_000_000:
+                return await interaction.respond(
+                    error_response.get('large_bid'),
+                    delete_after=4
                 )
 
             self.button_manager.children[self.index].label = f'{convert_bid(select_bid)} {interaction.user.display_name}'

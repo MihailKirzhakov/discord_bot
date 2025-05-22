@@ -2,10 +2,10 @@ import re
 
 import discord
 from discord.ext import commands
-from discord.ui import InputText, Modal
 from loguru import logger
 
 from .embeds import technical_works_embed, removed_role_list_embed
+from rcd_aplication.functions import clear_rcd_data
 from variables import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
     CLOSED_TOP_4_ICD, CLOSED_MOTHERS, AMARELLA_ID,
@@ -88,9 +88,6 @@ async def technical_works_error(
     Обработчик ошибок для команды technical_works.
     """
     await command_error(ctx, error, "technical_works")
-
-
-
 
 
 @commands.slash_command()
@@ -272,8 +269,39 @@ async def check_roles_error(
     await command_error(ctx, error, "check_roles")
 
 
+@commands.slash_command()
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
+async def clear_db_data(ctx: discord.ApplicationContext) -> None:
+    """
+    Команда для очистки базы данных.
+    """
+    await ctx.defer(ephemeral=True)
+    try:
+        clear_rcd_data()
+        await ctx.respond('_Почистил_ ✅', delete_after=2)
+        logger.info(
+            'Команда "/clear_db_data" вызвана пользователем '
+            f'"{ctx.user.display_name}"!'
+        )
+    except Exception as error:
+        await ctx.respond(f'_Ошибка ❌: {error}_')
+        logger.error(f'Ошибка при вызове команды "/clear_db_datas"! "{error}"')
+
+
+@clear_db_data.error
+async def clear_db_data_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+) -> None:
+    """
+    Обработчик ошибок для команды clear_db_data.
+    """
+    await command_error(ctx, error, "clear_db_data")
+
+
 def setup(bot: discord.Bot):
     bot.add_application_command(technical_works)
     bot.add_application_command(clear_all)
     bot.add_application_command(give_role_to)
     bot.add_application_command(check_roles)
+    bot.add_application_command(clear_db_data)
