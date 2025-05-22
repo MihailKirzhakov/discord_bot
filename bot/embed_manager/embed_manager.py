@@ -163,10 +163,9 @@ class CreateOrEditSymbolsList(View):
 
     def __init__(
         self,
-        timeout: float | None = None,
         lookup_message: discord.Message | None = None
     ) -> None:
-        super().__init__(timeout=timeout)
+        super().__init__(timeout=None)
         self.lookup_message = lookup_message
 
     @select(
