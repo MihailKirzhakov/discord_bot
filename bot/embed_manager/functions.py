@@ -1,6 +1,32 @@
 import discord
 
+from loguru import logger
+
 from variables import VETERAN_ROLE, OFICER_ROLE
+
+
+async def handle_selection(
+    self,
+    select: discord.ui.Select,
+    interaction: discord.Interaction,
+    list_type: str
+):
+    try:
+        await interaction.response.defer(invisible=False, ephemeral=True)
+        select_value: list[discord.User] = select.values
+        selected_list = '\n'.join(
+            f'{number}. {user.mention}' for number, user
+            in enumerate(select_value, start=1)
+        )
+        if list_type == 'banner':
+            self.banner_list = selected_list
+        elif list_type == 'cape':
+            self.cape_list = selected_list
+        await interaction.respond('✅', delete_after=1)
+    except Exception as error:
+        logger.error(
+            f'При оформлении списка {list_type} вышла "{error}"'
+        )
 
 
 async def validate_amount(
@@ -24,7 +50,7 @@ async def generate_member_list(
     nicknames: list,
     interaction: discord.Interaction
 ) -> str:
-    member_list = '_'
+    member_list = ''
     members: list[discord.Member] = interaction.guild.members
     roles: list[discord.Role] = interaction.guild.roles
     veteran_role: discord.Role | None = discord.utils.get(
@@ -53,6 +79,5 @@ async def generate_member_list(
         if member:
             member_list += f' | Discord: {member.mention}'
         member_list += '\n'
-    member_list += '_'
 
     return member_list

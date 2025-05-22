@@ -5,7 +5,7 @@ from discord.ext import commands
 from discord.ui import Modal, InputText, View, select, button
 from loguru import logger
 
-from .functions import validate_amount, generate_member_list
+from .functions import validate_amount, generate_member_list, handle_selection
 from .embeds import attention_embed, symbols_list_embed
 from regular_commands.regular_commands import command_error
 from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
@@ -156,6 +156,10 @@ class CreateOrEditSymbolsList(View):
     """
     banner_list: str | None = None
     cape_list: str | None = None
+    select_type: discord.ComponentType = discord.ComponentType.user_select
+    min_values: int = 1
+    max_values: int = 24
+    placeholder: str = 'Выбери игроков'
 
     def __init__(
         self,
@@ -166,48 +170,26 @@ class CreateOrEditSymbolsList(View):
         self.lookup_message = lookup_message
 
     @select(
-        select_type=discord.ComponentType.user_select,
-        min_values=1,
-        max_values=24,
-        placeholder='Выбери игроков'
+        select_type=select_type,
+        min_values=min_values,
+        max_values=max_values,
+        placeholder=placeholder
     )
     async def banner_callback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):
-        try:
-            await interaction.response.defer(invisible=False, ephemeral=True)
-            select_value: list[discord.User] = select.values
-            self.banner_list: str = '_' + '\n'.join(
-                f'{number}. {user.mention}' for number, user
-                in enumerate(select_value, start=1)
-            ) + '_'
-            await interaction.respond('✅', delete_after=1)
-        except Exception as error:
-            logger.error(
-                f'При оформлении списка знамён вышла "{error}"'
-            )
+        await handle_selection(self, select, interaction, 'banner')
 
     @select(
-        select_type=discord.ComponentType.user_select,
-        min_values=1,
-        max_values=24,
-        placeholder='Выбери игроков'
+        select_type=select_type,
+        min_values=min_values,
+        max_values=max_values,
+        placeholder=placeholder
     )
     async def cape_callback(
         self, select: discord.ui.Select, interaction: discord.Interaction
     ):
-        try:
-            await interaction.response.defer(invisible=False, ephemeral=True)
-            select_value: list[discord.User] = select.values
-            self.cape_list: str = '_' + '\n'.join(
-                f'{number}. {user.mention}' for number, user
-                in enumerate(select_value, start=1)
-            ) + '_'
-            await interaction.respond('✅', delete_after=1)
-        except Exception as error:
-            logger.error(
-                f'При оформлении списка накидок вышла "{error}"'
-            )
+        await handle_selection(self, select, interaction, 'cape')
 
     @button(
         label='Опубликовать',
@@ -261,15 +243,23 @@ async def symbols_list(
 
         if message_id:
             try:
-                lookup_message: discord.Message = await ctx.channel.fetch_message(int(message_id))
+                lookup_message: discord.Message = (
+                    await ctx.channel.fetch_message(int(message_id))
+                )
             except discord.NotFound:
-                await ctx.respond('_Сообщение не найдено по этому ID_', delete_after=2)
+                await ctx.respond(
+                    '_Сообщение не найдено по этому ID_', delete_after=2
+                )
                 logger.warning(f'Не найдено сообщение по id = {message_id}')
 
             if not lookup_message.embeds[0]:
-                await ctx.respond('_У этого сообщения нет embed!_', delete_after=2)
+                await ctx.respond(
+                    '_У этого сообщения нет embed!_', delete_after=2
+                )
 
-            await ctx.respond(view=CreateOrEditSymbolsList(lookup_message=lookup_message))
+            await ctx.respond(
+                view=CreateOrEditSymbolsList(lookup_message=lookup_message)
+            )
         else:
             await ctx.respond(view=CreateOrEditSymbolsList())
         logger.info(
