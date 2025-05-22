@@ -73,16 +73,16 @@ class StartAucModal(Modal):
         await interaction.response.defer(invisible=False, ephemeral=True)
 
         name_auc: str = str(self.children[0].value)
-        count: int = int(self.children[1].value)
+        lot_amount: int = int(self.children[1].value)
         start_bid: int = int(self.children[2].value)
         target_date_time: str = str(self.children[3].value)
         start_auc_user: discord.Member = interaction.user
-        user_mention: str = interaction.user.mention
+        user_mention: str = start_auc_user.mention
         button_manager = View(timeout=None)
         button_mentions: dict[str, str] = {}
         today: datetime = datetime.now()
 
-        if count < 1 or count > 25:
+        if lot_amount < 1 or lot_amount > 25:
             return await interaction.respond(
                 '_Количество лотов должно быть от 1 до 24_',
                 delete_after=10
@@ -104,12 +104,11 @@ class StartAucModal(Modal):
                 f'При вводе даты в команду аукциона возникла ошибка {error}'
             )
 
-        for index in range(count):
+        for index in range(lot_amount):
             button_manager.add_item(BidButton(
                 start_bid=start_bid,
                 start_auc_user=start_auc_user,
-                user_mention=user_mention,
-                count=count,
+                lot_amount=lot_amount,
                 name_auc=name_auc,
                 button_mentions=button_mentions,
                 button_manager=button_manager,
@@ -120,7 +119,7 @@ class StartAucModal(Modal):
                 user_mention=user_mention,
                 name_auc=name_auc,
                 stop_time=stop_time,
-                lot_count=count,
+                lot_count=lot_amount,
                 first_bid=convert_bid(start_bid)
             ),
             view=button_manager)
@@ -132,7 +131,7 @@ class StartAucModal(Modal):
             view=button_manager,
             user_mention=user_mention,
             name_auc=name_auc,
-            count=count,
+            lot_amount=lot_amount,
             final_time=final_time,
             button_mentions=button_mentions
         )
@@ -144,8 +143,7 @@ class PassBid(Modal):
         btn_label: str,
         start_bid: int,
         start_auc_user: discord.Member,
-        user_mention: str,
-        count: int,
+        lot_amount: int,
         name_auc: str,
         button_mentions: dict[str, str],
         button_manager: View,
@@ -156,8 +154,7 @@ class PassBid(Modal):
         self.btn_label = btn_label
         self.start_bid = start_bid
         self.start_auc_user = start_auc_user
-        self.user_mention = user_mention
-        self.count = count
+        self.lot_amount = lot_amount
         self.name_auc = name_auc
         self.button_mentions = button_mentions
         self.button_manager = button_manager
@@ -258,10 +255,10 @@ class PassBid(Modal):
                 await self.button_message.edit(
                     view=self.button_manager,
                     embed=start_auc_embed(
-                        user_mention=self.user_mention,
+                        user_mention=self.start_auc_user.mention,
                         name_auc=self.name_auc,
                         stop_time=plus_minute,
-                        lot_count=self.count,
+                        lot_count=self.lot_amount,
                         first_bid=convert_bid(self.start_bid)
                     )
                 )
@@ -311,8 +308,7 @@ class BidButton(Button):
         self,
         start_bid: int,
         start_auc_user: discord.Member,
-        user_mention: str,
-        count: int,
+        lot_amount: int,
         name_auc: str,
         button_mentions: dict[str, str],
         button_manager: View,
@@ -324,8 +320,7 @@ class BidButton(Button):
         )
         self.start_bid = start_bid
         self.start_auc_user = start_auc_user
-        self.user_mention = user_mention
-        self.count = count
+        self.lot_amount = lot_amount
         self.name_auc = name_auc
         self.button_mentions = button_mentions
         self.button_manager = button_manager
@@ -338,8 +333,7 @@ class BidButton(Button):
                     btn_label=self.label,
                     start_bid=self.start_bid,
                     start_auc_user=self.start_auc_user,
-                    user_mention=self.user_mention,
-                    count=self.count,
+                    lot_amount=self.lot_amount,
                     name_auc=self.name_auc,
                     button_mentions=self.button_mentions,
                     button_manager=self.button_manager,
@@ -404,7 +398,7 @@ async def check_timer(
     view: View,
     user_mention: str,
     name_auc: str,
-    count: int,
+    lot_amount: int,
     final_time: dict,
     button_mentions: dict
 ) -> None:
@@ -419,7 +413,7 @@ async def check_timer(
                 view=view,
                 user_mention=user_mention,
                 name_auc=name_auc,
-                count=count,
+                lot_amount=lot_amount,
                 button_mentions=button_mentions
             )
             break
@@ -429,7 +423,7 @@ async def auto_stop_auc(
         view: View,
         user_mention: str,
         name_auc: str,
-        count: int,
+        lot_amount: int,
         button_mentions: dict
 ) -> None:
     """
@@ -465,7 +459,7 @@ async def auto_stop_auc(
                 results_message=message,
                 user_mention=user_mention,
                 name_auc=name_auc,
-                count=count
+                lot_amount=lot_amount
             )
         )
         logger.info(

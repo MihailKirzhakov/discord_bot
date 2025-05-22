@@ -2,6 +2,7 @@ import discord
 from loguru import logger
 
 from core.config import settings
+from core.orm import AsyncORM
 from reminder.functions import send_reminders, cursor
 from randomaizer.randomaizer import RandomButton
 from rename_request.rename_request import RenameButton
@@ -46,31 +47,38 @@ async def on_ready() -> None:
         ))
     bot.add_view(create_rcd_list_view)
     logger.info('Бот запущен и готов к работе!')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS date_info
-        (date_name TEXT UNIQUE, date TEXT)
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS rcd_application
-        (message_name TEXT UNIQUE, message_id INTEGER)
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS appmember_list
-        (member_id INTEGER)
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS askmember_list
-        (member_id INTEGER)
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS notice_list
-        (action TEXT, role TEXT, members_id TEXT, UNIQUE (action, role) ON CONFLICT REPLACE)
-    ''')
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS reminds
-        (user_id INTEGER, message TEXT UNIQUE, remind_date TEXT)
-    ''')
-    await send_reminders(bot, cursor, logger)
+    # cursor.execute('''
+    #     CREATE TABLE IF NOT EXISTS date_info
+    #     (date_name TEXT UNIQUE, date TEXT)
+    # ''')
+    # cursor.execute('''
+    #     CREATE TABLE IF NOT EXISTS rcd_application
+    #     (message_name TEXT UNIQUE, message_id INTEGER)
+    # ''')
+    # cursor.execute('''
+    #     CREATE TABLE IF NOT EXISTS appmember_list
+    #     (member_id INTEGER)
+    # ''')
+    # cursor.execute('''
+    #     CREATE TABLE IF NOT EXISTS askmember_list
+    #     (member_id INTEGER)
+    # ''')
+    # cursor.execute('''
+    #     CREATE TABLE IF NOT EXISTS notice_list
+    #     (action TEXT, role TEXT, members_id TEXT, UNIQUE (action, role) ON CONFLICT REPLACE)
+    # ''')
+    # cursor.execute('''
+    #     CREATE TABLE IF NOT EXISTS reminds
+    #     (user_id INTEGER, message TEXT UNIQUE, remind_date TEXT)
+    # ''')
+    # await send_reminders(bot, cursor, logger)
+    await AsyncORM.create_tables()
+    # await AsyncORM.insert_bid_data(12345678, 300000, 1)
+    # await AsyncORM.insert_message_data(12345678, 'kek')
+    # if await AsyncORM.get_id_data(12345678):
+    #     await AsyncORM.update_bid_data(12345678, 400000)
+    # await AsyncORM.clear_tables()
+
 
 
 @bot.command()
