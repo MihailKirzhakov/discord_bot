@@ -12,6 +12,7 @@ from role_application.role_application import (
 from rcd_aplication.rcd_aplication import (
     StartRCDButton, CreateRCDList, AddMemberToListButton, PrivateMessageView
 )
+from role_application.role_application import AcceptRoleButton, DeniedRoleButton, RoleButton
 from set_group.set_group import SetGroupButton, EditGroupButton
 from variables import APPLICATION_CHANNEL_ID, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE
 
@@ -31,6 +32,7 @@ if settings.debug_server_id:
 @bot.event
 async def on_ready() -> None:
     """Событие запуска бота"""
+    await AsyncORM.create_tables()
     app_channel = await bot.fetch_channel(APPLICATION_CHANNEL_ID)
     bot.add_view(RandomButton())
     bot.add_view(RenameButton(channel=app_channel))
@@ -46,6 +48,10 @@ async def on_ready() -> None:
             custom_id=f'{index}КнопкаДобавления'
         ))
     bot.add_view(create_rcd_list_view)
+    cstm_btn_ids = await AsyncORM.get_btn_cstm_ids()
+    for id in cstm_btn_ids:
+        acc_btn_cstm_id, den_btn_cstm_id = id
+        bot.add_view(RoleButton(acc_btn_cstm_id, den_btn_cstm_id))
     logger.info('Бот запущен и готов к работе!')
     # cursor.execute('''
     #     CREATE TABLE IF NOT EXISTS date_info
@@ -72,12 +78,12 @@ async def on_ready() -> None:
     #     (user_id INTEGER, message TEXT UNIQUE, remind_date TEXT)
     # ''')
     # await send_reminders(bot, cursor, logger)
-    await AsyncORM.create_tables()
     # await AsyncORM.insert_bid_data(12345678, 300000, 1)
     # await AsyncORM.insert_message_data(12345678, 'kek')
-    # if await AsyncORM.get_id_data(12345678):
+    # await AsyncORM.insert_role_application_data(12345678, 'kok')
+    # if await AsyncORM.get_filter_obj(UserBid, 'user_id', 12345678):
     #     await AsyncORM.update_bid_data(12345678, 400000)
-    # await AsyncORM.clear_tables()
+    # await AsyncORM.clear_auction_table()
 
 
 
