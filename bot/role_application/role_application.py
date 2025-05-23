@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord.ui import Modal, InputText, View, button
 from loguru import logger
 
+from core.orm import AsyncORM
 from variables import (
     ANSWER_IF_DUPLICATE_APP, ANSWER_IF_DUPLICATE_NICK, ANSWER_IF_CHEAT,
     ANSWER_IF_CLICKED_THE_SAME_TIME, LEADER_ROLE, OFICER_ROLE,
@@ -17,29 +18,22 @@ from .functions import character_lookup, has_required_role
 app_list: list[str] = []  # Список для контроля дублирующих заявок
 
 
-class RoleButton(View):
-    """
-    Класс кнопки роли для взаимодействия с пользователем в Discord.
-    Создаёт 2 кнопки. Первая для выдачи роли,
-    вторая для отказа в выдаче роли 'Старшина'.
-    """
+class AcceptRoleButton(discord.ui.Button):
+    """Кнопка для одобрения выдачи роли"""
 
     def __init__(
-            self,
-            nickname: str,
-            user: discord.Member | discord.User,
-            timeout: float | None = None
-    ):
-        super().__init__(timeout=timeout)
-        self.nickname = nickname
-        self.user = user
-
-    @button(label='Выдать старшину', style=discord.ButtonStyle.green)
-    async def callback_accept(
         self,
-        button: discord.ui.Button,
-        interaction: discord.Interaction
+        custom_id: str,
+        roleapp_view: View
     ):
+        super().__init__(
+            label='Выдать старшину',
+            style=discord.ButtonStyle.green,
+            custom_id=custom_id
+        )
+        self.roleapp_view = roleapp_view
+
+    async def callback(self, interaction: discord.Interaction):
         """Кнопка выдачи роли 'Старшина'."""
         await interaction.response.defer(invisible=False, ephemeral=True)
         if not has_required_role(interaction.user):
@@ -53,55 +47,68 @@ class RoleButton(View):
         role_guest = discord.utils.get(
             interaction.guild.roles, name=GUEST_ROLE
         )
+        curent_embed: discord.Embed = interaction.message.embeds[0]
+        nickname = curent_embed.author.name
+        obj = await AsyncORM.get_roleapp_obj(nickname)
+        member: discord.Member = (
+            discord.utils.get(interaction.guild.members, id=obj.user_id)
+        )
         try:
-            if self.nickname not in app_list:
+            if not obj:
                 await interaction.respond(
                     ANSWER_IF_CLICKED_THE_SAME_TIME,
                     delete_after=15
                 )
-            await self.user.edit(nick=self.nickname)
-            await self.user.add_roles(role_sergeant)
-            await self.user.remove_roles(role_guest)
-            curent_embed = interaction.message.embeds[0]
+            await member.edit(nick=nickname)
+            await member.add_roles(role_sergeant)
+            await member.remove_roles(role_guest)
             curent_embed.add_field(
                 name='_Результат рассмотрения_ ✅',
                 value=f'_{interaction.user.mention} выдал роль!_',
                 inline=False
             )
-            self.disable_all_items()
-            self.clear_items()
+
+            self.roleapp_view.disable_all_items()
+            self.roleapp_view.clear_items()
             await interaction.message.edit(
                 embed=curent_embed,
-                view=self
+                view=self.roleapp_view
             )
+            await AsyncORM.delete_roleapp_data(nickname)
             try:
-                await self.user.send(embed=access_embed())
+                await member.send(embed=access_embed())
             except discord.Forbidden:
-                logger.warning(f'Пользователю "{self.user.display_name}" запрещено отправлять сообщения')
+                logger.warning(f'Пользователю "{member.display_name}" запрещено отправлять сообщения')
             await interaction.respond('✅', delete_after=1)
             logger.info(
                 f'Пользователь {interaction.user.display_name} '
-                f'выдал роль пользователю "{self.nickname}"!'
+                f'выдал роль пользователю "{nickname}"!'
             )
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
             logger.error(
                     f'При попытке выдать роль '
-                    f'пользователю "{self.nickname}" возникла ошибка '
+                    f'пользователю "{nickname}" возникла ошибка '
                     f'"{error}"'
                 )
-        finally:
-            app_list.remove(self.nickname)
 
-    @button(
-        label='Отправить в ЛС, что не подходит',
-        style=discord.ButtonStyle.red
-    )
-    async def callback_denied(
+
+class DeniedRoleButton(discord.ui.Button):
+    """Кнопка для отказа в выдаче роли"""
+
+    def __init__(
         self,
-        button: discord.ui.Button,
-        interaction: discord.Interaction
+        custom_id: str,
+        roleapp_view: View
     ):
+        super().__init__(
+            label='Отправить в ЛС, что не подходит',
+            style=discord.ButtonStyle.red,
+            custom_id=custom_id
+        )
+        self.roleapp_view = roleapp_view
+
+    async def callback(self, interaction: discord.Interaction):
         """Кнопка отказа в выдаче выдачи роли 'Старшина'."""
         if not has_required_role(interaction.user):
             return await interaction.respond(
@@ -110,11 +117,15 @@ class RoleButton(View):
                 delete_after=5
             )
         try:
+            current_embed: discord.Embed = interaction.message.embeds[0]
+            nickname = current_embed.author.name
+            obj = await AsyncORM.get_roleapp_obj(nickname)
+            member: discord.Member = discord.utils.get(interaction.guild.members, id=obj.user_id)
             await interaction.response.send_modal(DeniedRoleModal(
-                nickname=self.nickname,
-                view=self,
-                user=self.user,
-                embed=self.embed
+                nickname=nickname,
+                view=self.roleapp_view,
+                user=member,
+                embed=current_embed
             ))
         except Exception as error:
             await interaction.respond('❌', ephemeral=True, delete_after=1)
@@ -122,6 +133,26 @@ class RoleButton(View):
                 f'При попытке вызвать модальное окно нажатием на кнопку '
                 f'"{button.label}" возникла ошибка "{error}"'
             )
+
+
+class RoleButton(View):
+    """
+    Класс кнопки роли для взаимодействия с пользователем в Discord.
+    Создаёт 2 кнопки. Первая для выдачи роли,
+    вторая для отказа в выдаче роли 'Старшина'.
+    """
+
+    def __init__(
+        self,
+        acc_btn_cstm_id: str,
+        den_btn_cstm_id: str
+    ):
+        super().__init__(timeout=None)
+        self.acc_btn_cstm_id = acc_btn_cstm_id
+        self.den_btn_cstm_id = den_btn_cstm_id
+
+        self.add_item(AcceptRoleButton(self.acc_btn_cstm_id, self))
+        self.add_item(DeniedRoleButton(self.den_btn_cstm_id, self))
 
 
 class DeniedRoleModal(Modal):
@@ -160,12 +191,12 @@ class DeniedRoleModal(Modal):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(invisible=False, ephemeral=True)
-        if self.nickname not in app_list:
+        obj = await AsyncORM.get_roleapp_obj(self.nickname)
+        if not obj:
             return await interaction.respond(
                 ANSWER_IF_CLICKED_THE_SAME_TIME,
                 delete_after=5
             )
-        user = interaction.user
         value = self.children[0].value
         self.embed.add_field(
                 name='_Результат рассмотрения_ ❌',
@@ -173,19 +204,28 @@ class DeniedRoleModal(Modal):
                 inline=False
             )
         try:
-            app_list.remove(self.nickname)
             try:
-                await self.user.send(embed=denied_embed(user, value))
+                await self.user.send(embed=denied_embed(self.user, value))
             except discord.Forbidden:
-                logger.warning(f'Пользователю "{self.user.display_name}" запрещено отправлять сообщения')
-            self.view.disable_all_items()
-            self.view.clear_items()
-            await interaction.message.edit(embed=self.embed, view=self.view)
-            await interaction.respond('✅', delete_after=1)
-            logger.info(
-                f'Пользователь {interaction.user.display_name} отказал в доступе '
-                f'пользователю "{self.nickname}"!'
-            )
+                error_message = (
+                    f'❌\nПользователю "{self.user.display_name}" '
+                    'запрещено отправлять сообщения'
+                )
+                await interaction.respond(
+                    error_message,
+                    delete_after=3
+                )
+                logger.warning(error_message)
+            finally:
+                self.view.disable_all_items()
+                self.view.clear_items()
+                await interaction.message.edit(embed=self.embed, view=self.view)
+                await interaction.respond('✅', delete_after=1)
+                await AsyncORM.delete_roleapp_data(self.nickname)
+                logger.info(
+                    f'Пользователь {interaction.user.display_name} отказал в доступе '
+                    f'пользователю "{self.nickname}"!'
+                )
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
             logger.error(
@@ -216,9 +256,13 @@ class RoleApplication(Modal):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(invisible=False, ephemeral=True)
         nickname: str = self.children[0].value
-        user = interaction.user
-        member = discord.utils.get(interaction.guild.members, id=user.id)
-        member_by_display_name = discord.utils.get(interaction.guild.members, display_name=nickname)
+        user: discord.User = interaction.user
+        member: discord.Member | None = discord.utils.get(
+            interaction.guild.members, id=user.id
+        )
+        member_by_display_name: discord.Member | None = discord.utils.get(
+            interaction.guild.members, display_name=nickname
+        )
         role = discord.utils.get(interaction.guild.roles, name=GUEST_ROLE)
 
         try:
@@ -252,9 +296,14 @@ class RoleApplication(Modal):
             )
 
     async def handle_bad_site_work(self, interaction, nickname, user, member):
+        acc_btn_cstm_id = f'{await AsyncORM.get_roleapp_count()}Выдать'
+        den_btn_cstm_id = f'{await AsyncORM.get_roleapp_count()}НеВыдать'
+        await AsyncORM.insert_role_application_data(
+            nickname, user.id, acc_btn_cstm_id, den_btn_cstm_id
+        )
         description = f'Профиль Discord: {user.mention}\n'
         await self.channel.send(
-            view=RoleButton(nickname=nickname, user=user),
+            view=RoleButton(acc_btn_cstm_id, den_btn_cstm_id),
             embed=application_embed(description, nickname, member, player_parms=None)
         )
         app_list.append(nickname)
@@ -277,8 +326,13 @@ class RoleApplication(Modal):
         return description
 
     async def send_application(self, interaction, nickname, user, member, player_parms, description):
+        acc_btn_cstm_id = f'{await AsyncORM.get_roleapp_count()}Выдать'
+        den_btn_cstm_id = f'{await AsyncORM.get_roleapp_count()}НеВыдать'
+        await AsyncORM.insert_role_application_data(
+            nickname, user.id, acc_btn_cstm_id, den_btn_cstm_id
+        )
         await self.channel.send(
-            view=RoleButton(nickname=nickname, user=user),
+            view=RoleButton(acc_btn_cstm_id, den_btn_cstm_id),
             embed=application_embed(description, nickname, member, player_parms=player_parms)
         )
         app_list.append(nickname)
