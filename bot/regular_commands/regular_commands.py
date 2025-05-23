@@ -4,6 +4,7 @@ import discord
 from discord.ext import commands
 from loguru import logger
 
+from core.orm import AsyncORM
 from .embeds import technical_works_embed, removed_role_list_embed
 from rcd_aplication.functions import clear_rcd_data
 from variables import (
@@ -277,6 +278,7 @@ async def clear_db_data(ctx: discord.ApplicationContext) -> None:
     """
     await ctx.defer(ephemeral=True)
     try:
+        await AsyncORM.delete_roleapp_data()
         clear_rcd_data()
         await ctx.respond('_Почистил_ ✅', delete_after=2)
         logger.info(
