@@ -15,9 +15,6 @@ from .embeds import (
 from .functions import character_lookup, has_required_role
 
 
-app_list: list[str] = []  # Список для контроля дублирующих заявок
-
-
 class AcceptRoleButton(discord.ui.Button):
     """Кнопка для одобрения выдачи роли"""
 
@@ -264,6 +261,7 @@ class RoleApplication(Modal):
             interaction.guild.members, display_name=nickname
         )
         role = discord.utils.get(interaction.guild.roles, name=GUEST_ROLE)
+        obj = await AsyncORM.get_roleapp_obj(nickname)
 
         try:
             player_parms = character_lookup(1, nickname)
@@ -274,7 +272,7 @@ class RoleApplication(Modal):
             if not player_parms:
                 return await self.respond_with_message(interaction, ANSWER_IF_CHEAT, 15)
 
-            if nickname in app_list:
+            if obj:
                 return await self.respond_with_message(interaction, ANSWER_IF_DUPLICATE_APP, 10)
 
             if member_by_display_name and role not in member_by_display_name.roles:
@@ -306,7 +304,6 @@ class RoleApplication(Modal):
             view=RoleButton(acc_btn_cstm_id, den_btn_cstm_id),
             embed=application_embed(description, nickname, member, player_parms=None)
         )
-        app_list.append(nickname)
         await self.respond_with_message(interaction, '👍\n_Твой запрос принят! Дождись выдачи роли_', 5)
         logger.info(
             f'Пользователь {interaction.user.display_name} заполнил форму, '
@@ -335,7 +332,6 @@ class RoleApplication(Modal):
             view=RoleButton(acc_btn_cstm_id, den_btn_cstm_id),
             embed=application_embed(description, nickname, member, player_parms=player_parms)
         )
-        app_list.append(nickname)
         await self.respond_with_message(interaction, '👍\n_Твой запрос принят! Дождись выдачи роли_', 5)
         logger.info(
             f'Пользователь {interaction.user.display_name} заполнил форму, '
