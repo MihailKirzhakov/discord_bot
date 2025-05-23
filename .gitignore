@@ -8,3 +8,4 @@ ban_words.txt
 check_algs.py
 *.log
 /.vscode
+bash.exe.stackdump
