@@ -5,7 +5,10 @@ from discord.ext import commands
 from discord.ui import Modal, InputText, View, select, button
 from loguru import logger
 
-from .functions import validate_amount, generate_member_list, handle_selection
+from .functions import (
+    validate_amount, generate_member_list, handle_selection,
+    sort_nicknames_by_role
+)
 from .embeds import attention_embed, symbols_list_embed
 from regular_commands.regular_commands import command_error
 from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
@@ -328,10 +331,14 @@ class ChooseSimbolsAmount(Modal):
             data_end = content.rfind(']') + 1  # Находим конец JSON-данных
             json_data = content[data_start:data_end]
             data_list = json.loads(json_data)
-            result: list[str] = [item['name'] for item in data_list]
-
+            members: list[discord.Member] = interaction.guild.members
+            roles: list[discord.Role] = interaction.guild.roles
             banner_amount: str | None = self.children[0].value
             cape_amount: str | None = self.children[1].value
+            result: list[str] = [item['name'] for item in data_list]
+            sorted_result: list[str] = await sort_nicknames_by_role(
+                members, roles, result
+            )
 
             # Валидируем вводимое значение пользователем для знамён
             validated_banner_amount = await validate_amount(
@@ -340,7 +347,7 @@ class ChooseSimbolsAmount(Modal):
             )
             # Генерируем список знамён
             banner_list = await generate_member_list(
-                result[:validated_banner_amount],
+                sorted_result[:validated_banner_amount],
                 interaction=interaction
             )
             # Валидируем вводимое значение пользователем для накидок
@@ -352,7 +359,7 @@ class ChooseSimbolsAmount(Modal):
                 )
                 # Генерируем список накидок, если нужно
                 cape_list = await generate_member_list(
-                    result[
+                    sorted_result[
                         validated_banner_amount:validated_cape_amount
                         + validated_banner_amount
                     ],

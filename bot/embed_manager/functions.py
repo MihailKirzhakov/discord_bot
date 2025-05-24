@@ -38,7 +38,7 @@ async def validate_amount(
         f'❌\n_Значение должно быть числом от 1 до {30 if is_banner else 10}!_'
     )
 
-    max_value = 30 if is_banner else 10
+    max_value = 31 if is_banner else 11
     if value.isdigit():
         amount = int(value)
         if 0 < amount < max_value:
@@ -52,32 +52,46 @@ async def generate_member_list(
 ) -> str:
     member_list = ''
     members: list[discord.Member] = interaction.guild.members
-    roles: list[discord.Role] = interaction.guild.roles
-    veteran_role: discord.Role | None = discord.utils.get(
-        roles, name=VETERAN_ROLE
-    )
-    oficer_role: discord.Role | None = discord.utils.get(
-        roles, name=OFICER_ROLE
-    )
-    miss_count = 0
 
     for index, nickname in enumerate(nicknames, start=1):
         member: discord.Member | None = discord.utils.get(
             members,
             display_name=nickname
         )
-        if member:
-            if (
-                veteran_role in member.roles
-                or oficer_role in member.roles
-                and nickname != 'СашаЖмуров'
-            ):
-                miss_count += 1
-                continue
-        member_list += f'{index - miss_count}. {nickname}'
-        miss_count = 0
+        member_list += f'{index}. {nickname}'
         if member:
             member_list += f' | Discord: {member.mention}'
         member_list += '\n'
 
     return member_list
+
+
+async def sort_nicknames_by_role(
+    members: list[discord.Member],
+    roles: list[discord.Role],
+    result: list[str]
+) -> list[str]:
+    veteran_role: discord.Role | None = discord.utils.get(
+        roles, name=VETERAN_ROLE
+    )
+    oficer_role: discord.Role | None = discord.utils.get(
+        roles, name=OFICER_ROLE
+    )
+    sorted_result: list[str] = []
+
+    for nickname in result:
+        member: discord.Member | None = discord.utils.get(
+            members,
+            display_name=nickname
+        )
+        if member and (
+            (
+                veteran_role in member.roles or
+                oficer_role in member.roles
+            )
+            and nickname != 'СашаЖмуров'
+        ):
+            continue
+        sorted_result.append(nickname)
+
+    return sorted_result
