@@ -291,7 +291,8 @@ class ChooseSimbolsAmount(Modal):
     def __init__(
         self,
         ctx: discord.ApplicationContext,
-        message_id: str
+        message_id: str,
+        channel: discord.TextChannel
     ):
         super().__init__(
             title='Укажи сколько знамён и чемпионок',
@@ -299,6 +300,7 @@ class ChooseSimbolsAmount(Modal):
         )
         self.ctx = ctx
         self.message_id = message_id
+        self.channel = channel
 
         self.add_item(
             InputText(
@@ -366,7 +368,7 @@ class ChooseSimbolsAmount(Modal):
                     interaction=interaction
                 )
 
-            await interaction.channel.send(
+            await self.channel.send(
                 embed=symbols_list_embed(
                     banner_list=banner_list,
                     cape_list=cape_list if cape_amount else None
@@ -384,6 +386,11 @@ class ChooseSimbolsAmount(Modal):
 @commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def auto_simbols_list(
     ctx: discord.ApplicationContext,
+    channel: discord.Option(
+        discord.TextChannel,
+        description='Куда отправить сообщение?',
+        name_localizations={'ru':'текстовый_канал'},
+    ),  # type: ignore
     message_id: discord.Option(
         str,
         description='ID сообщения, в котором есть файл',
@@ -397,7 +404,7 @@ async def auto_simbols_list(
         if not message_id.isdigit():
             ctx.respond('❌\n_Введи ID сообщения с файлом!_')
         await ctx.response.send_modal(ChooseSimbolsAmount(
-            ctx=ctx, message_id=message_id
+            ctx=ctx, message_id=message_id, channel=channel
         ))
         logger.info(
             'Команда "/auto_simbols_list" вызвана пользователем '
