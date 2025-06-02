@@ -5,7 +5,7 @@ from loguru import logger
 
 from .embeds import number_range, nickname_range
 from .functions import rand_choice
-from variables import (
+from core import (
     DEAFAULT_RANDOMISE_VALUE, WRONG_PARMS,
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
 )

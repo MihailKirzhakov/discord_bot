@@ -7,7 +7,7 @@ from .embeds import (
     rename_embed, changed_rename_embed,
     denied_rename_embed, denied_send_embed
 )
-from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
+from core import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
 
 que_request: dict = {}
 

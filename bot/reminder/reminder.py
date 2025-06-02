@@ -8,7 +8,7 @@ from loguru import logger
 
 from .functions import add_remind_to_db, delete_remind_from_db
 from .embeds import remind_embed, remind_send_embed
-from variables import (
+from core import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
     SERGEANT_ROLE, VETERAN_ROLE
 )

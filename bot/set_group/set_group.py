@@ -3,13 +3,14 @@ from discord.ext import commands
 from discord.ui import View, button, Select
 from loguru import logger
 
-from variables import (
+from core import (
     LEADER_ROLE, TREASURER_ROLE, OFICER_ROLE,
     VETERAN_ROLE, SERGEANT_ROLE, LEADER_ID,
     MIURKA_ID
 )
 from .embeds import (
-    set_group_embed, set_group_discription_embed, group_create_instruction_embed
+    set_group_embed, set_group_discription_embed,
+    group_create_instruction_embed
 )
 
 

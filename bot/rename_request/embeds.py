@@ -1,6 +1,7 @@
 import discord
 
-from variables import DENIED_IMAGE_URL, ACCESS_IMAGE_URL, RENAME_IMAGE_URL
+from core import DENIED_IMAGE_URL, ACCESS_IMAGE_URL, RENAME_IMAGE_URL
+
 
 def rename_embed(user: str, nickname: str) -> discord.Embed:
     """

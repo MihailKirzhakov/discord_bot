@@ -1,9 +1,9 @@
 import discord
 
-from variables import (
+from core import (
     ATTENTION, CROSSED_SWORDS_IMAGE_URL,
     RCD_LIST_IMAGE_URL, QUESTION_IMAGE_URL, INDEX_CLASS_ROLE,
-    EXCLAMATION_MARK_URL, ATTENTION
+    EXCLAMATION_MARK_URL
 )
 
 

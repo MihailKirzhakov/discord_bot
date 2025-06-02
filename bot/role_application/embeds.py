@@ -1,6 +1,6 @@
 import discord
 
-from variables import (
+from core import (
     ACCESS_IMAGE_URL, ACCESS_VALUE, DENIED_IMAGE_URL,
     GUILD_IMAGE_URL, GUILD_NAME, SMALL_GUILD_ICON_URL
 )

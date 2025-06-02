@@ -1,6 +1,6 @@
 import discord
 
-from variables import PLAYING_DICES_URL_ICON
+from core import PLAYING_DICES_URL_ICON
 
 
 def number_range(value: str, ranje: str) -> discord.Embed:

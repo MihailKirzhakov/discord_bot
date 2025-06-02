@@ -3,7 +3,7 @@ import requests
 from json import JSONDecodeError
 from loguru import logger
 
-from variables import (
+from core import (
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
 )
 
