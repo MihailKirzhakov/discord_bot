@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .base_async_orm import AsyncORM
 from core.models import (
     AppMemberList, AskMemberList, DateInfo,
-    NoticeList, RcdApplication
+    NoticeList, RcdApplication, ButtonInfo
 )
 
 
@@ -15,63 +15,41 @@ class RcdApplicationORM(AsyncORM):
     # --------------------------------------------------------------------------------
     # Вставка данных в БД
     async def insert_date_info(self, session: AsyncSession, date_name, date):
-        """
-        Метод для добавления или обновления данных
-        о внесении информации о дате РЧД
-        """
-        # Проверяем, есть ли уже данные с таким date_name
-        obj = await self.get_rcd_date_obj(session, date_name)
-        if obj:
-            # Если запись существует, обновляем её
-            obj.date = date
-        else:
-            # Если записи нет, создаем новую
-            new_data = DateInfo(date_name=date_name, date=date)
-            session.add(new_data)
-        await session.flush()
+        """"""
+        await self.insert_data(
+            session, DateInfo, date_name=date_name, date=date
+        )
 
-    async def insert_message_id(self, session: AsyncSession, message_name, message_id):
-        """
-        Метод для добавления или обновления данных
-        об ID и названии сообщения
-        """
-        obj = await self.get_message_data_obj(session, message_name)
-        if obj:
-            # Если запись существует, обновляем её
-            obj.message_id = message_id
-        else:
-            # Если записи нет, создаем новую
-            new_data = RcdApplication(message_name=message_name, message_id=message_id)
-            session.add(new_data)
-        await session.flush()
+    async def insert_message_id(
+        self, session: AsyncSession, message_name, message_id
+    ):
+        """"""
+        await self.insert_data(
+            session, RcdApplication,
+            message_name=message_name, message_id=message_id
+            )
 
     async def insert_members_to_notice_list(
         self, session: AsyncSession, members_id, action, role
     ):
         """Добавляет информацию о пользователях, для отправки уведомления"""
-        obj = await self.get_filter_obj_first(
-            session, NoticeList, action=action, role=role
-        )
-        if obj:
-            # Если запись существует, обновляем members_id
-            obj.members_id = members_id
-        else:
-            # Если записи нет, создаем новую
-            new_notice = NoticeList(
+        await self.insert_data(
+                session, NoticeList,
                 members_id=members_id, action=action, role=role
             )
-            session.add(new_notice)
-        await session.flush()
 
     async def insert_appmember_id(self, session: AsyncSession, member_id):
-        data = AppMemberList(member_id=member_id)
-        session.add(data)
-        await session.flush()
+        await self.insert_data(session, AppMemberList, member_id=member_id)
 
     async def insert_askmember_id(self, session: AsyncSession, member_id):
-        data = AskMemberList(member_id=member_id)
-        session.add(data)
-        await session.flush()
+        await self.insert_data(session, AskMemberList, member_id=member_id)
+
+    async def insert_button_info(
+        self, session: AsyncSession, custom_id, **params
+    ):
+        await self.insert_data(
+            session, ButtonInfo, custom_id=custom_id, **params
+        )
 
     # --------------------------------------------------------------------------------
     # Получение данных
@@ -105,9 +83,20 @@ class RcdApplicationORM(AsyncORM):
         result = await self.get_filter_obj_all(session, AskMemberList)
         return result
 
+    async def get_notice_list_obj_all(self, session: AsyncSession):
+        """"""
+        result = await self.get_filter_obj_all(session, NoticeList)
+        return result
+
     async def get_notice_list_data(self, session, action: str):
         """Получает информацию о списках уведомлений"""
-        obj_list = await self.get_filter_obj_all(session, NoticeList, action=action)
+        obj_list = await self.get_filter_obj_all(
+            session, NoticeList, action=action
+        )
+
+        if not obj_list:
+            return None
+
         notice_list_data = []
         for obj in obj_list:
             members_id_list = [
@@ -120,6 +109,38 @@ class RcdApplicationORM(AsyncORM):
             }
             notice_list_data.append(notice_dict_data)
         return notice_list_data
+
+    async def get_toogle_button_info(self, session: AsyncSession):
+        """"""
+        result = await self.get_obj_by_pk(session, ButtonInfo, 'Тумблер')
+        return result
+
+    async def get_notice_button_info(self, session: AsyncSession):
+        """"""
+        result = await self.get_obj_by_pk(
+            session, ButtonInfo, 'ОповеститьОСписке'
+        )
+        return result
+
+    async def get_second_list_button_info(self, session: AsyncSession):
+        """"""
+        result = await self.get_obj_by_pk(
+            session, ButtonInfo, 'СоздатьСписок'
+        )
+        return result
+
+    # --------------------------------------------------------------------------------
+    # Обновление данных
+    async def update_button_info(
+        self, session: AsyncSession, custom_id, **fields
+    ):
+        """"""
+        obj = await self.get_obj_by_pk(session, ButtonInfo, custom_id)
+        self.obj_validation(obj)
+        for attr, value in fields.items():
+            setattr(obj, attr, value)
+        session.add(obj)
+        await session.flush()
 
     # --------------------------------------------------------------------------------
     # Удаление данных

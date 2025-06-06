@@ -66,7 +66,9 @@ class RcdDate(Modal):
         date_str: str = str(self.children[0].value)
         date_pattern = r'^([0-2][0-9]|3[0-1])[.,/](0[1-9]|1[0-2])$'
         date_match = re.match(date_pattern, date_str)
-        rcd_app_channel: discord.TextChannel = interaction.guild.get_channel(RCD_APPLICATION_CHANNEL_ID)
+        rcd_app_channel: discord.TextChannel = interaction.guild.get_channel(
+            RCD_APPLICATION_CHANNEL_ID
+        )
 
         if not date_match:
             return await interaction.respond(
@@ -102,9 +104,13 @@ class RcdDate(Modal):
                 await rcd_app_orm.insert_message_id(
                     session=session,
                     message_name=StaticNames.START_RCD_MESSAGE,
-                    message_id=interaction.guild.get_channel(interaction.channel_id).last_message_id
+                    message_id=interaction.guild.get_channel(
+                        interaction.channel_id
+                    ).last_message_id
                 )
-                rcd_buttons_embed_list: list[discord.Embed] = [rcd_list_embed(convert_rcd_date, StaticNames.ATACK)]
+                rcd_buttons_embed_list: list[discord.Embed] = [
+                    rcd_list_embed(convert_rcd_date, StaticNames.ATACK)
+                ]
                 view: discord.ui.View = CreateRCDList()
                 for index, role in INDEX_CLASS_ROLE.items():
                     view.add_item(AddMemberToListButton(

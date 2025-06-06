@@ -18,14 +18,13 @@ class RoleApplicationORM(AsyncORM):
         acc_btn_cstm_id, den_btn_cstm_id
     ):
         """Метод для добавления данных о заявке на роль"""
-        data = RoleApplicationData(
+        await self.insert_data(
+            session, RoleApplicationData,
             nickname=nickname,
             user_id=user_id,
             acc_btn_cstm_id=acc_btn_cstm_id,
             den_btn_cstm_id=den_btn_cstm_id
         )
-        session.add(data)
-        await session.flush()
 
     # --------------------------------------------------------------------------------
     # Получение данных

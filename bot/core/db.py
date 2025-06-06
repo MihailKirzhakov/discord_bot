@@ -10,6 +10,9 @@ intpk = Annotated[int, mapped_column(primary_key=True, unique=True)]
 strpk = Annotated[str, mapped_column(primary_key=True, unique=True)]
 int_uniq = Annotated[int, mapped_column(unique=True)]
 str_uniq = Annotated[str, mapped_column(unique=True)]
+int_empty = Annotated[int, mapped_column(nullable=True)]
+str_empty = Annotated[str, mapped_column(nullable=True)]
+bool_empty = Annotated[bool, mapped_column(nullable=True)]
 
 
 class Base(DeclarativeBase):

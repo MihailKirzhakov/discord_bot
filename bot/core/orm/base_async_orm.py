@@ -20,18 +20,25 @@ class AsyncORM():
             await conn.run_sync(Base.metadata.create_all)
 
     # --------------------------------------------------------------------------------
-    # Базовые методы
-    async def add_flush(self, session: AsyncSession, data):
-        """Метод для выполнения добавления данных в БД и обновления БД"""
-        session.add_all([data])
+    # Базовые методы для помещения данных в БД
+    async def insert_data(
+        self,
+        session: AsyncSession,
+        model: Type[ModelType],
+        **params
+    ):
+        """"""
+        data = model(**params)
+        session.add(data)
         await session.flush()
 
+    # --------------------------------------------------------------------------------
+    # Базовые методы для получения данных из БД
     async def get_obj_by_pk(
         self, session: AsyncSession, model: Type[ModelType], pk
     ):
         """Метод для получения данных из БД по первичному ключу"""
         result = await session.get(model, pk)
-        # self.obj_validation(result)
         return result
 
     async def get_filter_obj(
@@ -45,7 +52,6 @@ class AsyncORM():
         if conditions:
             query = query.where(and_(*conditions))
         result = await session.execute(query)
-        self.obj_validation(result)
         return result
 
     async def get_filter_obj_first(
@@ -62,6 +68,8 @@ class AsyncORM():
         result = await self.get_filter_obj(session, model, **filters)
         return result.scalars().all()
 
+    # --------------------------------------------------------------------------------
+    # Базовые методы для удаления данных в БД
     async def delete_data(self, session: AsyncSession, obj):
         """Метод для удаления данных из БД"""
         self.obj_validation(obj)
@@ -73,6 +81,8 @@ class AsyncORM():
         await session.execute(delete(model))
         await session.flush()
 
+    # --------------------------------------------------------------------------------
+    # Базовые методы для валидации данных
     def obj_validation(self, obj):
         """
         Метод проверяет наличие получаемого объекта из БД и выбрасывает

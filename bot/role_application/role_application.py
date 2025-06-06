@@ -148,17 +148,11 @@ class RoleButton(View):
     вторая для отказа в выдаче роли 'Старшина'.
     """
 
-    def __init__(
-        self,
-        acc_btn_cstm_id: str,
-        den_btn_cstm_id: str
-    ):
+    def __init__(self, acc_btn_cstm_id: str, den_btn_cstm_id: str):
         super().__init__(timeout=None)
-        self.acc_btn_cstm_id = acc_btn_cstm_id
-        self.den_btn_cstm_id = den_btn_cstm_id
 
-        self.add_item(AcceptRoleButton(self.acc_btn_cstm_id, self))
-        self.add_item(DeniedRoleButton(self.den_btn_cstm_id, self))
+        self.add_item(AcceptRoleButton(acc_btn_cstm_id, self))
+        self.add_item(DeniedRoleButton(den_btn_cstm_id, self))
 
 
 class DeniedRoleModal(Modal):

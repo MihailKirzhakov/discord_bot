@@ -5,8 +5,8 @@ from discord.ext import commands
 from loguru import logger
 
 from .embeds import technical_works_embed, removed_role_list_embed
-from rcd_aplication.functions import clear_rcd_data
 from core import (
+    async_session_factory,
     LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
     CLOSED_TOP_4_ICD, CLOSED_MOTHERS, AMARELLA_ID,
     CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT,
@@ -14,6 +14,7 @@ from core import (
     SERGEANT_ROLE, VETERAN_ROLE, GUEST_ROLE,
     DOBRYAK_ID, CLOSED_ON_GOOD_MOVEMENTS
 )
+from core.orm import rcd_app_orm
 
 
 async def command_error(
@@ -271,24 +272,26 @@ async def check_roles_error(
 
 @commands.slash_command()
 @commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
-async def clear_db_data(ctx: discord.ApplicationContext) -> None:
+async def clear_rcd_db_data(ctx: discord.ApplicationContext) -> None:
     """
     Команда для очистки базы данных.
     """
     await ctx.defer(ephemeral=True)
     try:
-        clear_rcd_data()
-        await ctx.respond('_Почистил_ ✅', delete_after=2)
-        logger.info(
-            'Команда "/clear_db_data" вызвана пользователем '
-            f'"{ctx.user.display_name}"!'
-        )
+        async with async_session_factory() as session:
+            await rcd_app_orm.clear_rcd_data(session)
+            await ctx.respond('_Почистил_ ✅', delete_after=2)
+            logger.info(
+                'Команда "/clear_db_data" вызвана пользователем '
+                f'"{ctx.user.display_name}"!'
+            )
+            await session.commit()
     except Exception as error:
         await ctx.respond(f'_Ошибка ❌: {error}_')
         logger.error(f'Ошибка при вызове команды "/clear_db_datas"! "{error}"')
 
 
-@clear_db_data.error
+@clear_rcd_db_data.error
 async def clear_db_data_error(
     ctx: discord.ApplicationContext,
     error: Exception
@@ -304,4 +307,4 @@ def setup(bot: discord.Bot):
     bot.add_application_command(clear_all)
     bot.add_application_command(give_role_to)
     bot.add_application_command(check_roles)
-    bot.add_application_command(clear_db_data)
+    bot.add_application_command(clear_rcd_db_data)

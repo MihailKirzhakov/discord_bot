@@ -1,6 +1,9 @@
 from sqlalchemy.orm import Mapped
 
-from core import Base, intpk, int_uniq, strpk, str_uniq
+from core import (
+    Base, intpk, int_uniq, strpk, str_uniq,
+    bool_empty, str_empty, int_empty
+)
 
 
 class MemberIdModel(Base):
@@ -37,3 +40,11 @@ class RcdApplication(Base):
     """Модель списка поданных заявок"""
     message_name: Mapped[strpk]
     message_id: Mapped[int_uniq]
+
+
+class ButtonInfo(Base):
+    """Модель для информации о кнопке"""
+    custom_id: Mapped[strpk]
+    label: Mapped[str_empty]
+    style: Mapped[int_empty]
+    disabled: Mapped[bool_empty]
