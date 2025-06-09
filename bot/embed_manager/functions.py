@@ -58,6 +58,12 @@ async def generate_member_list(
             members,
             display_name=nickname
         )
+        if nickname in ('СашаЖмуров', 'МарияЖмурова'):
+            nickname = 'МарияЖмурова'
+            member: discord.Member | None = discord.utils.get(
+                members,
+                display_name='СашаЖмуров'
+            )
         member_list += f'{index}. {nickname}'
         if member:
             member_list += f' | Discord: {member.mention}'
@@ -78,6 +84,7 @@ async def sort_nicknames_by_role(
         roles, name=OFICER_ROLE
     )
     sorted_result: list[str] = []
+    is_jmurov_exists = False
 
     for nickname in result:
         member: discord.Member | None = discord.utils.get(
@@ -92,6 +99,12 @@ async def sort_nicknames_by_role(
             and nickname != 'СашаЖмуров'
         ):
             continue
+
+        if nickname in ('СашаЖмуров', 'МарияЖмурова'):
+            if is_jmurov_exists:
+                continue
+            is_jmurov_exists = True
+
         sorted_result.append(nickname)
 
     return sorted_result
