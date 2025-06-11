@@ -6,7 +6,8 @@ from discord.ui import Modal, InputText, View, select, button
 from loguru import logger
 
 from .functions import (
-    validate_amount, generate_member_list, handle_selection
+    validate_amount, generate_member_list, handle_selection,
+    sort_nicknames_by_role
 )
 from .embeds import attention_embed, symbols_list_embed
 from regular_commands.regular_commands import command_error
@@ -290,7 +291,8 @@ class ChooseSimbolsAmount(Modal):
     def __init__(
         self,
         ctx: discord.ApplicationContext,
-        message_id: str
+        message_id: str,
+        channel: discord.TextChannel
     ):
         super().__init__(
             title='Укажи сколько знамён и чемпионок',
@@ -298,6 +300,7 @@ class ChooseSimbolsAmount(Modal):
         )
         self.ctx = ctx
         self.message_id = message_id
+        self.channel = channel
 
         self.add_item(
             InputText(
@@ -330,10 +333,14 @@ class ChooseSimbolsAmount(Modal):
             data_end = content.rfind(']') + 1  # Находим конец JSON-данных
             json_data = content[data_start:data_end]
             data_list = json.loads(json_data)
-            result: list[str] = [item['name'] for item in data_list]
-
+            members: list[discord.Member] = interaction.guild.members
+            roles: list[discord.Role] = interaction.guild.roles
             banner_amount: str | None = self.children[0].value
             cape_amount: str | None = self.children[1].value
+            result: list[str] = [item['name'] for item in data_list]
+            sorted_result: list[str] = await sort_nicknames_by_role(
+                members, roles, result
+            )
 
             # Валидируем вводимое значение пользователем для знамён
             validated_banner_amount = await validate_amount(
@@ -342,7 +349,7 @@ class ChooseSimbolsAmount(Modal):
             )
             # Генерируем список знамён
             banner_list = await generate_member_list(
-                result[:validated_banner_amount],
+                sorted_result[:validated_banner_amount],
                 interaction=interaction
             )
             # Валидируем вводимое значение пользователем для накидок
@@ -354,14 +361,14 @@ class ChooseSimbolsAmount(Modal):
                 )
                 # Генерируем список накидок, если нужно
                 cape_list = await generate_member_list(
-                    result[
+                    sorted_result[
                         validated_banner_amount:validated_cape_amount
                         + validated_banner_amount
                     ],
                     interaction=interaction
                 )
 
-            await interaction.channel.send(
+            await self.channel.send(
                 embed=symbols_list_embed(
                     banner_list=banner_list,
                     cape_list=cape_list if cape_amount else None
@@ -379,6 +386,11 @@ class ChooseSimbolsAmount(Modal):
 @commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
 async def auto_simbols_list(
     ctx: discord.ApplicationContext,
+    channel: discord.Option(
+        discord.TextChannel,
+        description='Куда отправить сообщение?',
+        name_localizations={'ru':'текстовый_канал'},
+    ),  # type: ignore
     message_id: discord.Option(
         str,
         description='ID сообщения, в котором есть файл',
@@ -392,7 +404,7 @@ async def auto_simbols_list(
         if not message_id.isdigit():
             ctx.respond('❌\n_Введи ID сообщения с файлом!_')
         await ctx.response.send_modal(ChooseSimbolsAmount(
-            ctx=ctx, message_id=message_id
+            ctx=ctx, message_id=message_id, channel=channel
         ))
         logger.info(
             'Команда "/auto_simbols_list" вызвана пользователем '
