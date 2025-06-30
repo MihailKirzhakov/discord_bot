@@ -15,7 +15,6 @@ class RcdApplicationORM(AsyncORM):
     # --------------------------------------------------------------------------------
     # Вставка данных в БД
     async def insert_date_info(self, session: AsyncSession, date_name, date):
-        """"""
         await self.insert_data(
             session, DateInfo, date_name=date_name, date=date
         )
@@ -23,7 +22,6 @@ class RcdApplicationORM(AsyncORM):
     async def insert_message_id(
         self, session: AsyncSession, message_name, message_id
     ):
-        """"""
         await self.insert_data(
             session, RcdApplication,
             message_name=message_name, message_id=message_id
@@ -32,7 +30,6 @@ class RcdApplicationORM(AsyncORM):
     async def insert_members_to_notice_list(
         self, session: AsyncSession, members_id, action, role
     ):
-        """Добавляет информацию о пользователях, для отправки уведомления"""
         await self.insert_data(
                 session, NoticeList,
                 members_id=members_id, action=action, role=role
@@ -54,42 +51,34 @@ class RcdApplicationORM(AsyncORM):
     # --------------------------------------------------------------------------------
     # Получение данных
     async def get_rcd_date_obj(self, session: AsyncSession, pk):
-        """"""
         result = await self.get_obj_by_pk(session, DateInfo, pk)
         return result
 
     async def get_message_data_obj(self, session: AsyncSession, pk):
-        """"""
         result = await self.get_obj_by_pk(session, RcdApplication, pk)
         return result
 
     async def get_appmember_obj(self, session: AsyncSession, pk):
-        """"""
         result = await self.get_obj_by_pk(session, AppMemberList, pk)
         return result
 
     async def get_askmember_obj(self, session: AsyncSession, pk):
-        """"""
         result = await self.get_obj_by_pk(session, AskMemberList, pk)
         return result
 
     async def get_all_appmember_ids(self, session: AsyncSession):
-        """Возвращает список всех ID пользователей, подавших заявку"""
         result = await self.get_filter_obj_all(session, AppMemberList)
         return result
 
     async def get_all_askmember_ids(self, session: AsyncSession):
-        """Возвращает список всех ID пользователей, кого спрашивали про РЧД"""
         result = await self.get_filter_obj_all(session, AskMemberList)
         return result
 
     async def get_notice_list_obj_all(self, session: AsyncSession):
-        """"""
         result = await self.get_filter_obj_all(session, NoticeList)
         return result
 
     async def get_notice_list_data(self, session, action: str):
-        """Получает информацию о списках уведомлений"""
         obj_list = await self.get_filter_obj_all(
             session, NoticeList, action=action
         )
@@ -111,19 +100,16 @@ class RcdApplicationORM(AsyncORM):
         return notice_list_data
 
     async def get_toogle_button_info(self, session: AsyncSession):
-        """"""
         result = await self.get_obj_by_pk(session, ButtonInfo, 'Тумблер')
         return result
 
     async def get_notice_button_info(self, session: AsyncSession):
-        """"""
         result = await self.get_obj_by_pk(
             session, ButtonInfo, 'ОповеститьОСписке'
         )
         return result
 
     async def get_second_list_button_info(self, session: AsyncSession):
-        """"""
         result = await self.get_obj_by_pk(
             session, ButtonInfo, 'СоздатьСписок'
         )
@@ -134,7 +120,6 @@ class RcdApplicationORM(AsyncORM):
     async def update_button_info(
         self, session: AsyncSession, custom_id, **fields
     ):
-        """"""
         obj = await self.get_obj_by_pk(session, ButtonInfo, custom_id)
         self.obj_validation(obj)
         for attr, value in fields.items():
@@ -147,7 +132,6 @@ class RcdApplicationORM(AsyncORM):
     async def delete_from_notice_list(
         self, session: AsyncSession, action, role
     ):
-        """Метод для удаления данных из списка оповещения"""
         obj = await self.get_filter_obj_first(
             session, NoticeList, action=action, role=role
         )
