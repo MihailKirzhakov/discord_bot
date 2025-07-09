@@ -1,9 +1,10 @@
-from .auc_models import UserBid, AuctionDataInfo # noqa
+from .auc_models import UserBid, AuctionDataInfo
 from .rcd_app_models import (
     AppMemberList, AskMemberList, DateInfo,
     NoticeList, RcdApplication, ButtonInfo
-) # noqa
-from .role_app_models import RoleApplicationData # noqa
+)
+from .role_app_models import RoleApplicationData
+from .rename_request_models import RenameRequestModel
 
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
     'NoticeList',
     'RcdApplication',
     'RoleApplicationData',
-    'ButtonInfo'
+    'ButtonInfo',
+    'RenameRequestModel'
 ]
