@@ -31,6 +31,7 @@ from core import (
 class StaticNames:
     """Костантные наименования для работы с РЧД списками"""
     ATACK: str = 'АТАКА'
+    ATTENTION_MESSAGE: str = 'attention_message'
     DEFENCE: str = 'ЗАЩИТА'
     DATE: str = 'date'
     DATE_NAME: str = 'date_name'
@@ -790,9 +791,13 @@ class CreateRCDList(View):
                     button.style = discord.ButtonStyle.gray
                     button.disabled = True
                     await interaction.message.edit(view=self)
-                if rcd_app_channel.last_message.embeds[0].title != ATTENTION:
+                if rcd_app_message.embeds[0].title != ATTENTION:
                     await rcd_app_channel.send(
                         embed=mailing_notification_embed(date=date_data_obj.date)
+                    )
+                    await rcd_app_orm.insert_message_id(
+                        session, StaticNames.ATTENTION_MESSAGE,
+                        rcd_app_channel.last_message_id
                     )
                 await session.commit()
                 await interaction.respond('✅', delete_after=1)
@@ -825,13 +830,20 @@ class CreateRCDList(View):
                     session=session,
                     pk=StaticNames.RCD_APPCHANNEL_MESSAGE
                 )
+                attention_message_obj = await rcd_app_orm.get_message_data_obj(
+                    session=session,
+                    pk=StaticNames.ATTENTION_MESSAGE
+                )
                 rcd_app_channel: discord.TextChannel = interaction.guild.get_channel(
                     RCD_APPLICATION_CHANNEL_ID
                 )
                 rcd_app_message: discord.Message = await rcd_app_channel.fetch_message(
                     rcd_appchannel_message_obj.message_id
                 )
-                attention_embed: discord.Embed = rcd_app_channel.last_message.embeds[0]
+                attention_message: discord.Message = await rcd_app_channel.fetch_message(
+                    attention_message_obj.message_id
+                )
+                attention_embed: discord.Embed = attention_message.embeds[0]
                 if 'Заявки на РЧД' in rcd_app_message.embeds[0].title:
                     await rcd_app_message.delete()
                 if ATTENTION in attention_embed.title:
