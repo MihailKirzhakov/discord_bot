@@ -37,7 +37,7 @@ class NoticeList(Base):
 
 
 class RcdApplication(Base):
-    """Модель списка поданных заявок"""
+    """Модель списка названия сообщений и их ID"""
     message_name: Mapped[strpk]
     message_id: Mapped[int_uniq]
 
