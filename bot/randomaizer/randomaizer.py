@@ -78,8 +78,8 @@ class RandomButton(View):
         None
     """
     def __init__(
-            self,
-            timeout: float | None = None
+        self,
+        timeout: float | None = None
     ):
         super().__init__(timeout=timeout)
 
