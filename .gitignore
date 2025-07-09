@@ -9,3 +9,4 @@ check_algs.py
 *.log
 /.vscode
 bash.exe.stackdump
+*.db-journal

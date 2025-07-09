@@ -1,7 +1,7 @@
 import datetime
 import re
 
-from variables import NOT_SOLD
+from core import NOT_SOLD
 
 
 def convert_bid(bid: int) -> str:

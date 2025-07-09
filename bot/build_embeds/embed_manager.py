@@ -11,7 +11,7 @@ from .functions import (
 )
 from .embeds import attention_embed, symbols_list_embed
 from regular_commands.regular_commands import command_error
-from variables import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
+from core import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
 
 
 class AttentionMessage(Modal):

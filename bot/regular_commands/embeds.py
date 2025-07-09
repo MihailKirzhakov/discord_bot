@@ -1,9 +1,8 @@
 import discord
 
-from variables import (
+from core import (
     ATTENTION, GUILD_IMAGE_URL,
-    SMALL_GUILD_ICON_URL, TEСHNICAL_WORKS, WRENCH_IMAGE_URL,
-    REMIND, REMIND_IMAGE_URL, TO_REMIND,
+    SMALL_GUILD_ICON_URL, TEСHNICAL_WORKS, WRENCH_IMAGE_URL
 )
 
 
@@ -23,12 +22,6 @@ def technical_works_embed() -> discord.Embed:
     embed.set_thumbnail(url=WRENCH_IMAGE_URL)
     embed.set_image(url=GUILD_IMAGE_URL)
     return embed
-
-
-
-
-
-
 
 
 def removed_role_list_embed() -> discord.Embed:

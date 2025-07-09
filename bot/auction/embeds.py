@@ -2,11 +2,11 @@ from datetime import datetime
 
 import discord
 
-from variables import ATTENTION, AUCTION_IMAGE_URL, REMIND
+from core import ATTENTION, AUCTION_IMAGE_URL, REMIND
 
 
 def start_auc_embed(
-    user_mention: discord.abc.User.mention,
+    user_mention: str,
     name_auc: str,
     stop_time: datetime,
     lot_count: int,
@@ -31,10 +31,10 @@ def start_auc_embed(
 
 
 def results_embed(
-        results_message: str,
-        user_mention: discord.abc.User.mention,
-        name_auc: str,
-        count: int
+    results_message: str,
+    user_mention: str,
+    name_auc: str,
+    lot_amount: int
 ) -> discord.Embed:
     """
     Создает встраиваемое сообщение с результатами аукциона.
@@ -44,7 +44,7 @@ def results_embed(
         description=(
             f'_**{user_mention} провёл аукцион "{name_auc}"!\n\n'
             f'Аукцион был завершён в {discord.utils.format_dt(datetime.now(), style="F")}!**\n\n'
-            f'Количество лотов: {count}.\n\n'
+            f'Количество лотов: {lot_amount}.\n\n'
             f'**Результаты аукциона:**\n'
             f'{results_message}_'
         ),
@@ -55,9 +55,9 @@ def results_embed(
 
 
 def outbid_embed(
-        url: str,
-        stop_time: datetime,
-        delete_after: int
+    url: str,
+    stop_time: datetime,
+    delete_after: int
 ) -> discord.Embed:
     """
     Создает встраиваемое сообщение о перебивании ставки.

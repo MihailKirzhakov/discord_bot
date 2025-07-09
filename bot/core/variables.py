@@ -1,4 +1,4 @@
-from core.config import settings
+from core import settings
 
 
 # Никнейм лидера гильдии
@@ -14,6 +14,8 @@ MIN_BID_VALUE: int = 100000
 APPLICATION_CHANNEL_ID = settings.application_channel_id
 
 RCD_APPLICATION_CHANNEL_ID = settings.rcd_application_channel_id
+
+ASK_RCD_MESSAGE_DELETION = 86400
 
 # Текстовые переменные с фразами
 AUC_CHEAT: str = (
@@ -129,6 +131,18 @@ AMARELLA_ID: str = '429669376405536781'
 NOT_SOLD: str = 'Лот не был выкуплен'
 
 MIURKA_ID: str = '528276680909914153'
+
+
+class StaticNames:
+    """Костантные наименования для работы с РЧД списками"""
+    ATACK: str = 'АТАКА'
+    DEFENCE: str = 'ЗАЩИТА'
+    RCD_DATE: str = 'rcd_date'
+    RCD_LIST_MESSAGE: str = 'rcd_list_message'
+    RCD_APPCHANNEL_MESSAGE: str = 'rcd_appchannel_message'
+    START_RCD_MESSAGE: str = 'start_rcd_message'
+    RCD_LIST_CHANNEL: str = 'rcd_list_channel'
+
 
 # URLS
 ACCESS_IMAGE_URL: str = 'https://media.discordapp.net/attachments/1182584501147279491/1230181776870346802/Green-Check-PNG.png?ex=6632630f&is=661fee0f&hm=6cf4321094865e1b393274b680eadfc6c92fd283b16bb54d367047525751439c&=&format=webp&quality=lossless&width=350&height=350'

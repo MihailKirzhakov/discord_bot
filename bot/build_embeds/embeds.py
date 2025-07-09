@@ -1,6 +1,6 @@
 import discord
 
-from variables import ATTENTION, SMALL_GUILD_ICON_URL
+from core import ATTENTION, SMALL_GUILD_ICON_URL
 
 
 def attention_embed(value: str) -> discord.Embed:
