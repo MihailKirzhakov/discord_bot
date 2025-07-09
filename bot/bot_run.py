@@ -4,7 +4,7 @@ from loguru import logger
 from core import settings
 from core.orm import async_orm, role_app_orm
 from randomaizer.randomaizer import RandomButton
-from rename_request.rename_request import RenameButton
+from rename_request.rename_request import RenameButton, AccessDeniedView
 from role_application.role_application import (
     ApplicationButton, has_required_role
 )
@@ -37,6 +37,7 @@ async def on_ready() -> None:
     bot.add_view(RandomButton())
     bot.add_view(RenameButton(channel=app_channel))
     bot.add_view(ApplicationButton(channel=app_channel))
+    bot.add_view(AccessDeniedView())
     bot.add_view(SetGroupButton())
     bot.add_view(EditGroupButton())
     bot.add_view(StartRCDButton())
