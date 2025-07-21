@@ -840,14 +840,13 @@ class CreateRCDList(View):
                 rcd_app_message: discord.Message = await rcd_app_channel.fetch_message(
                     rcd_appchannel_message_obj.message_id
                 )
-                attention_message: discord.Message = await rcd_app_channel.fetch_message(
-                    attention_message_obj.message_id
-                )
-                attention_embed: discord.Embed = attention_message.embeds[0]
+                if attention_message_obj:
+                    attention_message: discord.Message = await rcd_app_channel.fetch_message(
+                        attention_message_obj.message_id
+                    )
+                    await attention_message.delete()
                 if 'Заявки на РЧД' in rcd_app_message.embeds[0].title:
                     await rcd_app_message.delete()
-                if ATTENTION in attention_embed.title:
-                    await rcd_app_channel.last_message.delete()
                 start_rcd_message_obj = await rcd_app_orm.get_message_data_obj(
                     session=session,
                     pk=StaticNames.START_RCD_MESSAGE
