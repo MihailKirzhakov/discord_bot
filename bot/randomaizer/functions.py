@@ -15,11 +15,13 @@ def rand_choice(nicknames: str) -> str | None:
         message: str | None
             Результирующая строка никнеймом и числом рандомайзера
     """
-    values = nicknames.replace('_', '-').split('-')
+    values = nicknames.replace(',', '-').replace('_', '-').replace(' ', '-').split('-')
 
     if len(values) == 1:
         return None
     if values[0].isdigit():
+        if not values[1].isdigit() or int(values[0]) >= int(values[1]) or len(values) != 2:
+            return None
         return randint(int(values[0]), int(values[1]))
     else:
         message = (
