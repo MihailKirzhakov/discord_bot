@@ -30,8 +30,18 @@ def removed_role_list_embed() -> discord.Embed:
     """
     embed = discord.Embed(
         title=ATTENTION,
-        description='_**Список пользователей, у которых забрали роль старшина:**_\n\n',
+        description='_**Список пользователей, у которых:**_',
         color=0xfffb00
+    )
+    embed.add_field(
+        name="_Забрали роли:_",
+        value="",
+        inline=True
+    )
+    embed.add_field(
+        name="_Изменили роли:_",
+        value="",
+        inline=True
     )
     embed.set_thumbnail(url=SMALL_GUILD_ICON_URL)
     return embed
