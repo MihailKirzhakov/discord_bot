@@ -1,5 +1,6 @@
 import re
 
+import chardet
 import discord
 from discord.ext import commands
 from loguru import logger
@@ -222,41 +223,89 @@ async def check_roles(
     """
     Команда для проверки ролей на сервере.
     """
-    guild_member_list: list[str] = []
+    guild_member_list: dict[str, str] = {}
     removed_role_members: list[str] = []
+    changed_role_members: list[str] = []
     embed: discord.Embed = removed_role_list_embed()
     try:
         await ctx.defer(ephemeral=True)
+        
+        # Получаем объекты ролей один раз в начале, чтобы избежать повторных обращений к API
+        guest_role: discord.Role = discord.utils.get(ctx.guild.roles, name=GUEST_ROLE)
+        sergeant_role: discord.Role = discord.utils.get(ctx.guild.roles, name=SERGEANT_ROLE)
+        veteran_role: discord.Role = discord.utils.get(ctx.guild.roles, name=VETERAN_ROLE)
+        officer_role: discord.Role = discord.utils.get(ctx.guild.roles, name=OFICER_ROLE)
+        treasurer_role: discord.Role = discord.utils.get(ctx.guild.roles, name=TREASURER_ROLE)
+        leader_role: discord.Role = discord.utils.get(ctx.guild.roles, name=LEADER_ROLE)
+        
+        # Создаем словарь для быстрого доступа к объектам ролей по имени
+        role_dict = {
+            LEADER_ROLE: leader_role,
+            OFICER_ROLE: officer_role,
+            VETERAN_ROLE: veteran_role,
+            SERGEANT_ROLE: sergeant_role,
+            GUEST_ROLE: guest_role,
+        }
+        
         members: list[discord.Member] = await ctx.guild.fetch_members(limit=None).flatten()
         checking_message: discord.Message = await ctx.channel.fetch_message(int(message_id))
         attachment = checking_message.attachments[0]
+        bytes_data = await attachment.read()
+        detected = chardet.detect(bytes_data)
+        encoding = detected['encoding'] if detected['encoding'] else 'utf-8'
         try:
-            lines = (await attachment.read()).decode('windows-1251').splitlines()
-        except UnicodeDecodeError as e:
-            logger.error(f"Ошибка декодирования файла: {e}")
-            return await ctx.respond("Ошибка: файл не может быть прочитан. Проверьте кодировку файла.")
-        sergaunt_role: discord.Role = discord.utils.get(ctx.guild.roles, name=SERGEANT_ROLE)
-        guest_role: discord.Role = discord.utils.get(ctx.guild.roles, name=GUEST_ROLE)
-        veteran_role: discord.Role = discord.utils.get(ctx.guild.roles, name=VETERAN_ROLE)
+            lines = bytes_data.decode(encoding).splitlines()
+        except UnicodeDecodeError:
+            try:
+                lines = bytes_data.decode('windows-1251').splitlines()
+            except UnicodeDecodeError as e:
+                logger.error(f"Ошибка декодирования файла: {e}")
+                await ctx.respond("Ошибка: файл не может быть прочитан. Проверьте кодировку файла.")
+                return
+
         for line in lines:
             parts = line.split(';')
-            if len(parts) > 2:
-                guild_member_list.append(parts[2])
+            if len(parts) > 20:
+                guild_member_list[parts[2]] = parts[6]
+        
         for member in members:
+            member_name = re.sub(r'[^a-zA-Zа-яА-ЯеЕёЁ0-9]', '', member.display_name)
+            guild_rank_name = guild_member_list.get(member_name)
+            
+            guild_rank_role = role_dict.get(guild_rank_name) if guild_rank_name else None
+            
             if (
-                (sergaunt_role in member.roles or veteran_role in member.roles)
-                and re.sub(r'[^a-zA-Zа-яА-ЯеЕёЁ0-9]', '', member.display_name)
-                not in guild_member_list
+                ((sergeant_role in member.roles) or (veteran_role in member.roles))
+                and member_name not in guild_member_list
             ):
                 removed_role_members.append(member.display_name)
-                await member.remove_roles(sergaunt_role)
+                await member.remove_roles(sergeant_role)
                 await member.remove_roles(veteran_role)
                 await member.add_roles(guest_role)
-                logger.info(f'У пользователя {member.display_name} забрали старшину!')
-        embed.description += '\n'.join(f'_{member}_' for member in removed_role_members)
+                logger.info(f'У пользователя {member.display_name} забрали роль!')
+            elif (
+                member_name in guild_member_list
+                and guest_role not in member.roles
+                and guild_rank_role not in member.roles 
+                and leader_role not in member.roles
+                and treasurer_role not in member.roles
+            ):
+                changed_role_members.append(member.display_name)
+                all_roles = [sergeant_role, veteran_role, officer_role, guest_role]
+                await member.add_roles(guild_rank_role)
+                roles_to_remove = [role for role in all_roles if role != guild_rank_role]
+                for role in roles_to_remove:
+                    await member.remove_roles(role)
+                logger.info(f'Пользователю {member.display_name} сменили роль на {guild_rank_name}!')
+        
+        for i, members in enumerate([removed_role_members, changed_role_members]):
+            if members:
+                embed.fields[i].value += '\n'.join(f'_{member}_' for member in members)
         await ctx.respond(embed=embed)
     except Exception as error:
         logger.error(f'Ошибка при вызове команды "/check_roles"! "{error}"')
+
+
 
 
 @check_roles.error
