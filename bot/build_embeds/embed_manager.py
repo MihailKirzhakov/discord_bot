@@ -1,5 +1,6 @@
 import json
 
+import chardet
 import discord
 from discord.ext import commands
 from discord.ui import Modal, InputText, View, select, button
@@ -328,7 +329,18 @@ class ChooseSimbolsAmount(Modal):
                 await self.ctx.channel.fetch_message(int(self.message_id))
             )
             attachment = checking_message.attachments[0]
-            content = (await attachment.read()).decode('windows-1251')
+            bytes_data = await attachment.read()
+            detected = chardet.detect(bytes_data)
+            encoding = detected['encoding'] if detected['encoding'] else 'utf-8'
+            try:
+                content = bytes_data.decode(encoding)
+            except UnicodeDecodeError:
+                try:
+                    content = bytes_data.decode('windows-1251')
+                except UnicodeDecodeError as e:
+                    logger.error(f"Ошибка декодирования файла: {e}")
+                    await interaction.respond("Ошибка: файл не может быть прочитан. Проверьте кодировку файла.")
+                    return
             data_start = content.find('[')  # Находим начало JSON-данных
             data_end = content.rfind(']') + 1  # Находим конец JSON-данных
             json_data = content[data_start:data_end]
