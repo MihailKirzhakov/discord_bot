@@ -19,15 +19,15 @@ from core.orm import rcd_app_orm
 
 
 async def command_error(
-        ctx: discord.ApplicationContext, error: Exception, command_name: str
+    ctx: discord.ApplicationContext, error: Exception, command_name: str
 ) -> None:
     """
     Обработчик ошибок для команд.
     """
     if isinstance(error, commands.errors.MissingAnyRole):
         await ctx.respond(
-            f'_Команду {command_name} может вызвать только '
-            f'"Лидер", "Казначей" или "Офицер"! ❌_',
+            f'_Команду_ {command_name} _может вызвать только '
+            f'"Лидер", "Казначей" или "Офицер"!_ ❌',
             ephemeral=True,
             delete_after=10
         )
@@ -38,7 +38,7 @@ async def command_error(
         )
     elif isinstance(error, commands.errors.PrivateMessageOnly):
         await ctx.respond(
-            f'Команду {command_name} нельзя вызывать в личные сообщения бота!',
+            f'_Команду_ {command_name} _нельзя вызывать в личные сообщения бота!_',
             ephemeral=True,
             delete_after=5
         )
@@ -211,7 +211,7 @@ async def give_role_to_error(
 
 
 @commands.slash_command()
-@commands.has_any_role(LEADER_ROLE)
+@commands.has_any_role(LEADER_ROLE, TREASURER_ROLE, OFICER_ROLE)
 async def check_roles(
     ctx: discord.ApplicationContext,
     message_id: discord.Option(
@@ -354,6 +354,6 @@ async def clear_db_data_error(
 def setup(bot: discord.Bot):
     bot.add_application_command(technical_works)
     bot.add_application_command(clear_all)
-    bot.add_application_command(give_role_to)
+    # bot.add_application_command(give_role_to)
     bot.add_application_command(check_roles)
     bot.add_application_command(clear_rcd_db_data)
