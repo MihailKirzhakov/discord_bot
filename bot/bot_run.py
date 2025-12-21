@@ -85,6 +85,7 @@ async def reload_extentions(ctx: discord.ApplicationContext):
     bot.reload_extension('auc_buttons.auc_buttons')
     bot.reload_extension('role_application.role_application')
     bot.reload_extension('set_group.set_group')
+    bot.reload_extension('pve_application.pve_application')
     await ctx.respond(
         '_Расширения перезагружены!_',
         ephemeral=True,
@@ -102,6 +103,7 @@ bot.load_extension('randomaizer.randomaizer')
 bot.load_extension('auction.auc_buttons')
 bot.load_extension('role_application.role_application')
 bot.load_extension('set_group.set_group')
+bot.load_extension('pve_application.pve_application')
 logger.info('Приложения запущены')
 
 

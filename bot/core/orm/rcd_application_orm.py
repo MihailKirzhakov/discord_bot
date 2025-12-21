@@ -68,11 +68,11 @@ class RcdApplicationORM(AsyncORM):
 
     async def get_all_appmember_ids(self, session: AsyncSession):
         result = await self.get_filter_obj_all(session, AppMemberList)
-        return result
+        return [member.member_id for member in result]
 
     async def get_all_askmember_ids(self, session: AsyncSession):
         result = await self.get_filter_obj_all(session, AskMemberList)
-        return result
+        return [member.member_id for member in result]
 
     async def get_notice_list_obj_all(self, session: AsyncSession):
         result = await self.get_filter_obj_all(session, NoticeList)

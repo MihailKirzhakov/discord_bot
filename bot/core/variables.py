@@ -15,6 +15,10 @@ APPLICATION_CHANNEL_ID = settings.application_channel_id
 
 RCD_APPLICATION_CHANNEL_ID = settings.rcd_application_channel_id
 
+PVE_CHANNEL_ID = settings.pve_channel_id
+
+PVE_APPLICATION_CHANNEL_ID = settings.pve_app_channel_id
+
 ASK_RCD_MESSAGE_DELETION = 86400
 
 # Текстовые переменные с фразами
@@ -91,6 +95,20 @@ INDEX_CLASS_ROLE: dict[int, str] = {
     8: 'Некроманты:',
     9: 'Барды:',
     10: 'Демоны:'
+}
+
+TRANSLATION_ROLES: dict[str, str] = {
+    'Воин': 'Warrior',
+    'Инженер': 'Engineer',
+    'Жрец': 'Priest',
+    'Паладин': 'Paladin',
+    'Шаман': 'Druid',
+    'Мистик': 'Psyonic',
+    'Лучник': 'Scout',
+    'Маг': 'Mage',
+    'Некромант': 'Necromancer',
+    'Бард': 'Bard',
+    'Демон': 'Demonologist'
 }
 
 # Роли на сервере Discord для проверки
@@ -170,3 +188,5 @@ RCD_LIST_IMAGE_URL: str = 'https://media.discordapp.net/attachments/118258450114
 QUESTION_IMAGE_URL: str = 'https://media.discordapp.net/attachments/1182584501147279491/1269967902736515192/ad65f1ccea7e0e37.png?ex=66b1fd46&is=66b0abc6&hm=bbd1f02d4997fc7652427d220754cb689456635c9d9c4dea8fd84e4a2e998121&=&format=webp&quality=lossless&width=492&height=655'
 
 EXCLAMATION_MARK_URL: str = 'https://media.discordapp.net/attachments/1182584501147279491/1325499380530155533/f5b7291bcb61c1e7.png?ex=678737be&is=6785e63e&hm=0cdca1d7ab1fb488ded414967772933f73ee97ee665c342fe6cb40d1cf5e64f6&=&format=webp&quality=lossless&width=787&height=525'
+
+PVE_URL: str = 'https://media.discordapp.net/attachments/1182584501147279491/1452272864928596100/PVEpng.png?ex=69493600&is=6947e480&hm=2f1e0ccfa0b80368425afa6a5439623e4eab5ce41ce71b096f18cd73735d585c&=&format=webp&quality=lossless'

@@ -1,10 +1,12 @@
+import functools
+
 import discord
 import requests
 from json import JSONDecodeError
 from loguru import logger
 
 from core import (
-    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
+    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE, ANSWERS_IF_NO_ROLE
 )
 
 
@@ -108,7 +110,7 @@ def character_lookup(server: int, name: str) -> dict | str | None:
     return player_parms
 
 
-def has_required_role(user: discord.Member):
+def has_required_role(user: discord.Member | discord.User | None):
     """Проверка на наличие требуемых ролей у пользователя.
     """
     return (
@@ -116,3 +118,13 @@ def has_required_role(user: discord.Member):
         discord.utils.get(user.roles, name=TREASURER_ROLE) or
         discord.utils.get(user.roles, name=OFICER_ROLE)
     )
+
+def require_role(func):
+    """Декоратор для проверки наличия роли с доступом к команде бота"""
+    @functools.wraps(func)
+    async def wrapper(self, interaction: discord.Interaction, *args, **kwargs):
+        await interaction.response.defer(invisible=False, ephemeral=True)
+        if not has_required_role(interaction.user):
+            return await interaction.followup.send(ANSWERS_IF_NO_ROLE, delete_after=2)
+        return await func(self, interaction, *args, **kwargs)
+    return wrapper

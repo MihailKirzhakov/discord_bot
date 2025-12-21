@@ -17,7 +17,7 @@ from role_application.functions import has_required_role
 from core import (
     VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE,
     SERGEANT_ROLE, LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
-    RCD_APPLICATION_CHANNEL_ID, ATTENTION
+    RCD_APPLICATION_CHANNEL_ID
 )
 
 
@@ -213,8 +213,8 @@ class PrivateMessageView(View):
         super().__init__(timeout=None)
 
     @button(
-            label='Отправить заявку на РЧД', style=discord.ButtonStyle.green,
-            emoji='📋', custom_id='ЗаявкаРЧДприват'
+        label='Отправить заявку на РЧД', style=discord.ButtonStyle.green,
+        emoji='📋', custom_id='ЗаявкаРЧДприват'
     )
     async def acces_callback(
         self,
@@ -428,7 +428,10 @@ class SelectMemberToRCD(View):
                 action = StaticNames.DEFENCE if is_red else StaticNames.ATACK
 
                 if not members_id:
-                    await rcd_app_orm.delete_from_notice_list(session, action=action, role=role)
+                    try:
+                        await rcd_app_orm.delete_from_notice_list(session, action=action, role=role)
+                    except Exception:
+                        pass
                 else:
                     await rcd_app_orm.insert_members_to_notice_list(
                         session, members_id=members_id, action=action, role=role
@@ -630,7 +633,7 @@ class CreateRCDList(View):
                             jump_url=jump_url,
                             rcd_role=rcd_role
                         ),
-                        delete_after=86400
+                        delete_after=64800
                     )
                 except discord.Forbidden:
                     logger.warning(f'Пользователю "{member.display_name}" запрещено отправлять сообщения')
