@@ -6,14 +6,15 @@ from core import (
 )
 
 
-def start_pve_embed(date: str) -> Embed:
+def start_pve_embed(date: str, min_gearscore: str) -> Embed:
     """
     Функция для создания вложения о старте ПВЕ заявок.
     """
     embed = Embed(
         title=f'_**Заявки на ПВЕ (PVE Applications)\n{date}**_',
         description=(
-            '_Тыкай на кнопку ниже, чтобы подать заявку на ПВЕ!\n\n'
+            f'_Минимальный ГС (min gearscore): {min_gearscore}\n'
+            'Тыкай на кнопку ниже, чтобы подать заявку на ПВЕ!\n\n'
             'Click the button below to submit your PVE application!_ ⬇️'
         ),
         color=0x9900ff

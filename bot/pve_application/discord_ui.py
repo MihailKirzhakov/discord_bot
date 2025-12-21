@@ -1,11 +1,16 @@
 from datetime import datetime
 import re
+import locale
+try:
+    locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+except locale.Error:
+    locale.setlocale(locale.LC_ALL, 'ru_RU')
 
 from discord import InputTextStyle, Interaction, utils, ButtonStyle, ComponentType, Forbidden
 from discord.ui import Modal, InputText, View, Button, Select, select, button
 from loguru import logger
 
-from core import async_session_factory, PVE_APPLICATION_CHANNEL_ID, TRANSLATION_ROLES, INDEX_CLASS_ROLE
+from core import async_session_factory, PVE_CHANNEL_ID, TRANSLATION_ROLES, INDEX_CLASS_ROLE
 from core.orm import pve_app_orm
 from .embeds import (
     start_pve_embed, app_list_embed, pve_list_embed,
@@ -25,15 +30,28 @@ class PVEDate(Modal):
         self.add_item(
             InputText(
                 style=InputTextStyle.short,
-                label='Укажи дату в формате ДД.ММ ЧЧ.ММ',
-                placeholder='ДД.ММ ЧЧ.ММ',
+                label='Укажи дату в формате ДД.ММ ЧЧ:ММ',
+                placeholder='ДД.ММ ЧЧ:ММ',
                 max_length=11
             )
         )
 
+        self.add_item(
+            InputText(
+                style=InputTextStyle.short,
+                label='Укажи минимальный ГС',
+                placeholder='число',
+                max_length=5
+        ))
+
     async def callback(self, interaction: Interaction):
         await interaction.response.defer(invisible=False, ephemeral=True)
         date_str: str = str(self.children[0].value)
+        gs_value: str = str(self.children[1].value)
+        if not gs_value.isdigit():
+            return await interaction.respond('❌\n\nЗначение ГС только целочисленное', delete_after=3)
+        min_gearscore: int = int(gs_value)
+        formatted_gearscore = locale.format_string('%d', min_gearscore, grouping=True)
         pattern = r'^([0-2][0-9]|3[0-1])[.,/](0[1-9]|1[0-2]) ([0-1][0-9]|2[0-3])[:;]([0-5][0-9])$'
         match = re.match(pattern, date_str)
 
@@ -41,7 +59,7 @@ class PVEDate(Modal):
             return await interaction.respond('_Неверный формат. Ожидался ДД.ММ ЧЧ:ММ_', delete_after=5)
         
         day, month, hour, minute = map(int, match.groups())
-        pve_app_channel = interaction.guild.get_channel(PVE_APPLICATION_CHANNEL_ID)
+        pve_app_channel = interaction.guild.get_channel(PVE_CHANNEL_ID)
         
         try:
             async with async_session_factory() as session:
@@ -60,7 +78,7 @@ class PVEDate(Modal):
                 )
                 app_channel_view = View(PveAppButton())
                 await interaction.channel.send(embed=app_list_embed(convert_pve_date))
-                await pve_app_channel.send(embed=start_pve_embed(convert_pve_date), view=app_channel_view)
+                await pve_app_channel.send(embed=start_pve_embed(convert_pve_date, formatted_gearscore), view=app_channel_view)
                 await pve_app_orm.insert_message_id(
                     session=session,
                     message_name=StaticNamesPve.PVE_APPCHANNEL_MESSAGE,
@@ -126,6 +144,16 @@ class PveApplication(Modal):
             )
         )
 
+        self.add_item(
+            InputText(
+                style=InputTextStyle.singleline,
+                label='Укажи ГС (Specify gear score)',
+                placeholder='число (value)',
+                required=True,
+                max_length=5
+            )
+        )
+
     async def callback(self, interaction: Interaction):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
@@ -139,6 +167,14 @@ class PveApplication(Modal):
                     )
                 class_value: str = str(self.children[0].value)
                 role_value: str = str(self.children[1].value)
+                gs_value: str = str(self.children[2].value)
+                if not gs_value.isdigit():
+                    return await interaction.respond(
+                        '❌\n\nЗначение ГС только целочисленное\n\nThe HS value is an integer only',
+                        delete_after=5
+                    )
+                gearscore: int = int(gs_value)
+                formatted_gearscore = locale.format_string('%d', gearscore, grouping=True)
                 if not class_value:
                     class_value = 'Любой класс'
                 
@@ -186,7 +222,7 @@ class PveApplication(Modal):
                 pve_list_channel = guild.get_channel(pve_list_channel_obj.message_id)
                 start_pve_message = await pve_list_channel.fetch_message(start_pve_message_obj.message_id)
                 during_embed = start_pve_message.embeds[0]
-                during_embed.fields[0].value = f'\n{member.mention}: {class_value} ({role})'
+                during_embed.fields[0].value += f'\n{member.mention}: {class_value} ({role}), [{formatted_gearscore}]'
                 await start_pve_message.edit(embed=during_embed)
                 await pve_app_orm.insert_appmember_id(session, user.id)
                 await session.commit()
@@ -254,7 +290,11 @@ class PublishListButton(Button):
     Кнопка для публикации списка ПВЕ.
     """
     def __init__(self):
-        super().__init__(label='Опубликовать 📨', style=ButtonStyle.blurple, custom_id='ОпубликоватьПве')
+        super().__init__(
+            label='Опубликовать 📨',
+            style=ButtonStyle.blurple,
+            custom_id='ОпубликоватьПве'
+        )
 
     @require_role
     async def callback(self, interaction: Interaction):
@@ -264,7 +304,7 @@ class PublishListButton(Button):
                     session=session,
                     pk=StaticNamesPve.PVE_APPCHANNEL_MESSAGE
                 )
-                pve_app_channel = interaction.guild.get_channel(PVE_APPLICATION_CHANNEL_ID)
+                pve_app_channel = interaction.guild.get_channel(PVE_CHANNEL_ID)
                 pve_app_message = await pve_app_channel.fetch_message(
                     pve_appchannel_message_obj.message_id
                 )
@@ -350,8 +390,12 @@ class NotificationButton(Button):
                     session=session,
                     pk=StaticNamesPve.PVE_APPCHANNEL_MESSAGE
                 )
-                pve_app_channel = (interaction.guild.get_channel(PVE_APPLICATION_CHANNEL_ID))
+                pve_app_channel = interaction.guild.get_channel(PVE_CHANNEL_ID)
                 pve_app_message = await pve_app_channel.fetch_message(pve_appchannel_message_obj.message_id)
+
+                if 'Заявки на ПВЕ' in pve_app_message.embeds[0].title:
+                    return await interaction.respond('❌\n\n_Сначала опубликуй список_', delete_after=5)
+
                 jump_url = pve_app_channel.jump_url if 'Список ПВЕ' in pve_app_message.embeds[0].title else None
 
                 if not await get_members_by_role(
@@ -410,7 +454,7 @@ class StopAppButton(Button):
                     session=session,
                     pk=StaticNamesPve.PVE_APPCHANNEL_MESSAGE
                 )
-                pve_app_channel = interaction.guild.get_channel(PVE_APPLICATION_CHANNEL_ID)
+                pve_app_channel = interaction.guild.get_channel(PVE_CHANNEL_ID)
                 pve_app_message = await pve_app_channel.fetch_message(pve_appchannel_message_obj.message_id)
                 if 'Заявки на ПВЕ' in pve_app_message.embeds[0].title:
                     await pve_app_message.delete()
@@ -444,7 +488,8 @@ class SelectMemberView(View):
         select_type=ComponentType.user_select,
         min_values=1,
         max_values=8,
-        placeholder='Выбери игроков...'
+        placeholder='Выбери игроков...',
+        custom_id="SelectPve"
     )
     async def select_callback(self, select: Select, interaction: Interaction):
         try:
