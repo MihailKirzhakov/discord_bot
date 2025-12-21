@@ -54,7 +54,7 @@ class PVEDate(Modal):
                     minute=minute)
                 if pve_date < datetime.now():
                     pve_date = pve_date.replace(year=current_year + 1)
-                convert_pve_date = utils.format_dt(pve_date, style="D")
+                convert_pve_date = utils.format_dt(pve_date, style="F")
                 await pve_app_orm.insert_date_info(
                     session, StaticNamesPve.PVE_DATE, convert_pve_date
                 )
