@@ -191,7 +191,7 @@ class PveApplication(Modal):
                 }
                 
                 # Регулярное выражение для поиска роли (без учета регистра)
-                pattern = re.compile(r'\b(танк|дд|саппорт|сап|tank|dd|support|sup)\b', re.IGNORECASE)
+                pattern = re.compile(r'\b(танк|дд|саппорт|сап|сапп|tank|dd|support|sup|supp)\b', re.IGNORECASE)
                 match = pattern.search(role_value.lower())
                 if match:
                     role_key = match.group(0).lower()
