@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     debug_server_id: int
     application_channel_id: int
     rcd_application_channel_id: int
+    pve_channel_id: int
+    pve_app_channel_id: int
 
     class Config:
         env_file = '.env'

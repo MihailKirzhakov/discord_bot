@@ -15,7 +15,7 @@ from core import (
     SERGEANT_ROLE, VETERAN_ROLE, GUEST_ROLE,
     DOBRYAK_ID, CLOSED_ON_GOOD_MOVEMENTS
 )
-from core.orm import rcd_app_orm
+from core.orm import rcd_app_orm, pve_app_orm
 
 
 async def command_error(
@@ -331,24 +331,56 @@ async def clear_rcd_db_data(ctx: discord.ApplicationContext) -> None:
             await rcd_app_orm.clear_rcd_data(session)
             await ctx.respond('_Почистил_ ✅', delete_after=2)
             logger.info(
-                'Команда "/clear_db_data" вызвана пользователем '
+                'Команда "/clear_rcd_db_data" вызвана пользователем '
                 f'"{ctx.user.display_name}"!'
             )
             await session.commit()
     except Exception as error:
         await ctx.respond(f'_Ошибка ❌: {error}_')
-        logger.error(f'Ошибка при вызове команды "/clear_db_datas"! "{error}"')
+        logger.error(f'Ошибка при вызове команды "/clear_rcd_db_data"! "{error}"')
 
 
 @clear_rcd_db_data.error
-async def clear_db_data_error(
+async def clear_rcd_db_data_error(
     ctx: discord.ApplicationContext,
     error: Exception
 ) -> None:
     """
-    Обработчик ошибок для команды clear_db_data.
+    Обработчик ошибок для команды clear_rcd_db_data.
     """
-    await command_error(ctx, error, "clear_db_data")
+    await command_error(ctx, error, "clear_rcd_db_data")
+
+
+@commands.slash_command()
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
+async def clear_pve_db_data(ctx: discord.ApplicationContext) -> None:
+    """
+    Команда для очистки базы данных.
+    """
+    await ctx.defer(ephemeral=True)
+    try:
+        async with async_session_factory() as session:
+            await pve_app_orm.clear_pve_data(session)
+            await ctx.respond('_Почистил_ ✅', delete_after=2)
+            logger.info(
+                'Команда "/clear_pve_db_data" вызвана пользователем '
+                f'"{ctx.user.display_name}"!'
+            )
+            await session.commit()
+    except Exception as error:
+        await ctx.respond(f'_Ошибка ❌: {error}_')
+        logger.error(f'Ошибка при вызове команды "/clear_pve_db_data"! "{error}"')
+
+
+@clear_pve_db_data.error
+async def clear_pve_data_error(
+    ctx: discord.ApplicationContext,
+    error: Exception
+) -> None:
+    """
+    Обработчик ошибок для команды clear_pve_db_data.
+    """
+    await command_error(ctx, error, "clear_pve_db_data")
 
 
 def setup(bot: discord.Bot):
@@ -357,3 +389,4 @@ def setup(bot: discord.Bot):
     # bot.add_application_command(give_role_to)
     bot.add_application_command(check_roles)
     bot.add_application_command(clear_rcd_db_data)
+    bot.add_application_command(clear_pve_db_data)
