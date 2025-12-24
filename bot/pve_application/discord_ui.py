@@ -140,7 +140,7 @@ class PveApplication(Modal):
                 label='Укажи роль (Specify gameplay role)',
                 placeholder='Танк | ДД | Саппорт (Tank | DD | Support)',
                 required=True,
-                max_length=7
+                max_length=20
             )
         )
 
@@ -168,6 +168,9 @@ class PveApplication(Modal):
                 class_value: str = str(self.children[0].value)
                 role_value: str = str(self.children[1].value)
                 gs_value: str = str(self.children[2].value)
+                if not class_value:
+                    class_value = 'Любой класс'
+
                 if not gs_value.isdigit():
                     return await interaction.respond(
                         '❌\n\nЗначение ГС только целочисленное\n\nThe HS value is an integer only',
@@ -175,33 +178,41 @@ class PveApplication(Modal):
                     )
                 gearscore: int = int(gs_value)
                 formatted_gearscore = locale.format_string('%d', gearscore, grouping=True)
-                if not class_value:
-                    class_value = 'Любой класс'
                 
-                # Маппинг ролей для нормализации к русскому языку
+                # Исходный маппинг ролей (добавил 'сапп' для полноты)
                 role_mapping = {
-                    'танк': 'Танк',
                     'tank': 'Танк',
-                    'дд': 'ДД',
+                    'Tank': 'Танк',
                     'dd': 'ДД',
-                    'саппорт': 'Саппорт',
-                    'сап': 'Саппорт',
                     'support': 'Саппорт',
-                    'sup': 'Саппорт'
+                    'sup': 'Саппорт',
+                    'supp': 'Саппорт'
                 }
-                
-                # Регулярное выражение для поиска роли (без учета регистра)
-                pattern = re.compile(r'\b(танк|дд|саппорт|сап|сапп|tank|dd|support|sup|supp)\b', re.IGNORECASE)
-                match = pattern.search(role_value.lower())
-                if match:
-                    role_key = match.group(0).lower()
-                    role = role_mapping.get(role_key, role_value)
-                else:
-                    return await interaction.respond(
-                        '🙌\n\n_Укажи роль, как в примере "Танк | ДД | Саппорт"\n\n'
-                        'Specify the role as in the example "Tank | DD | Support"_',
-                        delete_after = 5
+
+                # Функция для перевода строки с ролями
+                def translate_roles(role_value: str) -> str:
+                    # Унифицируем разделители: заменяем "|" на ", " для упрощения
+                    role_value = (
+                        role_value.replace(" | ", ", ").replace("|", ", ")
+                        .replace("/", ", ").replace(" / ", ", ").replace("\\", ", ").replace(" \\ ", ", ")
                     )
+                    
+                    # Разделяем по ", " и обрабатываем каждую часть
+                    parts = role_value.split(", ")
+                    translated_parts = []
+                    
+                    for part in parts:
+                        part = part.strip()  # Убираем лишние пробелы
+                        if part.lower() in role_mapping:
+                            translated_parts.append(role_mapping[part.lower()])
+                        else:
+                            translated_parts.append(part)  # Если не роль, оставляем как есть
+                    
+                    # Собираем обратно в строку с ", "
+                    return ", ".join(translated_parts)
+
+                # Пример использования (вместо старого кода)
+                role = translate_roles(role_value)
                 
                 guild = user.mutual_guilds[0]
                 member = guild.get_member(user.id)
