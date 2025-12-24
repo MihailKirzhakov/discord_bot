@@ -11,6 +11,7 @@ from role_application.role_application import (
 from rcd_aplication.rcd_aplication import (
     StartRCDButton, CreateRCDList, AddMemberToListButton, PrivateMessageView
 )
+from pve_application.discord_ui import PveAppButton
 from role_application.role_application import RoleButton
 from set_group.set_group import SetGroupButton, EditGroupButton
 from core import APPLICATION_CHANNEL_ID, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE
@@ -53,6 +54,7 @@ async def on_ready() -> None:
     for id in cstm_btn_ids:
         acc_btn_cstm_id, den_btn_cstm_id = id
         bot.add_view(RoleButton(acc_btn_cstm_id, den_btn_cstm_id))
+    bot.add_view(discord.ui.View(PveAppButton()))
     logger.info('Бот запущен и готов к работе!')
 
 
