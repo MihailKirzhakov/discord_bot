@@ -76,7 +76,7 @@ class PVEDate(Modal):
                 await pve_app_orm.insert_date_info(
                     session, StaticNamesPve.PVE_DATE, convert_pve_date
                 )
-                app_channel_view = View(PveAppButton())
+                app_channel_view = View(PveAppButton(), timeout=None)
                 await interaction.channel.send(embed=app_list_embed(convert_pve_date))
                 await pve_app_channel.send(embed=start_pve_embed(convert_pve_date, formatted_gearscore), view=app_channel_view)
                 await pve_app_orm.insert_message_id(
@@ -90,12 +90,12 @@ class PVEDate(Modal):
                     message_id=interaction.guild.get_channel(interaction.channel_id).last_message_id
                 )
                 pve_buttons_embed_list = [pve_list_embed(convert_pve_date)]
-                create_list_view = View()
+                create_list_view = View(timeout=None)
                 create_list_view.add_item(PublishListButton())
                 create_list_view.add_item(NotificationButton())
                 create_list_view.add_item(StopAppButton())
                 for index, role in INDEX_CLASS_ROLE.items():
-                    create_list_view.add_item(AddMemberToListButton(
+                    create_list_view.add_item(AddMemberToListButtonPve(
                         label=f'Редактировать "{role[:-2]}ов"',
                         custom_id=f'{index}КнопкаДобавления'
                     ))
@@ -273,7 +273,7 @@ class PveAppButton(Button):
             logger.error(f'При нажатии на кнопку подачи заявки возникла ошибка "{error}"')
 
 
-class AddMemberToListButton(Button):
+class AddMemberToListButtonPve(Button):
     """Кнопка для добавления игроков к классам"""
 
     def __init__(self, custom_id: str, label: str, style=ButtonStyle.green,):
@@ -372,7 +372,7 @@ class NotificationButton(Button):
                             pve_role=pve_role
                         ),
                         # TODO: 10800
-                        delete_after=20
+                        delete_after=10800
                     )
                 except Forbidden:
                     logger.warning(f'Пользователю "{member.display_name}" запрещено отправлять сообщения')
@@ -420,7 +420,7 @@ class NotificationButton(Button):
                     )
 
                 await session.flush()
-                create_list_view = View()
+                create_list_view = View(timeout=None)
                 create_list_view.add_item(PublishListButton())
                 create_list_view.add_item(
                     NotificationButton(
@@ -430,7 +430,7 @@ class NotificationButton(Button):
                 ))
                 create_list_view.add_item(StopAppButton())
                 for index, role in INDEX_CLASS_ROLE.items():
-                    create_list_view.add_item(AddMemberToListButton(
+                    create_list_view.add_item(AddMemberToListButtonPve(
                         label=f'Редактировать "{role[:-2]}ов"',
                         custom_id=f'{index}КнопкаДобавления'
                     ))
