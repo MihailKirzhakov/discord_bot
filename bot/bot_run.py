@@ -64,6 +64,7 @@ async def on_ready() -> None:
             label=f'Редактировать "{role[:-2]}ов"',
             custom_id=f'{index}КнопкаДобавления'
         ))
+    bot.add_view(view=create_list_view)
     logger.info('Бот запущен и готов к работе!')
 
 

@@ -10,7 +10,7 @@ from discord import InputTextStyle, Interaction, utils, ButtonStyle, ComponentTy
 from discord.ui import Modal, InputText, View, Button, Select, select, button
 from loguru import logger
 
-from core import async_session_factory, PVE_CHANNEL_ID, TRANSLATION_ROLES, INDEX_CLASS_ROLE
+from core import async_session_factory, PVE_CHANNEL_ID, TRANSLATION_ROLES, INDEX_CLASS_ROLE, PVE_APPLICATION_CHANNEL_ID
 from core.orm import pve_app_orm
 from .embeds import (
     start_pve_embed, app_list_embed, pve_list_embed,
