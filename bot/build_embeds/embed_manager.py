@@ -341,10 +341,33 @@ class ChooseSimbolsAmount(Modal):
                     logger.error(f"Ошибка декодирования файла: {e}")
                     await interaction.respond("Ошибка: файл не может быть прочитан. Проверьте кодировку файла.")
                     return
-            data_start = content.find('[')  # Находим начало JSON-данных
-            data_end = content.rfind(']') + 1  # Находим конец JSON-данных
-            json_data = content[data_start:data_end]
-            data_list = json.loads(json_data)
+            
+            # Находим позицию "Info: " в содержимом
+            info_start = content.find('Info: ')
+            if info_start == -1:
+                await interaction.respond("Ошибка: в файле не найдено 'Info: '.")
+                return
+            info_start += len('Info: ')
+            json_str = content[info_start:].strip()  # Убираем лишние пробелы и символы после
+            
+            # Предполагаем, что JSON начинается с '[' и заканчивается ']'
+            # Если есть несколько, берем первый после "Info: "
+            json_start = json_str.find('[')
+            if json_start == -1:
+                await interaction.respond("Ошибка: после 'Info: ' не найден JSON-массив.")
+                return
+            json_end = json_str.rfind(']') + 1
+            if json_end == 0:
+                await interaction.respond("Ошибка: после 'Info: ' не найден завершающий ']' для JSON-массива.")
+                return
+            json_data = json_str[json_start:json_end]
+            
+            try:
+                data_list = json.loads(json_data)
+            except json.JSONDecodeError as e:
+                logger.error(f"Ошибка декодирования JSON: {e}")
+                await interaction.respond("Ошибка: не удалось распарсить JSON-данные.")
+                return
             members: list[discord.Member] = interaction.guild.members
             roles: list[discord.Role] = interaction.guild.roles
             banner_amount: str | None = self.children[0].value
