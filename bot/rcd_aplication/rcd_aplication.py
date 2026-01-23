@@ -17,7 +17,7 @@ from role_application.functions import has_required_role
 from core import (
     VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE,
     SERGEANT_ROLE, LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
-    RCD_APPLICATION_CHANNEL_ID
+    RCD_APPLICATION_CHANNEL_ID, GUEST_ROLE
 )
 
 
@@ -633,7 +633,7 @@ class CreateRCDList(View):
                             jump_url=jump_url,
                             rcd_role=rcd_role
                         ),
-                        delete_after=64800
+                        delete_after=72000
                     )
                 except discord.Forbidden:
                     logger.warning(f'Пользователю "{member.display_name}" запрещено отправлять сообщения')
@@ -810,6 +810,9 @@ class StartRCDButton(View):
             async with async_session_factory() as session:
                 if not has_required_role(interaction.user):
                     return await interaction.respond(ANSWERS_IF_NO_ROLE, delete_after=2)
+                guest_role = discord.utils.get(
+                    interaction.guild.roles, name=GUEST_ROLE
+                )
                 during_embed: discord.Embed = interaction.message.embeds[0]
                 ask_users: list[discord.Member] = [user for user in select.values]
                 all_askmember_ids: list = await rcd_app_orm.get_all_askmember_ids(session)
@@ -817,7 +820,7 @@ class StartRCDButton(View):
                 all_members = all_askmember_ids + all_appmember_ids
                 date_obj = await rcd_app_orm.get_rcd_date_obj(session=session, pk=StaticNames.RCD_DATE)
                 for user in ask_users:
-                    if user.id in all_members:
+                    if user.id in all_members or guest_role in user.roles:
                         continue
                     field_index = 0 if discord.utils.get(user.roles, name=VETERAN_ROLE) else 1
                     during_embed.fields[field_index].value += (f'\n{user.mention}: 🟡')
