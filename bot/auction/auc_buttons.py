@@ -124,15 +124,18 @@ class StartAucModal(Modal):
         await interaction.respond('✅', delete_after=1)
         channel_last_message_dict[name_auc] = self.channel.last_message
 
-        await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
-        await check_timer(
-            view=button_manager,
-            user_mention=user_mention,
-            name_auc=name_auc,
-            lot_amount=lot_amount,
-            final_time=final_time,
-            button_mentions=button_mentions
-        )
+        try:
+            await discord.utils.sleep_until(stop_time - timedelta(seconds=60))
+            await check_timer(
+                view=button_manager,
+                user_mention=user_mention,
+                name_auc=name_auc,
+                lot_amount=lot_amount,
+                final_time=final_time,
+                button_mentions=button_mentions
+            )
+        except Exception:
+            logger.error("Аукцион был отменён. Сообщение удалёно")
 
 
 class PassBid(Modal):
