@@ -275,23 +275,21 @@ async def check_roles(
             guild_rank_role = role_dict.get(guild_rank_name) if guild_rank_name else None
             
             if (
-                ((sergeant_role in member.roles) or (veteran_role in member.roles))
+                any(role in member.roles for role in [sergeant_role, veteran_role, officer_role, treasurer_role])
                 and member_name not in guild_member_list
             ):
                 removed_role_members.append(member.display_name)
-                await member.remove_roles(sergeant_role)
-                await member.remove_roles(veteran_role)
+                await member.remove_roles(sergeant_role, veteran_role, officer_role, treasurer_role)
                 await member.add_roles(guest_role)
                 logger.info(f'У пользователя {member.display_name} забрали роль!')
             elif (
                 member_name in guild_member_list
                 and guest_role not in member.roles
-                and guild_rank_role not in member.roles 
+                and guild_rank_role not in member.roles
                 and leader_role not in member.roles
-                and treasurer_role not in member.roles
             ):
                 changed_role_members.append(member.display_name)
-                all_roles = [sergeant_role, veteran_role, officer_role, guest_role]
+                all_roles = [sergeant_role, veteran_role, officer_role, treasurer_role, guest_role]
                 await member.add_roles(guild_rank_role)
                 roles_to_remove = [role for role in all_roles if role != guild_rank_role]
                 for role in roles_to_remove:
