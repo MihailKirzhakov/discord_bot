@@ -245,6 +245,7 @@ async def check_roles(
             VETERAN_ROLE: veteran_role,
             SERGEANT_ROLE: sergeant_role,
             GUEST_ROLE: guest_role,
+            TREASURER_ROLE: treasurer_role,
         }
         
         members: list[discord.Member] = await ctx.guild.fetch_members(limit=None).flatten()
@@ -271,7 +272,7 @@ async def check_roles(
         for member in members:
             member_name = re.sub(r'[^a-zA-Zа-яА-ЯеЕёЁ0-9]', '', member.display_name)
             guild_rank_name = guild_member_list.get(member_name)
-            
+
             guild_rank_role = role_dict.get(guild_rank_name) if guild_rank_name else None
             
             if (
