@@ -846,6 +846,53 @@ class StartRCDButton(View):
                 f'При опросе игроков возникла ошибка "{error}"'
             )
 
+    @button(
+        label='Спросить всех ветеранов', style=discord.ButtonStyle.green,
+        emoji='📋', custom_id='СпроситьВсехВетеранов'
+    )
+    async def ask_all_veteran_callback(
+        self,
+        button: discord.ui.Button,
+        interaction: discord.Interaction
+    ):
+        try:
+            await interaction.response.defer(invisible=False, ephemeral=True)
+            async with async_session_factory() as session:
+                during_embed: discord.Embed = interaction.message.embeds[0]
+                veteran_role = interaction.user.guild.get_role(1182413213728526457)
+                all_askmember_ids: list = await rcd_app_orm.get_all_askmember_ids(session)
+                all_appmember_ids: list = await rcd_app_orm.get_all_appmember_ids(session)
+                date_obj = await rcd_app_orm.get_rcd_date_obj(session=session, pk=StaticNames.RCD_DATE)
+                all_members = all_askmember_ids + all_appmember_ids
+                for veteran in veteran_role.members:
+                    if veteran.id in all_members:
+                        continue
+                    during_embed.fields[0].value += (f'\n{veteran.mention}: 🟡')
+                    try:
+                        await veteran.send(
+                            embed=ask_veteran_embed(
+                                member=interaction.user,
+                                date=date_obj.date
+                            ),
+                            view=PrivateMessageView(),
+                            delete_after=86400
+                        )
+                        await rcd_app_orm.insert_askmember_id(session, veteran.id)
+                        logger.info(f'Пользователю "{veteran.display_name}" был отправлен вопрос об РЧД')
+                    except discord.Forbidden:
+                        logger.warning(f'Пользователю "{veteran.display_name}" запрещено отправлять сообщения')
+                await session.commit()
+                button.disabled = True
+                await interaction.message.edit(embed=during_embed, view=self)
+                await interaction.respond('✅', delete_after=1)
+        except Exception as error:
+            await interaction.respond('❌', delete_after=1)
+            logger.error(
+                f'При нажатии на кнопку "спросить ветеранов об РЧД" '
+                f'пользователем "{interaction.user.display_name}" '
+                f'возникла ошибка "{error}"'
+            )
+
 
 @commands.slash_command()
 @commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
