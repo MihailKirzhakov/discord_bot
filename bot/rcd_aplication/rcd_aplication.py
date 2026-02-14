@@ -848,7 +848,7 @@ class StartRCDButton(View):
 
     @button(
         label='Спросить всех ветеранов', style=discord.ButtonStyle.green,
-        emoji='📋', custom_id='СпроситьВсехВетеранов'
+        emoji='📢', custom_id='СпроситьВсехВетеранов'
     )
     async def ask_all_veteran_callback(
         self,
@@ -859,7 +859,7 @@ class StartRCDButton(View):
             await interaction.response.defer(invisible=False, ephemeral=True)
             async with async_session_factory() as session:
                 during_embed: discord.Embed = interaction.message.embeds[0]
-                veteran_role = interaction.user.guild.get_role(1182413213728526457)
+                veteran_role: discord.Role | None = discord.utils.get(interaction.guild.roles, name=VETERAN_ROLE)
                 all_askmember_ids: list = await rcd_app_orm.get_all_askmember_ids(session)
                 all_appmember_ids: list = await rcd_app_orm.get_all_appmember_ids(session)
                 date_obj = await rcd_app_orm.get_rcd_date_obj(session=session, pk=StaticNames.RCD_DATE)
@@ -883,6 +883,9 @@ class StartRCDButton(View):
                         logger.warning(f'Пользователю "{veteran.display_name}" запрещено отправлять сообщения')
                 await session.commit()
                 button.disabled = True
+                button.style = discord.ButtonStyle.gray
+                button.label = "Всем ветеранам отправлен запрос"
+                button.emoji = "✅"
                 await interaction.message.edit(embed=during_embed, view=self)
                 await interaction.respond('✅', delete_after=1)
         except Exception as error:
