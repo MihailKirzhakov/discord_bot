@@ -302,6 +302,7 @@ async def check_roles(
                 embed.fields[i].value += '\n'.join(f'_{member}_' for member in members)
         await ctx.respond(embed=embed)
     except Exception as error:
+        await ctx.respond("❌")
         logger.error(f'Ошибка при вызове команды "/check_roles"! "{error}"')
 
 
