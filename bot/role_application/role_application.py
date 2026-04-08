@@ -307,10 +307,13 @@ class RoleApplication(Modal):
                     f'она была отправлена в канал "{self.channel}"'
                 )
         except Exception as error:
-            await interaction.respond('❌', delete_after=1)
+            await interaction.respond(
+                '_Не удалось сформировать заявку!❌\nСкорее всего сайт оружейки недоступен.\n'
+                'Напиши ГайРичи и приложи скрин этого сообщения!_'
+            )
             logger.error(
-                f'При попытке отказать пользователю в выдаче роли '
-                f'пользователю "{nickname}" возникла ошибка '
+                f'При попытке ввести никнейм пользователем '
+                f'"{nickname}" возникла ошибка '
                 f'"{error}"'
             )
 

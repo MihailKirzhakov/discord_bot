@@ -632,8 +632,8 @@ class CreateRCDList(View):
                             date=date,
                             jump_url=jump_url,
                             rcd_role=rcd_role
-                        ),
-                        delete_after=72000
+                        )
+                        # delete_after=72000
                     )
                 except discord.Forbidden:
                     logger.warning(f'Пользователю "{member.display_name}" запрещено отправлять сообщения')
