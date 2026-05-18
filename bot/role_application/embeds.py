@@ -11,12 +11,12 @@ def access_embed() -> discord.Embed:
     Функция для создания вложения с информацией о выдаче доступа.
     """
     embed = discord.Embed(
-        title='_Приветствую!_',
-        description=f'_Тебе выдан доступ на сервер гильдии {GUILD_NAME}!_',
+        title='_Приветствую | Hi!_',
+        description=f"_Тебе выдан доступ на сервер гильдии | You have been granted access to the guild's server. {GUILD_NAME}!_",
         color=0x00ff00
     )
     embed.add_field(
-        name='_Полезное:_',
+        name='_Полезное | Useful:_',
         value=ACCESS_VALUE,
         inline=False
     )
