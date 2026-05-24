@@ -121,6 +121,8 @@ OFICER_ROLE: str = 'Офицер'
 
 TREASURER_ROLE: str = 'Казначей'
 
+RCD_CONTROL: str = 'РЧД управление'
+
 SERGEANT_ROLE: str = 'Старшина'
 
 VETERAN_ROLE: str = 'Ветеран'

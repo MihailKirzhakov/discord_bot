@@ -6,7 +6,7 @@ from json import JSONDecodeError
 from loguru import logger
 
 from core import (
-    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE, ANSWERS_IF_NO_ROLE
+    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE, ANSWERS_IF_NO_ROLE, RCD_CONTROL
 )
 
 
@@ -110,9 +110,16 @@ def character_lookup(server: int, name: str) -> dict | str | None:
     return player_parms
 
 
+def rcd_control_required_role(user: discord.Member | discord.User | None):
+    """Проверка на наличие требуемых ролей у пользователя."""
+    return (
+        discord.utils.get(user.roles, name=LEADER_ROLE) or
+        discord.utils.get(user.roles, name=RCD_CONTROL)
+    )
+
+
 def has_required_role(user: discord.Member | discord.User | None):
-    """Проверка на наличие требуемых ролей у пользователя.
-    """
+    """Проверка на наличие требуемых ролей у пользователя."""
     return (
         discord.utils.get(user.roles, name=LEADER_ROLE) or
         discord.utils.get(user.roles, name=TREASURER_ROLE) or

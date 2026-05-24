@@ -13,7 +13,7 @@ from .embeds import (
     publish_rcd_second_embed, mailing_notification_embed
 )
 from core.orm import rcd_app_orm
-from role_application.functions import has_required_role
+from role_application.functions import rcd_control_required_role
 from core import (
     VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE,
     SERGEANT_ROLE, LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
@@ -344,7 +344,7 @@ class SelectMemberToRCD(View):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             async with async_session_factory() as session:
-                if not has_required_role(interaction.user):
+                if not rcd_control_required_role(interaction.user):
                     return await interaction.respond(
                         ANSWERS_IF_NO_ROLE,
                         delete_after=2
@@ -396,7 +396,7 @@ class SelectMemberToRCD(View):
         interaction: discord.Interaction
     ):
         await interaction.response.defer(invisible=False, ephemeral=True)
-        if not has_required_role(interaction.user):
+        if not rcd_control_required_role(interaction.user):
             return await interaction.respond(
                 ANSWERS_IF_NO_ROLE,
                 delete_after=2
@@ -463,7 +463,7 @@ class AddMemberToListButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
-            if not has_required_role(interaction.user):
+            if not rcd_control_required_role(interaction.user):
                 return await interaction.respond(
                     ANSWERS_IF_NO_ROLE, delete_after=2
                 )
@@ -498,7 +498,7 @@ class CreateRCDList(View):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             async with async_session_factory() as session:
-                if not has_required_role(interaction.user):
+                if not rcd_control_required_role(interaction.user):
                     return await interaction.respond(
                         ANSWERS_IF_NO_ROLE,
                         delete_after=2
@@ -530,7 +530,7 @@ class CreateRCDList(View):
     )
     async def tumbler_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
         try:
-            if not has_required_role(interaction.user):
+            if not rcd_control_required_role(interaction.user):
                 return await interaction.respond(
                     ANSWERS_IF_NO_ROLE,
                     ephemeral=True,
@@ -558,7 +558,7 @@ class CreateRCDList(View):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             async with async_session_factory() as session:
-                if not has_required_role(interaction.user):
+                if not rcd_control_required_role(interaction.user):
                     return await interaction.respond(
                         ANSWERS_IF_NO_ROLE,
                         delete_after=2
@@ -742,7 +742,7 @@ class CreateRCDList(View):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             async with async_session_factory() as session:
-                if not has_required_role(interaction.user):
+                if not rcd_control_required_role(interaction.user):
                     return await interaction.respond(
                         ANSWERS_IF_NO_ROLE,
                         delete_after=2
@@ -808,7 +808,7 @@ class StartRCDButton(View):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             async with async_session_factory() as session:
-                if not has_required_role(interaction.user):
+                if not rcd_control_required_role(interaction.user):
                     return await interaction.respond(ANSWERS_IF_NO_ROLE, delete_after=2)
                 guest_role = discord.utils.get(
                     interaction.guild.roles, name=GUEST_ROLE
