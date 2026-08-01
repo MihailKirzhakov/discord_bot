@@ -1,10 +1,7 @@
-from typing import Type
-
-from sqlalchemy import delete, select, and_
-from sqlalchemy.ext.asyncio import AsyncSession
+from core import Base, ModelType, async_engine
+from sqlalchemy import and_, delete, select
 from sqlalchemy.engine import Result
-
-from core import Base, async_engine, ModelType
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AsyncORM():
@@ -24,10 +21,10 @@ class AsyncORM():
     async def insert_data(
         self,
         session: AsyncSession,
-        model: Type[ModelType],
+        model: type[ModelType],
         **params
     ):
-        """"""
+        """."""
         data = model(**params)
         session.add(data)
         await session.flush()
@@ -35,14 +32,14 @@ class AsyncORM():
     # --------------------------------------------------------------------------------
     # Базовые методы для получения данных из БД
     async def get_obj_by_pk(
-        self, session: AsyncSession, model: Type[ModelType], pk
+        self, session: AsyncSession, model: type[ModelType], pk
     ):
         """Метод для получения данных из БД по первичному ключу"""
         result = await session.get(model, pk)
         return result
 
     async def get_filter_obj(
-        self, session: AsyncSession, model: Type[ModelType], **filters
+        self, session: AsyncSession, model: type[ModelType], **filters
     ) -> Result:
         """Метод для получения данных из БД по значениям в полях модели"""
         query = select(model)
@@ -55,14 +52,14 @@ class AsyncORM():
         return result
 
     async def get_filter_obj_first(
-        self, session: AsyncSession, model: Type[ModelType], **filters
+        self, session: AsyncSession, model: type[ModelType], **filters
     ):
         """Метод для получения первого найденного значения из БД по значениям в полях модели"""
         result = await self.get_filter_obj(session, model, **filters)
         return result.scalars().first()
 
     async def get_filter_obj_all(
-        self, session: AsyncSession, model: Type[ModelType], **filters
+        self, session: AsyncSession, model: type[ModelType], **filters
     ):
         """Метод для получения всех данных из БД по значениям в полях модели"""
         result = await self.get_filter_obj(session, model, **filters)
@@ -76,7 +73,7 @@ class AsyncORM():
         await session.delete(obj)
         await session.flush()
 
-    async def clear_table(self, session: AsyncSession, model: Type[ModelType]):
+    async def clear_table(self, session: AsyncSession, model: type[ModelType]):
         """Метод для очистки таблицы в БД"""
         await session.execute(delete(model))
         await session.flush()

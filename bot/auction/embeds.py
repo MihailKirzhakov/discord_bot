@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import discord
-
 from core import ATTENTION, AUCTION_IMAGE_URL, REMIND
 
 
