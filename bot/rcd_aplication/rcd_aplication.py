@@ -17,7 +17,7 @@ from role_application.functions import rcd_control_required_role
 from core import (
     VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE,
     SERGEANT_ROLE, LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
-    RCD_APPLICATION_CHANNEL_ID, GUEST_ROLE
+    RCD_APPLICATION_CHANNEL_ID, GUEST_ROLE, RCD_CONTROL
 )
 
 
@@ -898,7 +898,7 @@ class StartRCDButton(View):
 
 
 @commands.slash_command()
-@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE)
+@commands.has_any_role(LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE, RCD_CONTROL)
 async def rcd_application(ctx: discord.ApplicationContext) -> None:
     """
     Команда для запуска кнопки старта РЧД заявок.
