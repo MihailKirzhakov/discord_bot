@@ -1,5 +1,4 @@
 import discord
-
 from core import ATTENTION, SMALL_GUILD_ICON_URL
 
 

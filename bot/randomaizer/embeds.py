@@ -1,5 +1,4 @@
 import discord
-
 from core import PLAYING_DICES_URL_ICON
 
 

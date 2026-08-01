@@ -1,8 +1,6 @@
 import discord
-
+from core import VETERAN_ROLE
 from loguru import logger
-
-from core import VETERAN_ROLE, OFICER_ROLE
 
 
 async def handle_selection(

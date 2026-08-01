@@ -1,21 +1,29 @@
 import discord
-from loguru import logger
-
-from core import settings
+from core import ANSWERS_IF_NO_ROLE, APPLICATION_CHANNEL_ID, INDEX_CLASS_ROLE, settings
 from core.orm import async_orm, role_app_orm
+from discord import TextChannel
+from loguru import logger
+from pve_application.discord_ui import (
+    AddMemberToListButtonPve,
+    NotificationButton,
+    PublishListButton,
+    PveAppButton,
+    StopAppButton,
+)
 from randomaizer.randomaizer import RandomButton
-from rename_request.rename_request import RenameButton, AccessDeniedView
-from role_application.role_application import (
-    ApplicationButton, has_required_role
-)
 from rcd_aplication.rcd_aplication import (
-    StartRCDButton, CreateRCDList, AddMemberToListButton, PrivateMessageView
+    AddMemberToListButton,
+    CreateRCDList,
+    PrivateMessageView,
+    StartRCDButton,
 )
-from pve_application.discord_ui import PveAppButton, PublishListButton, NotificationButton, StopAppButton, AddMemberToListButtonPve
-from role_application.role_application import RoleButton
-from set_group.set_group import SetGroupButton, EditGroupButton
-from core import APPLICATION_CHANNEL_ID, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE
-
+from rename_request.rename_request import AccessDeniedView, RenameButton
+from role_application.role_application import (
+    ApplicationButton,
+    RoleButton,
+    has_required_role,
+)
+from set_group.set_group import EditGroupButton, SetGroupButton
 
 logger.remove()
 logger.add(
@@ -34,7 +42,7 @@ async def on_ready() -> None:
     """Событие запуска бота"""
 
     await async_orm.create_tables()
-    app_channel = await bot.fetch_channel(APPLICATION_CHANNEL_ID)
+    app_channel: TextChannel = await bot.fetch_channel(APPLICATION_CHANNEL_ID)
     bot.add_view(RandomButton())
     bot.add_view(RenameButton(channel=app_channel))
     bot.add_view(ApplicationButton(channel=app_channel))

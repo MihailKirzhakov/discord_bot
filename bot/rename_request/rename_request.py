@@ -1,15 +1,23 @@
 import discord
+from core import (
+    LEADER_NICKNAME,
+    LEADER_ROLE,
+    OFICER_ROLE,
+    TREASURER_ROLE,
+    async_session_factory,
+)
+from core.orm import rename_req_orm
 from discord.ext import commands
-from discord.ui import Modal, InputText, View, button
+from discord.ui import InputText, Modal, View, button
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .embeds import (
-    rename_embed, changed_rename_embed,
-    denied_rename_embed, denied_send_embed
+    changed_rename_embed,
+    denied_rename_embed,
+    denied_send_embed,
+    rename_embed,
 )
-from core import async_session_factory, LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE, LEADER_NICKNAME
-from core.orm import rename_req_orm
 
 
 class AccessDeniedView(View):

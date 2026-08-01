@@ -1,19 +1,24 @@
 import discord
+from core import (
+    ANSWER_IF_CHEAT,
+    ANSWER_IF_CLICKED_THE_SAME_TIME,
+    ANSWER_IF_DUPLICATE_APP,
+    ANSWER_IF_DUPLICATE_NICK,
+    ANSWERS_IF_NO_ROLE,
+    GUEST_ROLE,
+    LEADER_ROLE,
+    OFICER_ROLE,
+    SERGEANT_ROLE,
+    TREASURER_ROLE,
+    async_session_factory,
+)
+from core.orm import role_app_orm
 from discord.ext import commands
-from discord.ui import Modal, InputText, View, button
+from discord.ui import InputText, Modal, View, button
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.orm import role_app_orm
-from core import (
-    async_session_factory,
-    ANSWER_IF_DUPLICATE_APP, ANSWER_IF_DUPLICATE_NICK, ANSWER_IF_CHEAT,
-    ANSWER_IF_CLICKED_THE_SAME_TIME, LEADER_ROLE, OFICER_ROLE,
-    TREASURER_ROLE, SERGEANT_ROLE, GUEST_ROLE, ANSWERS_IF_NO_ROLE
-)
-from .embeds import (
-    access_embed, denied_embed, application_embed, start_app_embed
-)
+from .embeds import access_embed, application_embed, denied_embed, start_app_embed
 from .functions import character_lookup, has_required_role
 
 

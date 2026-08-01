@@ -2,17 +2,19 @@ import json
 
 import chardet
 import discord
-from discord.ext import commands
-from discord.ui import Modal, InputText, View, select, button
-from loguru import logger
-
-from .functions import (
-    validate_amount, generate_member_list, handle_selection,
-    sort_nicknames_by_role
-)
-from .embeds import attention_embed, symbols_list_embed
-from regular_commands.regular_commands import command_error
 from core import LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
+from discord.ext import commands
+from discord.ui import InputText, Modal, View, button, select
+from loguru import logger
+from regular_commands.regular_commands import command_error
+
+from .embeds import attention_embed, symbols_list_embed
+from .functions import (
+    generate_member_list,
+    handle_selection,
+    sort_nicknames_by_role,
+    validate_amount,
+)
 
 
 class AttentionMessage(Modal):

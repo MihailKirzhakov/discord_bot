@@ -1,23 +1,35 @@
-from datetime import datetime
 import re
+from datetime import datetime
 
 import discord
-from discord.ext import commands
-from discord.ui import Modal, InputText, View, button, select
-from loguru import logger
-
-from core import async_session_factory
-from .embeds import (
-    start_rcd_embed, app_list_embed, ask_veteran_embed,
-    rcd_list_embed, publish_rcd_embed, rcd_notification_embed,
-    publish_rcd_second_embed, mailing_notification_embed
+from core import (
+    ANSWERS_IF_NO_ROLE,
+    GUEST_ROLE,
+    INDEX_CLASS_ROLE,
+    LEADER_ROLE,
+    OFICER_ROLE,
+    RCD_APPLICATION_CHANNEL_ID,
+    RCD_CONTROL,
+    SERGEANT_ROLE,
+    TREASURER_ROLE,
+    VETERAN_ROLE,
+    async_session_factory,
 )
 from core.orm import rcd_app_orm
+from discord.ext import commands
+from discord.ui import InputText, Modal, View, button, select
+from loguru import logger
 from role_application.functions import rcd_control_required_role
-from core import (
-    VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE,
-    SERGEANT_ROLE, LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
-    RCD_APPLICATION_CHANNEL_ID, GUEST_ROLE, RCD_CONTROL
+
+from .embeds import (
+    app_list_embed,
+    ask_veteran_embed,
+    mailing_notification_embed,
+    publish_rcd_embed,
+    publish_rcd_second_embed,
+    rcd_list_embed,
+    rcd_notification_embed,
+    start_rcd_embed,
 )
 
 

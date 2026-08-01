@@ -1,13 +1,16 @@
 import functools
+from json import JSONDecodeError
 
 import discord
 import requests
-from json import JSONDecodeError
-from loguru import logger
-
 from core import (
-    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE, ANSWERS_IF_NO_ROLE, RCD_CONTROL
+    ANSWERS_IF_NO_ROLE,
+    LEADER_ROLE,
+    OFICER_ROLE,
+    RCD_CONTROL,
+    TREASURER_ROLE,
 )
+from loguru import logger
 
 
 def character_lookup(server: int, name: str) -> dict | str | None:

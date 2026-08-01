@@ -1,14 +1,17 @@
 import discord
+from core import (
+    DEAFAULT_RANDOMISE_VALUE,
+    LEADER_ROLE,
+    OFICER_ROLE,
+    TREASURER_ROLE,
+    WRONG_PARMS,
+)
 from discord.ext import commands
-from discord.ui import Modal, InputText, View, button
+from discord.ui import InputText, Modal, View, button
 from loguru import logger
 
-from .embeds import number_range, nickname_range
+from .embeds import nickname_range, number_range
 from .functions import rand_choice
-from core import (
-    DEAFAULT_RANDOMISE_VALUE, WRONG_PARMS,
-    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE
-)
 
 
 class RandomModal(Modal):

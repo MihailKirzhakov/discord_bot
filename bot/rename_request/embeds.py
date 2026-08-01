@@ -1,6 +1,5 @@
 import discord
-
-from core import DENIED_IMAGE_URL, ACCESS_IMAGE_URL, RENAME_IMAGE_URL
+from core import ACCESS_IMAGE_URL, DENIED_IMAGE_URL, RENAME_IMAGE_URL
 
 
 def rename_embed(

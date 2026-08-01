@@ -2,20 +2,30 @@ import re
 
 import chardet
 import discord
+from core import (
+    AMARELLA_ID,
+    CLOSED_GOOSE_HOME,
+    CLOSED_MOTHERS,
+    CLOSED_ON_GOOD_MOVEMENTS,
+    CLOSED_ON_THE_MIND_ASPECT,
+    CLOSED_TOP_4_ICD,
+    DOBRYAK_ID,
+    GOOSE_ID,
+    GUEST_ROLE,
+    IDOL_ID,
+    KVAPA_ID,
+    LEADER_ROLE,
+    OFICER_ROLE,
+    SERGEANT_ROLE,
+    TREASURER_ROLE,
+    VETERAN_ROLE,
+    async_session_factory,
+)
+from core.orm import pve_app_orm, rcd_app_orm
 from discord.ext import commands
 from loguru import logger
 
-from .embeds import technical_works_embed, removed_role_list_embed
-from core import (
-    async_session_factory,
-    LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
-    CLOSED_TOP_4_ICD, CLOSED_MOTHERS, AMARELLA_ID,
-    CLOSED_GOOSE_HOME, CLOSED_ON_THE_MIND_ASPECT,
-    IDOL_ID, KVAPA_ID, GOOSE_ID,
-    SERGEANT_ROLE, VETERAN_ROLE, GUEST_ROLE,
-    DOBRYAK_ID, CLOSED_ON_GOOD_MOVEMENTS
-)
-from core.orm import rcd_app_orm, pve_app_orm
+from .embeds import removed_role_list_embed, technical_works_embed
 
 
 async def command_error(
