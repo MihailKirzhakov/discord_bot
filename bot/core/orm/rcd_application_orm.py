@@ -19,6 +19,12 @@ class RcdApplicationORM(AsyncORM):
     # --------------------------------------------------------------------------------
     # Вставка данных в БД
     async def insert_date_info(self, session: AsyncSession, date_name, date):
+        obj = await self.get_obj_by_pk(session, DateInfo, date_name)
+        if obj:
+            obj.date = date
+            session.add(obj)
+            await session.flush()
+            return
         await self.insert_data(
             session, DateInfo, date_name=date_name, date=date
         )
@@ -26,6 +32,12 @@ class RcdApplicationORM(AsyncORM):
     async def insert_message_id(
         self, session: AsyncSession, message_name, message_id
     ):
+        obj = await self.get_obj_by_pk(session, RcdApplication, message_name)
+        if obj:
+            obj.message_id = message_id
+            session.add(obj)
+            await session.flush()
+            return
         await self.insert_data(
             session, RcdApplication,
             message_name=message_name, message_id=message_id
@@ -34,15 +46,28 @@ class RcdApplicationORM(AsyncORM):
     async def insert_members_to_notice_list(
         self, session: AsyncSession, members_id, action, role
     ):
+        obj = await self.get_obj_by_pk(session, NoticeList, members_id)
+        if obj:
+            obj.action = action
+            obj.role = role
+            session.add(obj)
+            await session.flush()
+            return
         await self.insert_data(
                 session, NoticeList,
                 members_id=members_id, action=action, role=role
             )
 
     async def insert_appmember_id(self, session: AsyncSession, member_id):
+        obj = await self.get_obj_by_pk(session, AppMemberList, member_id)
+        if obj:
+            return
         await self.insert_data(session, AppMemberList, member_id=member_id)
 
     async def insert_askmember_id(self, session: AsyncSession, member_id):
+        obj = await self.get_obj_by_pk(session, AskMemberList, member_id)
+        if obj:
+            return
         await self.insert_data(session, AskMemberList, member_id=member_id)
 
     async def insert_button_info(
@@ -139,6 +164,8 @@ class RcdApplicationORM(AsyncORM):
         obj = await self.get_filter_obj_first(
             session, NoticeList, action=action, role=role
         )
+        if not obj:
+            return
         await self.delete_data(session, obj)
 
     async def clear_rcd_data(self, session: AsyncSession):

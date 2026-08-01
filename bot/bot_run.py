@@ -62,17 +62,17 @@ async def on_ready() -> None:
     for id in cstm_btn_ids:
         acc_btn_cstm_id, den_btn_cstm_id = id
         bot.add_view(RoleButton(acc_btn_cstm_id, den_btn_cstm_id))
-    bot.add_view(discord.ui.View(PveAppButton(), timeout=None))
-    create_list_view = discord.ui.View(timeout=None)
-    create_list_view.add_item(PublishListButton())
-    create_list_view.add_item(NotificationButton())
-    create_list_view.add_item(StopAppButton())
-    for index, role in INDEX_CLASS_ROLE.items():
-        create_list_view.add_item(AddMemberToListButtonPve(
-            label=f'Редактировать "{role[:-2]}ов"',
-            custom_id=f'{index}КнопкаДобавления'
-        ))
-    bot.add_view(view=create_list_view)
+    # bot.add_view(discord.ui.View(PveAppButton(), timeout=None))
+    # create_list_view = discord.ui.View(timeout=None)
+    # create_list_view.add_item(PublishListButton())
+    # create_list_view.add_item(NotificationButton())
+    # create_list_view.add_item(StopAppButton())
+    # for index, role in INDEX_CLASS_ROLE.items():
+    #     create_list_view.add_item(AddMemberToListButtonPve(
+    #         label=f'Редактировать "{role[:-2]}ов"',
+    #         custom_id=f'{index}КнопкаДобавления'
+    #     ))
+    # bot.add_view(view=create_list_view)
     logger.info('Бот запущен и готов к работе!')
 
 
