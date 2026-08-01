@@ -56,15 +56,14 @@ class AcceptRoleButton(discord.ui.Button):
             nickname = curent_embed.author.name
             async with async_session_factory() as session:
                 obj = await role_app_orm.get_roleapp_obj(session, nickname)
-                member: discord.Member = (
-                    discord.utils.get(interaction.guild.members, id=obj.user_id)
-                )
-
                 if not obj:
-                    await interaction.respond(
+                    return await interaction.respond(
                         ANSWER_IF_CLICKED_THE_SAME_TIME,
                         delete_after=15
                     )
+                member: discord.Member = (
+                    discord.utils.get(interaction.guild.members, id=obj.user_id)
+                )
                 await member.edit(nick=nickname)
                 await member.add_roles(role_sergeant)
                 await member.remove_roles(role_guest)
@@ -322,12 +321,15 @@ class RoleApplication(Modal):
                 f'"{error}"'
             )
 
+    async def _build_button_custom_ids(self, session: AsyncSession) -> tuple[str, str]:
+        count = await role_app_orm.get_roleapp_count(session)
+        return f'{count}Выдать', f'{count}НеВыдать'
+
     async def handle_bad_site_work(
         self, interaction, session: AsyncSession,
         nickname, user, member
     ):
-        acc_btn_cstm_id = f'{await role_app_orm.get_roleapp_count(session)}Выдать'
-        den_btn_cstm_id = f'{await role_app_orm.get_roleapp_count(session)}НеВыдать'
+        acc_btn_cstm_id, den_btn_cstm_id = await self._build_button_custom_ids(session)
         await role_app_orm.insert_role_application_data(
             session=session,
             nickname=nickname,
@@ -366,8 +368,7 @@ class RoleApplication(Modal):
         self, interaction, session: AsyncSession,
         nickname, user, member, player_parms, description
     ):
-        acc_btn_cstm_id = f'{await role_app_orm.get_roleapp_count(session)}Выдать'
-        den_btn_cstm_id = f'{await role_app_orm.get_roleapp_count(session)}НеВыдать'
+        acc_btn_cstm_id, den_btn_cstm_id = await self._build_button_custom_ids(session)
         await role_app_orm.insert_role_application_data(
             session=session,
             nickname=nickname,

@@ -11,6 +11,7 @@ from core import (
     TREASURER_ROLE,
 )
 from loguru import logger
+from requests import exceptions as requests_exceptions
 
 
 def character_lookup(server: int, name: str) -> dict | str | None:
@@ -20,13 +21,14 @@ def character_lookup(server: int, name: str) -> dict | str | None:
     # Никнейм игрока, которого ищем в оружейке
     lookup_name = name
     # Отправляем запрос на поиск
-    look_response = requests.post(
-        'https://api.allodswiki.ru/api/v1/armory/avatars',
-        json={"filter": {"name": lookup_name, "server": server}}
-    )
     try:
+        look_response = requests.post(
+            'https://api.allodswiki.ru/api/v1/armory/avatars',
+            json={"filter": {"name": lookup_name, "server": server}},
+            timeout=10
+        )
         lookup_response = look_response.json()['data']
-    except JSONDecodeError as e:
+    except (JSONDecodeError, KeyError, requests_exceptions.RequestException) as e:
         logger.info(
             f'Упал сайт оружейки аллодов! {e}'
         )
@@ -44,8 +46,14 @@ def character_lookup(server: int, name: str) -> dict | str | None:
     # Никнейм
     player_parms['nickname'] = lookup_name
 
-    char_info = requests.get(lookup_url).json()
-    char_data = char_info['data']
+    try:
+        char_info = requests.get(lookup_url, timeout=10).json()
+        char_data = char_info['data']
+    except (JSONDecodeError, KeyError, requests_exceptions.RequestException) as e:
+        logger.info(
+            f'Упал сайт оружейки аллодов! {e}'
+        )
+        return 'Bad site work'
 
     if not char_data:
         return None
