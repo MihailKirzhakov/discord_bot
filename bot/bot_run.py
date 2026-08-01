@@ -1,4 +1,5 @@
 import discord
+from auction.auc_buttons import restore_active_auctions
 from core import ANSWERS_IF_NO_ROLE, APPLICATION_CHANNEL_ID, INDEX_CLASS_ROLE, settings
 from core.orm import async_orm, role_app_orm
 from discord import TextChannel
@@ -42,7 +43,14 @@ async def on_ready() -> None:
     """Событие запуска бота"""
 
     await async_orm.create_tables()
-    app_channel: TextChannel = await bot.fetch_channel(APPLICATION_CHANNEL_ID)
+    await restore_active_auctions(bot)
+    app_channel = await bot.fetch_channel(APPLICATION_CHANNEL_ID)
+    if not isinstance(app_channel, TextChannel):
+        logger.error(
+            f'Канал APPLICATION_CHANNEL_ID={APPLICATION_CHANNEL_ID} '
+            f'не является TextChannel'
+        )
+        return
     bot.add_view(RandomButton())
     bot.add_view(RenameButton(channel=app_channel))
     bot.add_view(ApplicationButton(channel=app_channel))
@@ -102,7 +110,7 @@ async def reload_extentions(ctx: discord.ApplicationContext):
     bot.reload_extension('randomaizer.randomaizer')
     bot.reload_extension('reminder.reminder')
     bot.reload_extension('rcd_aplication.rcd_aplication')
-    bot.reload_extension('auc_buttons.auc_buttons')
+    bot.reload_extension('auction.auc_buttons')
     bot.reload_extension('role_application.role_application')
     bot.reload_extension('set_group.set_group')
     bot.reload_extension('pve_application.pve_application')

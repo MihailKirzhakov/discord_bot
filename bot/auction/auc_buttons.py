@@ -405,10 +405,14 @@ class BidButton(Button):
         button_manager: View,
         index: int,
         auction_id: int,
+        custom_id: str | None = None,
     ):
+        if custom_id is None:
+            custom_id = f'auction_bid_{auction_id}_{index}'
         super().__init__(
             style=discord.ButtonStyle.green,
-            label=convert_bid(start_bid)
+            label=convert_bid(start_bid),
+            custom_id=custom_id
         )
         self.start_bid = start_bid
         self.start_auc_user = start_auc_user
@@ -589,6 +593,157 @@ async def auto_stop_auc(
         channel_last_message_dict.pop(name_auc, None)
         final_time.pop(name_auc, None)
         auc_id_by_name.pop(name_auc, None)
+
+
+async def restore_active_auctions(bot: discord.Bot) -> None:
+    """
+    Восстановление активных аукционов после реконнекта/рестарта бота:
+    - восстановление обработчиков кнопок через bot.add_view(..., message_id=...)
+    - восстановление таймеров автозавершения
+    """
+    async with async_session_factory() as session:
+        auctions = await auc_orm.get_active_auctions(session)
+
+    if not auctions:
+        logger.info('Активные аукционы для восстановления не найдены')
+        return
+
+    for auction in auctions:
+        auction_id = auction.id
+        name_auc = auction.name_auc
+        lot_amount = auction.lot_amount
+        start_bid = auction.start_bid
+        stop_time = auction.stop_time
+        message_id = auction.message_id
+        channel_id = auction.channel_id
+        start_auc_user_id = auction.start_auc_user_id
+
+        if message_id is None:
+            logger.warning(
+                f'Аукцион "{name_auc}" (id={auction_id}) пропущен: отсутствует message_id'
+            )
+            continue
+
+        channel = bot.get_channel(channel_id)
+        if channel is None:
+            try:
+                channel = await bot.fetch_channel(channel_id)
+            except Exception as error:
+                logger.warning(
+                    f'Не удалось получить канал "{channel_id}" '
+                    f'для аукциона "{name_auc}": {error}'
+                )
+                continue
+
+        if not isinstance(channel, discord.TextChannel):
+            logger.warning(
+                f'Канал "{channel_id}" для аукциона "{name_auc}" '
+                f'не является TextChannel'
+            )
+            continue
+
+        try:
+            message = await channel.fetch_message(message_id)
+        except Exception as error:
+            logger.warning(
+                f'Не удалось получить сообщение "{message_id}" '
+                f'для аукциона "{name_auc}": {error}'
+            )
+            continue
+
+        guild = message.guild
+        if guild is None:
+            logger.warning(
+                f'Для аукциона "{name_auc}" не удалось получить guild '
+                f'из сообщения "{message_id}"'
+            )
+            continue
+
+        start_auc_user = guild.get_member(start_auc_user_id)
+        if start_auc_user is None:
+            try:
+                start_auc_user = await guild.fetch_member(start_auc_user_id)
+            except Exception:
+                logger.warning(
+                    f'Не удалось получить автора аукциона '
+                    f'user_id={start_auc_user_id} для "{name_auc}"'
+                )
+                continue
+
+        button_manager = View(timeout=None)
+        button_mentions: dict[str, str] = {}
+
+        async with async_session_factory() as session:
+            bids = await auc_orm.get_bids_by_auction_sorted(session, auction_id)
+
+        if len(bids) != lot_amount:
+            logger.warning(
+                f'Несоответствие количества лотов/ставок для "{name_auc}": '
+                f'lot_amount={lot_amount}, bids={len(bids)}'
+            )
+
+        for lot_index in range(lot_amount):
+            bid_obj = next((b for b in bids if b.lot_index == lot_index), None)
+            if bid_obj is None:
+                current_bid = start_bid
+                current_user_id = None
+            else:
+                current_bid = bid_obj.user_bid
+                current_user_id = bid_obj.user_id
+
+            bid_button = BidButton(
+                start_bid=start_bid,
+                start_auc_user=start_auc_user,
+                lot_amount=lot_amount,
+                name_auc=name_auc,
+                button_mentions=button_mentions,
+                button_manager=button_manager,
+                index=lot_index,
+                auction_id=auction_id
+            )
+
+            if current_user_id is not None:
+                member = guild.get_member(current_user_id)
+                if member:
+                    bid_button.label = f'{convert_bid(current_bid)} {member.display_name}'
+                    bid_button.style = discord.ButtonStyle.blurple
+                    button_mentions[member.display_name] = member.mention
+                else:
+                    bid_button.label = convert_bid(current_bid)
+            else:
+                bid_button.label = convert_bid(current_bid)
+
+            button_manager.add_item(bid_button)
+
+        bot.add_view(button_manager, message_id=message_id)
+        channel_last_message_dict[name_auc] = message
+        final_time[name_auc] = stop_time
+        auc_id_by_name[name_auc] = auction_id
+
+        if stop_time <= datetime.now():
+            await auto_stop_auc(
+                view=button_manager,
+                user_mention=f'<@{start_auc_user_id}>',
+                name_auc=name_auc,
+                lot_amount=lot_amount,
+                button_mentions=button_mentions
+            )
+            logger.info(
+                f'Аукцион "{name_auc}" восстановлен и сразу завершён '
+                f'(время окончания уже прошло)'
+            )
+        else:
+            asyncio.create_task(
+                check_timer(
+                    view=button_manager,
+                    user_mention=f'<@{start_auc_user_id}>',
+                    name_auc=name_auc,
+                    lot_amount=lot_amount,
+                    final_time=final_time,
+                    button_mentions=button_mentions
+                )
+            )
+            logger.info(f'Аукцион "{name_auc}" успешно восстановлен')
 
 
 def setup(bot: discord.Bot):

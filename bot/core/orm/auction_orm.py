@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import cast
 
 from core.models import AuctionDataInfo, UserBid
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .base_async_orm import AsyncORM
@@ -86,6 +87,23 @@ class AuctionORM(AsyncORM):
             UserBid,
             auction_id=auction_id
         )
+
+    async def get_active_auctions(self, session: AsyncSession):
+        """Получение всех активных аукционов"""
+        return await self.get_filter_obj_all(
+            session,
+            AuctionDataInfo,
+            status='active'
+        )
+
+    async def get_bids_by_auction_sorted(
+        self, session: AsyncSession, auction_id: int
+    ):
+        """Получение всех ставок конкретного аукциона с сортировкой по индексу лота"""
+        result = await session.execute(
+            select(UserBid).where(UserBid.auction_id == auction_id).order_by(UserBid.lot_index)
+        )
+        return result.scalars().all()
 
     async def get_lot_bid(
         self,
