@@ -852,6 +852,7 @@ class StartRCDButton(View):
                         continue
                     field_index = 0 if discord.utils.get(user.roles, name=VETERAN_ROLE) else 1
                     during_embed.fields[field_index].value += (f'\n{user.mention}: 🟡')
+                    await interaction.message.edit(embed=during_embed)
                     try:
                         await user.send(
                             embed=ask_veteran_embed(
@@ -866,7 +867,6 @@ class StartRCDButton(View):
                     except discord.Forbidden:
                         logger.warning(f'Пользователю "{user.display_name}" запрещено отправлять сообщения')
                 await session.commit()
-                await interaction.message.edit(embed=during_embed)
                 await interaction.respond('✅', delete_after=1)
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
@@ -896,6 +896,7 @@ class StartRCDButton(View):
                     if veteran.id in all_members:
                         continue
                     during_embed.fields[0].value += (f'\n{veteran.mention}: 🟡')
+                    await interaction.message.edit(embed=during_embed)
                     try:
                         await veteran.send(
                             embed=ask_veteran_embed(
