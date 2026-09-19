@@ -1,15 +1,23 @@
 import discord
+from core import (
+    LEADER_NICKNAME,
+    LEADER_ROLE,
+    OFICER_ROLE,
+    TREASURER_ROLE,
+    async_session_factory,
+)
+from core.orm import rename_req_orm
 from discord.ext import commands
-from discord.ui import Modal, InputText, View, button
+from discord.ui import InputText, Modal, View, button
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .embeds import (
-    rename_embed, changed_rename_embed,
-    denied_rename_embed, denied_send_embed
+    changed_rename_embed,
+    denied_rename_embed,
+    denied_send_embed,
+    rename_embed,
 )
-from core import async_session_factory, LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE, LEADER_NICKNAME
-from core.orm import rename_req_orm
 
 
 class AccessDeniedView(View):
@@ -23,8 +31,9 @@ class AccessDeniedView(View):
     async def get_member_params(self, session: AsyncSession, interaction: discord.Interaction):
         old_nickname = interaction.message.embeds[0].author.name
         rename_req_obj = await rename_req_orm.get_rename_request_obj(session, old_nickname)
-        if not rename_req_orm:
-            return await interaction.respond('Ошибка в БД, не нашел пользователя! ❌')
+        if not rename_req_obj:
+            await interaction.respond('Ошибка в БД, не нашел пользователя! ❌')
+            return None
         guild = interaction.guild
         member = await guild.fetch_member(rename_req_obj.user_id)
 
@@ -40,10 +49,13 @@ class AccessDeniedView(View):
         try:
             async with async_session_factory() as session:
                 await interaction.response.defer(invisible=False, ephemeral=True)
-                old_nickname, rename_req_obj, member = await self.get_member_params(
+                params = await self.get_member_params(
                     session=session,
                     interaction=interaction
                 )
+                if not params:
+                    return
+                old_nickname, rename_req_obj, member = params
                 await member.edit(nick=rename_req_obj.new_nickname)
                 self.disable_all_items()
                 self.clear_items()
@@ -81,10 +93,13 @@ class AccessDeniedView(View):
         try:
             async with async_session_factory() as session:
                 await interaction.response.defer(invisible=False, ephemeral=True)
-                old_nickname, rename_req_obj, member = await self.get_member_params(
+                params = await self.get_member_params(
                     session=session,
                     interaction=interaction
                 )
+                if not params:
+                    return
+                old_nickname, rename_req_obj, member = params
                 try:
                     await member.send(
                         embed=denied_send_embed()

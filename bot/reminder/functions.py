@@ -5,7 +5,6 @@ import discord
 
 from .embeds import remind_send_embed
 
-
 # Создание базы данных
 conn = sqlite3.connect('discord_bot.db')
 cursor = conn.cursor()

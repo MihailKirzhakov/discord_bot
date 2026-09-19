@@ -1,23 +1,35 @@
-from datetime import datetime
 import re
+from datetime import datetime
 
 import discord
-from discord.ext import commands
-from discord.ui import Modal, InputText, View, button, select
-from loguru import logger
-
-from core import async_session_factory
-from .embeds import (
-    start_rcd_embed, app_list_embed, ask_veteran_embed,
-    rcd_list_embed, publish_rcd_embed, rcd_notification_embed,
-    publish_rcd_second_embed, mailing_notification_embed
+from core import (
+    ANSWERS_IF_NO_ROLE,
+    GUEST_ROLE,
+    INDEX_CLASS_ROLE,
+    LEADER_ROLE,
+    OFICER_ROLE,
+    RCD_APPLICATION_CHANNEL_ID,
+    RCD_CONTROL,
+    SERGEANT_ROLE,
+    TREASURER_ROLE,
+    VETERAN_ROLE,
+    async_session_factory,
 )
 from core.orm import rcd_app_orm
+from discord.ext import commands
+from discord.ui import InputText, Modal, View, button, select
+from loguru import logger
 from role_application.functions import rcd_control_required_role
-from core import (
-    VETERAN_ROLE, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE,
-    SERGEANT_ROLE, LEADER_ROLE, OFICER_ROLE, TREASURER_ROLE,
-    RCD_APPLICATION_CHANNEL_ID, GUEST_ROLE, RCD_CONTROL
+
+from .embeds import (
+    app_list_embed,
+    ask_veteran_embed,
+    mailing_notification_embed,
+    publish_rcd_embed,
+    publish_rcd_second_embed,
+    rcd_list_embed,
+    rcd_notification_embed,
+    start_rcd_embed,
 )
 
 
@@ -82,17 +94,23 @@ class RcdDate(Modal):
                 await rcd_app_orm.insert_date_info(
                     session, StaticNames.RCD_DATE, convert_rcd_date
                 )
-                await interaction.channel.send(embed=app_list_embed(convert_rcd_date), view=StartRCDButton())
-                await rcd_app_channel.send(embed=start_rcd_embed(convert_rcd_date), view=RCDButton())
+                start_rcd_message_in_list_channel = await interaction.channel.send(
+                    embed=app_list_embed(convert_rcd_date),
+                    view=StartRCDButton()
+                )
+                start_rcd_message_in_app_channel = await rcd_app_channel.send(
+                    embed=start_rcd_embed(convert_rcd_date),
+                    view=RCDButton()
+                )
                 await rcd_app_orm.insert_message_id(
                     session=session,
                     message_name=StaticNames.RCD_APPCHANNEL_MESSAGE,
-                    message_id=rcd_app_channel.last_message_id
+                    message_id=start_rcd_message_in_app_channel.id
                 )
                 await rcd_app_orm.insert_message_id(
                     session=session,
                     message_name=StaticNames.START_RCD_MESSAGE,
-                    message_id=interaction.guild.get_channel(interaction.channel_id).last_message_id
+                    message_id=start_rcd_message_in_list_channel.id
                 )
                 rcd_buttons_embed_list: list[discord.Embed] = [rcd_list_embed(convert_rcd_date, StaticNames.ATACK)]
                 view: discord.ui.View = CreateRCDList()
@@ -101,11 +119,11 @@ class RcdDate(Modal):
                         label=f'Редактировать "{role[:-2]}ов"',
                         custom_id=f'{index}КнопкаДобавления'
                     ))
-                await interaction.channel.send(view=view, embeds=rcd_buttons_embed_list)
+                rcd_list_message = await interaction.channel.send(view=view, embeds=rcd_buttons_embed_list)
                 await rcd_app_orm.insert_message_id(
                     session=session,
                     message_name=StaticNames.RCD_LIST_MESSAGE,
-                    message_id=interaction.guild.get_channel(interaction.channel_id).last_message_id
+                    message_id=rcd_list_message.id
                 )
                 await rcd_app_orm.insert_message_id(
                     session=session,
@@ -172,7 +190,17 @@ class RaidChampionDominionApplication(Modal):
                     session=session,
                     pk=StaticNames.RCD_LIST_CHANNEL
                 )
+                if not start_rcd_message_obj or not rcd_list_channel_obj:
+                    return await interaction.respond(
+                        '_Не найдены данные РЧД в базе. Обратись к офицеру для перезапуска процесса._',
+                        delete_after=3
+                    )
                 rcd_list_channel: discord.TextChannel = guild.get_channel(rcd_list_channel_obj.message_id)
+                if not rcd_list_channel:
+                    return await interaction.respond(
+                        '_Не найден канал списка РЧД. Обратись к офицеру._',
+                        delete_after=3
+                    )
                 start_rcd_message: discord.Message = (
                     await rcd_list_channel.fetch_message(start_rcd_message_obj.message_id)
                 )

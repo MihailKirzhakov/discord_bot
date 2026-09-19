@@ -1,6 +1,5 @@
+from core import Base, int_uniq, str_uniq, strpk
 from sqlalchemy.orm import Mapped
-
-from core import Base, strpk, int_uniq, str_uniq
 
 
 class RoleApplicationData(Base):

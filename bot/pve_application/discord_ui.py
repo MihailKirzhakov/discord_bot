@@ -1,23 +1,39 @@
-from datetime import datetime
-import re
 import locale
+import re
+from datetime import datetime
+
 try:
     locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
 except locale.Error:
     locale.setlocale(locale.LC_ALL, 'ru_RU')
 
-from discord import InputTextStyle, Interaction, utils, ButtonStyle, ComponentType, Forbidden
-from discord.ui import Modal, InputText, View, Button, Select, select, button
-from loguru import logger
-
-from core import async_session_factory, PVE_CHANNEL_ID, TRANSLATION_ROLES, INDEX_CLASS_ROLE, PVE_APPLICATION_CHANNEL_ID
+from core import (
+    INDEX_CLASS_ROLE,
+    PVE_CHANNEL_ID,
+    TRANSLATION_ROLES,
+    async_session_factory,
+)
 from core.orm import pve_app_orm
+from discord import (
+    ButtonStyle,
+    ComponentType,
+    Forbidden,
+    InputTextStyle,
+    Interaction,
+    utils,
+)
+from discord.ui import Button, InputText, Modal, Select, View, button, select
+from loguru import logger
+from role_application.functions import require_role
+
 from .embeds import (
-    start_pve_embed, app_list_embed, pve_list_embed,
-    pve_notification_embed, publish_pve_embed
+    app_list_embed,
+    publish_pve_embed,
+    pve_list_embed,
+    pve_notification_embed,
+    start_pve_embed,
 )
 from .static import StaticNamesPve
-from role_application.functions import require_role
 
 
 class PVEDate(Modal):

@@ -1,19 +1,24 @@
 import discord
+from core import (
+    ANSWER_IF_CHEAT,
+    ANSWER_IF_CLICKED_THE_SAME_TIME,
+    ANSWER_IF_DUPLICATE_APP,
+    ANSWER_IF_DUPLICATE_NICK,
+    ANSWERS_IF_NO_ROLE,
+    GUEST_ROLE,
+    LEADER_ROLE,
+    OFICER_ROLE,
+    SERGEANT_ROLE,
+    TREASURER_ROLE,
+    async_session_factory,
+)
+from core.orm import role_app_orm
 from discord.ext import commands
-from discord.ui import Modal, InputText, View, button
+from discord.ui import InputText, Modal, View, button
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.orm import role_app_orm
-from core import (
-    async_session_factory,
-    ANSWER_IF_DUPLICATE_APP, ANSWER_IF_DUPLICATE_NICK, ANSWER_IF_CHEAT,
-    ANSWER_IF_CLICKED_THE_SAME_TIME, LEADER_ROLE, OFICER_ROLE,
-    TREASURER_ROLE, SERGEANT_ROLE, GUEST_ROLE, ANSWERS_IF_NO_ROLE
-)
-from .embeds import (
-    access_embed, denied_embed, application_embed, start_app_embed
-)
+from .embeds import access_embed, application_embed, denied_embed, start_app_embed
 from .functions import character_lookup, has_required_role
 
 
@@ -51,15 +56,14 @@ class AcceptRoleButton(discord.ui.Button):
             nickname = curent_embed.author.name
             async with async_session_factory() as session:
                 obj = await role_app_orm.get_roleapp_obj(session, nickname)
-                member: discord.Member = (
-                    discord.utils.get(interaction.guild.members, id=obj.user_id)
-                )
-
                 if not obj:
-                    await interaction.respond(
+                    return await interaction.respond(
                         ANSWER_IF_CLICKED_THE_SAME_TIME,
                         delete_after=15
                     )
+                member: discord.Member = (
+                    discord.utils.get(interaction.guild.members, id=obj.user_id)
+                )
                 await member.edit(nick=nickname)
                 await member.add_roles(role_sergeant)
                 await member.remove_roles(role_guest)
@@ -317,12 +321,15 @@ class RoleApplication(Modal):
                 f'"{error}"'
             )
 
+    async def _build_button_custom_ids(self, session: AsyncSession) -> tuple[str, str]:
+        count = await role_app_orm.get_roleapp_count(session)
+        return f'{count}Выдать', f'{count}НеВыдать'
+
     async def handle_bad_site_work(
         self, interaction, session: AsyncSession,
         nickname, user, member
     ):
-        acc_btn_cstm_id = f'{await role_app_orm.get_roleapp_count(session)}Выдать'
-        den_btn_cstm_id = f'{await role_app_orm.get_roleapp_count(session)}НеВыдать'
+        acc_btn_cstm_id, den_btn_cstm_id = await self._build_button_custom_ids(session)
         await role_app_orm.insert_role_application_data(
             session=session,
             nickname=nickname,
@@ -361,8 +368,7 @@ class RoleApplication(Modal):
         self, interaction, session: AsyncSession,
         nickname, user, member, player_parms, description
     ):
-        acc_btn_cstm_id = f'{await role_app_orm.get_roleapp_count(session)}Выдать'
-        den_btn_cstm_id = f'{await role_app_orm.get_roleapp_count(session)}НеВыдать'
+        acc_btn_cstm_id, den_btn_cstm_id = await self._build_button_custom_ids(session)
         await role_app_orm.insert_role_application_data(
             session=session,
             nickname=nickname,

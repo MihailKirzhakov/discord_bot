@@ -1,4 +1,4 @@
-from random import randint, choice
+from random import choice, randint
 
 
 def rand_choice(nicknames: str) -> str | None:

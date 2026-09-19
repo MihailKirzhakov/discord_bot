@@ -1,21 +1,30 @@
 import discord
-from loguru import logger
-
-from core import settings
+from auction.auc_buttons import restore_active_auctions
+from core import ANSWERS_IF_NO_ROLE, APPLICATION_CHANNEL_ID, INDEX_CLASS_ROLE, settings
 from core.orm import async_orm, role_app_orm
+from discord import TextChannel
+from loguru import logger
+from pve_application.discord_ui import (
+    AddMemberToListButtonPve,
+    NotificationButton,
+    PublishListButton,
+    PveAppButton,
+    StopAppButton,
+)
 from randomaizer.randomaizer import RandomButton
-from rename_request.rename_request import RenameButton, AccessDeniedView
-from role_application.role_application import (
-    ApplicationButton, has_required_role
-)
 from rcd_aplication.rcd_aplication import (
-    StartRCDButton, CreateRCDList, AddMemberToListButton, PrivateMessageView
+    AddMemberToListButton,
+    CreateRCDList,
+    PrivateMessageView,
+    StartRCDButton,
 )
-from pve_application.discord_ui import PveAppButton, PublishListButton, NotificationButton, StopAppButton, AddMemberToListButtonPve
-from role_application.role_application import RoleButton
-from set_group.set_group import SetGroupButton, EditGroupButton
-from core import APPLICATION_CHANNEL_ID, ANSWERS_IF_NO_ROLE, INDEX_CLASS_ROLE
-
+from rename_request.rename_request import AccessDeniedView, RenameButton
+from role_application.role_application import (
+    ApplicationButton,
+    RoleButton,
+    has_required_role,
+)
+from set_group.set_group import EditGroupButton, SetGroupButton
 
 logger.remove()
 logger.add(
@@ -34,7 +43,14 @@ async def on_ready() -> None:
     """Событие запуска бота"""
 
     await async_orm.create_tables()
+    await restore_active_auctions(bot)
     app_channel = await bot.fetch_channel(APPLICATION_CHANNEL_ID)
+    if not isinstance(app_channel, TextChannel):
+        logger.error(
+            f'Канал APPLICATION_CHANNEL_ID={APPLICATION_CHANNEL_ID} '
+            f'не является TextChannel'
+        )
+        return
     bot.add_view(RandomButton())
     bot.add_view(RenameButton(channel=app_channel))
     bot.add_view(ApplicationButton(channel=app_channel))
@@ -54,17 +70,17 @@ async def on_ready() -> None:
     for id in cstm_btn_ids:
         acc_btn_cstm_id, den_btn_cstm_id = id
         bot.add_view(RoleButton(acc_btn_cstm_id, den_btn_cstm_id))
-    bot.add_view(discord.ui.View(PveAppButton(), timeout=None))
-    create_list_view = discord.ui.View(timeout=None)
-    create_list_view.add_item(PublishListButton())
-    create_list_view.add_item(NotificationButton())
-    create_list_view.add_item(StopAppButton())
-    for index, role in INDEX_CLASS_ROLE.items():
-        create_list_view.add_item(AddMemberToListButtonPve(
-            label=f'Редактировать "{role[:-2]}ов"',
-            custom_id=f'{index}КнопкаДобавления'
-        ))
-    bot.add_view(view=create_list_view)
+    # bot.add_view(discord.ui.View(PveAppButton(), timeout=None))
+    # create_list_view = discord.ui.View(timeout=None)
+    # create_list_view.add_item(PublishListButton())
+    # create_list_view.add_item(NotificationButton())
+    # create_list_view.add_item(StopAppButton())
+    # for index, role in INDEX_CLASS_ROLE.items():
+    #     create_list_view.add_item(AddMemberToListButtonPve(
+    #         label=f'Редактировать "{role[:-2]}ов"',
+    #         custom_id=f'{index}КнопкаДобавления'
+    #     ))
+    # bot.add_view(view=create_list_view)
     logger.info('Бот запущен и готов к работе!')
 
 
@@ -94,7 +110,7 @@ async def reload_extentions(ctx: discord.ApplicationContext):
     bot.reload_extension('randomaizer.randomaizer')
     bot.reload_extension('reminder.reminder')
     bot.reload_extension('rcd_aplication.rcd_aplication')
-    bot.reload_extension('auc_buttons.auc_buttons')
+    bot.reload_extension('auction.auc_buttons')
     bot.reload_extension('role_application.role_application')
     bot.reload_extension('set_group.set_group')
     bot.reload_extension('pve_application.pve_application')

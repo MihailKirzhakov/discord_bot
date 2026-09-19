@@ -1,9 +1,14 @@
-from sqlalchemy.orm import Mapped
-
 from core import (
-    Base, intpk, int_uniq, strpk, str_uniq,
-    bool_empty, str_empty, int_empty
+    Base,
+    bool_empty,
+    int_empty,
+    int_uniq,
+    intpk,
+    str_empty,
+    str_uniq,
+    strpk,
 )
+from sqlalchemy.orm import Mapped
 
 
 class MemberIdModel(Base):

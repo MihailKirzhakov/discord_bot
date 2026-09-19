@@ -1,9 +1,9 @@
-from sqlalchemy import select, func
+from core import async_session_factory
+from core.models import RoleApplicationData
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .base_async_orm import AsyncORM
-from core import async_session_factory
-from core.models import RoleApplicationData
 
 
 class RoleApplicationORM(AsyncORM):

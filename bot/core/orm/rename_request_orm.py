@@ -1,7 +1,7 @@
+from core.models import RenameRequestModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .base_async_orm import AsyncORM
-from core.models import RenameRequestModel
 
 
 class RenameRequestORM(AsyncORM):

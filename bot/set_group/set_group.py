@@ -1,16 +1,21 @@
 import discord
+from core import (
+    LEADER_ID,
+    LEADER_ROLE,
+    MIURKA_ID,
+    OFICER_ROLE,
+    SERGEANT_ROLE,
+    TREASURER_ROLE,
+    VETERAN_ROLE,
+)
 from discord.ext import commands
-from discord.ui import View, button, Select
+from discord.ui import Select, View, button
 from loguru import logger
 
-from core import (
-    LEADER_ROLE, TREASURER_ROLE, OFICER_ROLE,
-    VETERAN_ROLE, SERGEANT_ROLE, LEADER_ID,
-    MIURKA_ID
-)
 from .embeds import (
-    set_group_embed, set_group_discription_embed,
-    group_create_instruction_embed
+    group_create_instruction_embed,
+    set_group_discription_embed,
+    set_group_embed,
 )
 
 

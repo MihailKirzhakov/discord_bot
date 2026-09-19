@@ -1,6 +1,5 @@
 import discord
-
-from core import REMIND, SMALL_GUILD_ICON_URL, REMIND_IMAGE_URL, TO_REMIND
+from core import REMIND, REMIND_IMAGE_URL, SMALL_GUILD_ICON_URL, TO_REMIND
 
 
 def remind_embed(date: str, message: str) -> discord.Embed:
