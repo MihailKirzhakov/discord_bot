@@ -400,6 +400,19 @@ class SelectMemberToRCD(View):
                         for value in field.value.split(','):
                             check_set.add(value.strip())
 
+                no_role_users = [
+                    user for user in select.values
+                    if not discord.utils.get(user.roles, name=VETERAN_ROLE)
+                    and not discord.utils.get(user.roles, name=SERGEANT_ROLE)
+                ]
+                if no_role_users:
+                    return await interaction.respond(
+                        '_Нельзя добавить '
+                        f'{", ".join(user.mention for user in no_role_users)} '
+                        f'— нет роли "{VETERAN_ROLE}" или "{SERGEANT_ROLE}"! ❌_',
+                        delete_after=4
+                    )
+
                 for user in select.values:
                     if user.mention in check_set:
                         return await interaction.respond(
@@ -676,14 +689,22 @@ class CreateRCDList(View):
                         ephemeral=True
                     )
 
+                notified_member_ids: set[int] = set()
+                processed_roles: set[str] = set()
+
                 for dict_item in notice_data_list:
                     action = dict_item.get('action')
                     role = dict_item.get('role')
                     members_id = dict_item.get('members_id')
 
-                    await rcd_app_orm.delete_from_notice_list(session, action=action, role=role)
+                    if role not in processed_roles:
+                        await rcd_app_orm.delete_from_notice_list(session, action=action, role=role)
+                        processed_roles.add(role)
 
                     for member_id in members_id:
+                        if member_id in notified_member_ids:
+                            continue
+                        notified_member_ids.add(member_id)
                         member = await interaction.guild.fetch_member(member_id)
                         await send_notification(member, role, date)
                         logger.info(f'"{member.display_name}" оповещён об РЧД')
