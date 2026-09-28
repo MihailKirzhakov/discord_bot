@@ -307,7 +307,14 @@ class PassBid(Modal):
                 full_label_number = bid_obj.user_bid
                 current_user_id = bid_obj.user_id
 
-            if full_label_number >= select_bid:
+            if current_user_id is None:
+                # Лот ещё никто не занял — стартовую ставку можно занять.
+                if select_bid < full_label_number:
+                    return await interaction.respond(
+                        '_Ставка не может быть меньше стартовой! ❌_',
+                        delete_after=5
+                    )
+            elif full_label_number >= select_bid:
                 return await interaction.respond(
                     '_Ставка должна быть большей текущей! ❌_',
                     delete_after=5
