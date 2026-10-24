@@ -3,7 +3,9 @@ from core import (
     LEADER_NICKNAME,
     LEADER_ROLE,
     OFICER_ROLE,
+    SERGEANT_ROLE,
     TREASURER_ROLE,
+    VETERAN_ROLE,
     async_session_factory,
 )
 from core.orm import rename_req_orm
@@ -18,6 +20,25 @@ from .embeds import (
     denied_send_embed,
     rename_embed,
 )
+
+NICKNAME_CHECK_ROLES = (
+    SERGEANT_ROLE, VETERAN_ROLE, OFICER_ROLE, TREASURER_ROLE, LEADER_ROLE
+)
+
+
+def is_nickname_taken(guild: discord.Guild, nickname: str, exclude_id: int) -> bool:
+    """
+    Проверить, занят ли никнейм среди участников
+    с ролями старшины, ветерана, офицера, казначея и лидера.
+    """
+    nickname = nickname.casefold()
+    for role in guild.roles:
+        if role.name not in NICKNAME_CHECK_ROLES:
+            continue
+        for member in role.members:
+            if member.id != exclude_id and member.display_name.casefold() == nickname:
+                return True
+    return False
 
 
 class AccessDeniedView(View):
@@ -155,6 +176,11 @@ class RenameModal(Modal):
                     return await interaction.respond(
                         '_Зачем менять никнейм на свой текущий? 🤔_',
                         delete_after=3
+                    )
+                if is_nickname_taken(interaction.guild, new_nickname, user.id):
+                    return await interaction.respond(
+                        '_Такой никнейм уже занят одним из участников гильдии! 🙅_',
+                        delete_after=5
                     )
                 if rename_req_obj:
                     await interaction.respond(

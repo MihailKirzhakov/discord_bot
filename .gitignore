@@ -10,3 +10,4 @@ check_algs.py
 /.vscode
 bash.exe.stackdump
 *.db-journal
+/.venv

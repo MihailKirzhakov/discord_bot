@@ -31,12 +31,11 @@ Discord бот для автоматизированного администр�
 ## Как развернуть проект
 
 1. Вам необходимо создать самого бота и получить TOKEN на [ПОРТАЛЕ](https://discord.com/developers/applications/) разработчике Discord ботов
-2. Клонировать репозиторий, создать виртуальное окружение, установить зависимости:
+2. Установить [uv](https://docs.astral.sh/uv/), клонировать репозиторий и установить зависимости (Python 3.12 и виртуальное окружение `.venv` uv создаст сам):
 ```
 git clone git@github.com:MihailKirzhakov/discord_bot.git
-python -m venv venv
-source venv/Scripts/activate
-pip install -r requirements.txt
+cd discord_bot
+uv sync
 ```
 3. Заполнить файл .env
 ```
@@ -46,4 +45,4 @@ APPLICATION_CHANNEL_ID = ID канала для приёма заявок
 RCD_APPLICATION_CHANNEL_ID = ID канала для приёма заявок на активность РЧД
 ```
 4. Настроить файл variables.py, тк некоторые параметры относятся напрямую к серверу, в котором будет работать бот, в основном ID.
-5. Запустить бота можно с помощью запуска исполняемого файла bot_run.py.
+5. Запустить бота можно командой `uv run bot/bot_run.py`. Тесты: `uv run pytest`.
