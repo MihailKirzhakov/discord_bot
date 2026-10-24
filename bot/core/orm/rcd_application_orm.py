@@ -46,10 +46,11 @@ class RcdApplicationORM(AsyncORM):
     async def insert_members_to_notice_list(
         self, session: AsyncSession, members_id, action, role
     ):
-        obj = await self.get_obj_by_pk(session, NoticeList, members_id)
+        obj = await self.get_filter_obj_first(
+            session, NoticeList, action=action, role=role
+        )
         if obj:
-            obj.action = action
-            obj.role = role
+            obj.members_id = members_id
             session.add(obj)
             await session.flush()
             return
@@ -161,12 +162,14 @@ class RcdApplicationORM(AsyncORM):
     async def delete_from_notice_list(
         self, session: AsyncSession, action, role
     ):
-        obj = await self.get_filter_obj_first(
+        objs = await self.get_filter_obj_all(
             session, NoticeList, action=action, role=role
         )
-        if not obj:
+        if not objs:
             return
-        await self.delete_data(session, obj)
+        for obj in objs:
+            await session.delete(obj)
+        await session.flush()
 
     async def clear_rcd_data(self, session: AsyncSession):
         for model in [

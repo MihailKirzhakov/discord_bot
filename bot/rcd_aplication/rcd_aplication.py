@@ -400,6 +400,19 @@ class SelectMemberToRCD(View):
                         for value in field.value.split(','):
                             check_set.add(value.strip())
 
+                no_role_users = [
+                    user for user in select.values
+                    if not discord.utils.get(user.roles, name=VETERAN_ROLE)
+                    and not discord.utils.get(user.roles, name=SERGEANT_ROLE)
+                ]
+                if no_role_users:
+                    return await interaction.respond(
+                        '_Нельзя добавить '
+                        f'{", ".join(user.mention for user in no_role_users)} '
+                        f'— нет роли "{VETERAN_ROLE}" или "{SERGEANT_ROLE}"! ❌_',
+                        delete_after=4
+                    )
+
                 for user in select.values:
                     if user.mention in check_set:
                         return await interaction.respond(
@@ -676,14 +689,22 @@ class CreateRCDList(View):
                         ephemeral=True
                     )
 
+                notified_member_ids: set[int] = set()
+                processed_roles: set[str] = set()
+
                 for dict_item in notice_data_list:
                     action = dict_item.get('action')
                     role = dict_item.get('role')
                     members_id = dict_item.get('members_id')
 
-                    await rcd_app_orm.delete_from_notice_list(session, action=action, role=role)
+                    if role not in processed_roles:
+                        await rcd_app_orm.delete_from_notice_list(session, action=action, role=role)
+                        processed_roles.add(role)
 
                     for member_id in members_id:
+                        if member_id in notified_member_ids:
+                            continue
+                        notified_member_ids.add(member_id)
                         member = await interaction.guild.fetch_member(member_id)
                         await send_notification(member, role, date)
                         logger.info(f'"{member.display_name}" оповещён об РЧД')
@@ -852,6 +873,7 @@ class StartRCDButton(View):
                         continue
                     field_index = 0 if discord.utils.get(user.roles, name=VETERAN_ROLE) else 1
                     during_embed.fields[field_index].value += (f'\n{user.mention}: 🟡')
+                    await interaction.message.edit(embed=during_embed)
                     try:
                         await user.send(
                             embed=ask_veteran_embed(
@@ -866,7 +888,6 @@ class StartRCDButton(View):
                     except discord.Forbidden:
                         logger.warning(f'Пользователю "{user.display_name}" запрещено отправлять сообщения')
                 await session.commit()
-                await interaction.message.edit(embed=during_embed)
                 await interaction.respond('✅', delete_after=1)
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
@@ -896,6 +917,7 @@ class StartRCDButton(View):
                     if veteran.id in all_members:
                         continue
                     during_embed.fields[0].value += (f'\n{veteran.mention}: 🟡')
+                    await interaction.message.edit(embed=during_embed)
                     try:
                         await veteran.send(
                             embed=ask_veteran_embed(
