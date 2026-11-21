@@ -13,111 +13,126 @@ from core import (
 from loguru import logger
 from requests import exceptions as requests_exceptions
 
+ARMORY_API = 'https://api.allodswiki.ru/api/v2/public'
+ASSETS_URL = 'https://assets.allodswiki.ru'
+# Без Origin/X-Site API отвечает так же, но держимся заголовков сайта
+ARMORY_HEADERS = {
+    'Accept': 'application/json',
+    'Origin': 'https://allodswiki.ru',
+    'Referer': 'https://allodswiki.ru/',
+    'X-Site': 'allodswiki.ru',
+    'User-Agent': 'discord-guild-bot',
+}
+ARMORY_TIMEOUT = 10
+
+
+def _asset_url(path: str | None) -> str | None:
+    """API отдаёт путь картинки без хоста и расширения."""
+    if not path:
+        return None
+    if path.startswith('http'):
+        return path
+    return f'{ASSETS_URL}/{path.lstrip("/")}.webp'
+
+
+def _armory_request(method: str, url: str, **kwargs) -> dict:
+    response = requests.request(
+        method, url, headers=ARMORY_HEADERS, timeout=ARMORY_TIMEOUT, **kwargs
+    )
+    response.raise_for_status()
+    return response.json()
+
 
 def character_lookup(server: int, name: str) -> dict | str | None:
     """
     Функция для получения информации об игроке через оружейку.
+
+    Возвращает словарь параметров персонажа, None если персонаж не найден
+    на сервере, или 'Bad site work', если API недоступен / сменил формат.
     """
-    # Никнейм игрока, которого ищем в оружейке
     lookup_name = name
-    # Отправляем запрос на поиск
+    # Поиск идёт по всем серверам и без учёта регистра, поэтому
+    # фильтруем по id сервера и точному совпадению ника
     try:
-        look_response = requests.post(
-            'https://api.allodswiki.ru/api/v1/armory/avatars',
-            json={"filter": {"name": lookup_name, "server": server}},
-            timeout=10
+        search = _armory_request(
+            'POST', f'{ARMORY_API}/search',
+            json={'q': lookup_name, 'limit': 50}
         )
-        lookup_response = look_response.json()['data']
-    except (JSONDecodeError, KeyError, requests_exceptions.RequestException) as e:
-        logger.info(
-            f'Упал сайт оружейки аллодов! {e}'
-        )
-        return 'Bad site work'
-    data_id = 0
-    if len(lookup_response) > 0:
-        data_id = lookup_response[0]['id']
-    else:
-        return None
-
-    lookup_url = f'https://api.allodswiki.ru/api/v1/armory/avatars/{data_id}'
-
-    # Словарь с параметрами персонажа
-    player_parms = {}
-    # Никнейм
-    player_parms['nickname'] = lookup_name
-
-    try:
-        char_info = requests.get(lookup_url, timeout=10).json()
-        char_data = char_info['data']
-    except (JSONDecodeError, KeyError, requests_exceptions.RequestException) as e:
-        logger.info(
-            f'Упал сайт оружейки аллодов! {e}'
-        )
+        avatars = [
+            result['data'] for result in search['results']
+            if result.get('kind') == 'avatar'
+        ]
+    except (JSONDecodeError, KeyError, TypeError, requests_exceptions.RequestException) as e:
+        logger.info(f'Упал сайт оружейки аллодов! (поиск) {e!r}')
         return 'Bad site work'
 
-    if not char_data:
-        return None
-    if char_data['name'] != lookup_name:
-        return None
-    # Величка
-    player_parms['greatness'] = char_data['greatness']
-    # Класс персонажа
-    player_parms['class'] = char_data['class']
-    # Переменная для конвертирования в url ниже
-    class_capitalized = str(player_parms['class']).capitalize()
-    # url для иконки класса
-    player_parms['class_icon'] = (
-        f'https://assets.allodswiki.ru/Interface/Common/Elements/ClassIcons/{class_capitalized}.50x50.webp'
+    found = next(
+        (
+            avatar for avatar in avatars
+            if avatar.get('name') == lookup_name
+            and (avatar.get('server') or {}).get('id') == server
+        ),
+        None
     )
-    # Фракция
-    player_parms['faction'] = char_data['faction']
-    # Гильдия
-    player_parms['guild'] = char_data['guild']
-    # Уровень персонажа
-    player_parms['level'] = char_data['level']
-    # Гирскор
-    player_parms['gear_score'] = char_data['gear_score']
+    if not found:
+        return None
 
-    # Экипировка персонажа
-    items = char_data['items']
-    # Если нет элементов экипировки, то ...
-    if not items:
-        # Возвращаем параметры персонажа
-        return player_parms
+    try:
+        char_data = _armory_request(
+            'GET', f'{ARMORY_API}/armory/avatars/{found["id"]}'
+        )
+    except (JSONDecodeError, requests_exceptions.RequestException) as e:
+        logger.info(f'Упал сайт оружейки аллодов! (персонаж) {e!r}')
+        return 'Bad site work'
 
-    # Эмблема персонажа
-    emblem = items.get('primary-19', None)
+    if not char_data or char_data.get('name') != lookup_name:
+        return None
+
+    class_capitalized = str(char_data.get('class')).capitalize()
+    player_parms = {
+        'nickname': lookup_name,
+        'greatness': char_data.get('greatness'),
+        'class': char_data.get('class'),
+        'class_icon': (
+            f'{ASSETS_URL}/Interface/Common/Elements/ClassIcons/'
+            f'{class_capitalized}.50x50.webp'
+        ),
+        'faction': char_data.get('faction'),
+        'guild': char_data.get('guild'),
+        'level': char_data.get('level'),
+        'gear_score': char_data.get('gear_score'),
+        'updated_at': char_data.get('updated_at'),
+    }
+
+    # equipment: список {place, position, item}; слоты как в старом API
+    # ('primary-19' — эмблема, 'secondary-19' — драконий артефакт)
+    items = {
+        f'{slot.get("place")}-{slot.get("position")}': slot.get('item') or {}
+        for slot in char_data.get('equipment') or []
+    }
+
+    emblem = items.get('primary-19')
     if emblem:
-        # Добавляем в словарь название эмблемы и иконку
         player_parms['emblem'] = {
-            "name": emblem['name'],
-            "image_url": emblem['image']
-        }  # type: ignore
-    # Драконий артефакт (шип или память света)
-    dragon_emblem = items.get('secondary-19', None)
+            'name': emblem.get('name'),
+            'image_url': _asset_url(emblem.get('image')),
+        }
+    dragon_emblem = items.get('secondary-19')
     if dragon_emblem:
-        # Добавляем в словарь драконий артефакт
         player_parms['dragon_emblem'] = {
-            "name": dragon_emblem['name'],
-            "image_url": dragon_emblem['image']
-        }  # type: ignore
+            'name': dragon_emblem.get('name'),
+            'image_url': _asset_url(dragon_emblem.get('image')),
+        }
     # Наследие богов
-    artifact = {}
-
-    # Берём параметры наследия богов
-    arts_lookup = [
-        i for k, i in items.items() if 'id' in i and i['id'] == 14078
-    ]
-    if len(arts_lookup) > 0:
-        # Элемент списка для выбора параметров
-        artifact = arts_lookup[0]
-
-        # Параметры артефакта наследия богов
+    artifact = next(
+        (item for item in items.values() if item.get('id') == 14078), None
+    )
+    if artifact:
         player_parms['artifact'] = {
-                "name": artifact['name'],
-                "image_url": artifact['image'],
-                "level": artifact['level']
-            }  # type: ignore
+            'name': artifact.get('name'),
+            'image_url': _asset_url(artifact.get('image')),
+            'level': artifact.get('level'),
+        }
     return player_parms
 
 

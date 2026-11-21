@@ -31,6 +31,7 @@ from .embeds import (
     rcd_notification_embed,
     start_rcd_embed,
 )
+from .rcd_list_state import SECTION_SERGEANTS, SECTION_VETERANS, refresh_rcd_list
 
 
 class StaticNames:
@@ -49,6 +50,24 @@ class StaticNames:
     MESSAGE_NAME: str = 'message_name'
     START_RCD_MESSAGE: str = 'start_rcd_message'
     RCD_LIST_CHANNEL: str = 'rcd_list_channel'
+
+
+async def send_ask_messages(
+    users: list[discord.Member], asker: discord.Member, date: str
+) -> None:
+    """Рассылает вопрос об РЧД. Ошибка одному адресату не прерывает рассылку."""
+    for user in users:
+        try:
+            await user.send(
+                embed=ask_veteran_embed(member=asker, date=date),
+                view=PrivateMessageView(),
+                delete_after=86400
+            )
+            logger.info(f'Пользователю "{user.display_name}" был отправлен вопрос об РЧД')
+        except discord.Forbidden:
+            logger.warning(f'Пользователю "{user.display_name}" запрещено отправлять сообщения')
+        except discord.HTTPException as error:
+            logger.warning(f'Не удалось отправить вопрос об РЧД "{user.display_name}": {error}')
 
 
 class RcdDate(Modal):
@@ -167,21 +186,24 @@ class RaidChampionDominionApplication(Modal):
     async def callback(self, interaction: discord.Interaction):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
+            honor: str = str(self.children[0].value)
+            if not honor:
+                honor = '0'
+            if not honor.isdigit():
+                return await interaction.respond(
+                    '_Строка для ввода чести принимает только целые числа, повтори снова ⚠️_',
+                    delete_after=2
+                )
+            class_role: str = str(self.children[1].value)
+            if not class_role:
+                class_role = 'Любой класс'
+            guild = interaction.user.mutual_guilds[0]
+            member: discord.Member = guild.get_member(interaction.user.id)
+            section = (
+                SECTION_VETERANS if discord.utils.get(member.roles, name=VETERAN_ROLE)
+                else SECTION_SERGEANTS
+            )
             async with async_session_factory() as session:
-                honor: str = str(self.children[0].value)
-                if not honor:
-                    honor = '0'
-                if not honor.isdigit():
-                    return await interaction.respond(
-                        '_Строка для ввода чести принимает только целые числа, повтори снова ⚠️_',
-                        delete_after=2
-                    )
-                class_role: str = str(self.children[1].value)
-                if not class_role:
-                    class_role = 'Любой класс'
-                guild = interaction.user.mutual_guilds[0]
-                member: discord.Member = guild.get_member(interaction.user.id)
-                field_index = 0 if discord.utils.get(member.roles, name=VETERAN_ROLE) else 1
                 start_rcd_message_obj = await rcd_app_orm.get_message_data_obj(
                     session=session,
                     pk=StaticNames.START_RCD_MESSAGE
@@ -195,36 +217,21 @@ class RaidChampionDominionApplication(Modal):
                         '_Не найдены данные РЧД в базе. Обратись к офицеру для перезапуска процесса._',
                         delete_after=3
                     )
-                rcd_list_channel: discord.TextChannel = guild.get_channel(rcd_list_channel_obj.message_id)
-                if not rcd_list_channel:
-                    return await interaction.respond(
-                        '_Не найден канал списка РЧД. Обратись к офицеру._',
-                        delete_after=3
-                    )
-                start_rcd_message: discord.Message = (
-                    await rcd_list_channel.fetch_message(start_rcd_message_obj.message_id)
+                # модалку можно открыть дважды, пока первая не отправлена
+                if interaction.user.id in await rcd_app_orm.get_all_appmember_ids(session):
+                    return await interaction.respond('_Ты уже подал заявку! ✅_', delete_after=1)
+                await rcd_app_orm.set_participant_applied(
+                    session, interaction.user.id, section, class_role, honor
                 )
-                during_embed: discord.Embed = start_rcd_message.embeds[0]
-                field_value = during_embed.fields[field_index].value
-                pattern = re.compile(rf'{member.mention}: (🟡|🔴)')
-                match = pattern.search(field_value)
-                if match:
-                    new_value = field_value.replace(
-                        match.group(0), f'{member.mention}: {class_role} ({honor})'
-                    )
-                else:
-                    new_value = field_value + f'\n{member.mention}: {class_role} ({honor})'
-                during_embed.fields[field_index].value = new_value
-                await start_rcd_message.edit(embed=during_embed)
-                await rcd_app_orm.insert_appmember_id(session, interaction.user.id)
                 await session.commit()
-                if interaction.channel.type.value == 1:
-                    await interaction.message.delete()
-                await interaction.respond(
-                    '_Заявка принята ✅_',
-                    delete_after=1
-                )
-                logger.info(f'Принята заявка на РЧД от "{interaction.user.display_name}"')
+            await refresh_rcd_list(interaction.client)
+            if interaction.channel.type.value == 1:
+                await interaction.message.delete()
+            await interaction.respond(
+                '_Заявка принята ✅_',
+                delete_after=1
+            )
+            logger.info(f'Принята заявка на РЧД от "{interaction.user.display_name}"')
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
             logger.error(
@@ -276,30 +283,15 @@ class PrivateMessageView(View):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
             async with async_session_factory() as session:
-                guild = interaction.user.mutual_guilds[0]
-                member = guild.get_member(interaction.user.id)
-                field_index = 0 if discord.utils.get(member.roles, name=VETERAN_ROLE) else 1
-                start_rcd_message_obj = await rcd_app_orm.get_message_data_obj(
-                    session=session,
-                    pk=StaticNames.START_RCD_MESSAGE
+                changed = await rcd_app_orm.set_participant_denied(
+                    session, interaction.user.id
                 )
-                rcd_list_channel_obj = await rcd_app_orm.get_message_data_obj(
-                    session=session,
-                    pk=StaticNames.RCD_LIST_CHANNEL
-                )
-                rcd_list_channel: discord.TextChannel = guild.get_channel(rcd_list_channel_obj.message_id)
-                start_rcd_message: discord.Message = (
-                    await rcd_list_channel.fetch_message(start_rcd_message_obj.message_id)
-                )
-                during_embed: discord.Embed = start_rcd_message.embeds[0]
-                field_value = during_embed.fields[field_index].value
-                if member.mention in field_value:
-                    new_value = field_value.replace(f'{member.mention}: 🟡', f'{member.mention}: 🔴')
-                    during_embed.fields[field_index].value = new_value
-                    await start_rcd_message.edit(embed=during_embed)
-                await interaction.message.delete()
-                await interaction.respond('_Принято ✅_', delete_after=1)
-                logger.info(f'"{interaction.user.display_name}" отказался быть на РЧД')
+                await session.commit()
+            if changed:
+                await refresh_rcd_list(interaction.client)
+            await interaction.message.delete()
+            await interaction.respond('_Принято ✅_', delete_after=1)
+            logger.info(f'"{interaction.user.display_name}" отказался быть на РЧД')
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
             logger.error(
@@ -856,39 +848,29 @@ class StartRCDButton(View):
     ):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
+            if not rcd_control_required_role(interaction.user):
+                return await interaction.respond(ANSWERS_IF_NO_ROLE, delete_after=2)
+            guest_role = discord.utils.get(
+                interaction.guild.roles, name=GUEST_ROLE
+            )
+            to_ask: list[discord.Member] = []
             async with async_session_factory() as session:
-                if not rcd_control_required_role(interaction.user):
-                    return await interaction.respond(ANSWERS_IF_NO_ROLE, delete_after=2)
-                guest_role = discord.utils.get(
-                    interaction.guild.roles, name=GUEST_ROLE
-                )
-                during_embed: discord.Embed = interaction.message.embeds[0]
-                ask_users: list[discord.Member] = [user for user in select.values]
-                all_askmember_ids: list = await rcd_app_orm.get_all_askmember_ids(session)
-                all_appmember_ids: list = await rcd_app_orm.get_all_appmember_ids(session)
-                all_members = all_askmember_ids + all_appmember_ids
                 date_obj = await rcd_app_orm.get_rcd_date_obj(session=session, pk=StaticNames.RCD_DATE)
-                for user in ask_users:
-                    if user.id in all_members or guest_role in user.roles:
+                for user in select.values:
+                    if guest_role in user.roles:
                         continue
-                    field_index = 0 if discord.utils.get(user.roles, name=VETERAN_ROLE) else 1
-                    during_embed.fields[field_index].value += (f'\n{user.mention}: 🟡')
-                    await interaction.message.edit(embed=during_embed)
-                    try:
-                        await user.send(
-                            embed=ask_veteran_embed(
-                                member=interaction.user,
-                                date=date_obj.date
-                            ),
-                            view=PrivateMessageView(),
-                            delete_after=86400
-                        )
-                        await rcd_app_orm.insert_askmember_id(session, user.id)
-                        logger.info(f'Пользователю "{user.display_name}" был отправлен вопрос об РЧД')
-                    except discord.Forbidden:
-                        logger.warning(f'Пользователю "{user.display_name}" запрещено отправлять сообщения')
+                    section = (
+                        SECTION_VETERANS if discord.utils.get(user.roles, name=VETERAN_ROLE)
+                        else SECTION_SERGEANTS
+                    )
+                    if await rcd_app_orm.add_asked_participant(session, user.id, section):
+                        to_ask.append(user)
                 await session.commit()
-                await interaction.respond('✅', delete_after=1)
+            # одна перерисовка на весь опрос, затем рассылка уже без блокировки
+            if to_ask:
+                await refresh_rcd_list(interaction.client)
+            await send_ask_messages(to_ask, interaction.user, date_obj.date)
+            await interaction.respond('✅', delete_after=1)
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
             logger.error(
@@ -906,38 +888,24 @@ class StartRCDButton(View):
     ):
         try:
             await interaction.response.defer(invisible=False, ephemeral=True)
+            veteran_role: discord.Role | None = discord.utils.get(interaction.guild.roles, name=VETERAN_ROLE)
+            to_ask: list[discord.Member] = []
             async with async_session_factory() as session:
-                during_embed: discord.Embed = interaction.message.embeds[0]
-                veteran_role: discord.Role | None = discord.utils.get(interaction.guild.roles, name=VETERAN_ROLE)
-                all_askmember_ids: list = await rcd_app_orm.get_all_askmember_ids(session)
-                all_appmember_ids: list = await rcd_app_orm.get_all_appmember_ids(session)
                 date_obj = await rcd_app_orm.get_rcd_date_obj(session=session, pk=StaticNames.RCD_DATE)
-                all_members = all_askmember_ids + all_appmember_ids
                 for veteran in veteran_role.members:
-                    if veteran.id in all_members:
-                        continue
-                    during_embed.fields[0].value += (f'\n{veteran.mention}: 🟡')
-                    await interaction.message.edit(embed=during_embed)
-                    try:
-                        await veteran.send(
-                            embed=ask_veteran_embed(
-                                member=interaction.user,
-                                date=date_obj.date
-                            ),
-                            view=PrivateMessageView(),
-                            delete_after=86400
-                        )
-                        await rcd_app_orm.insert_askmember_id(session, veteran.id)
-                        logger.info(f'Пользователю "{veteran.display_name}" был отправлен вопрос об РЧД')
-                    except discord.Forbidden:
-                        logger.warning(f'Пользователю "{veteran.display_name}" запрещено отправлять сообщения')
+                    if await rcd_app_orm.add_asked_participant(session, veteran.id, SECTION_VETERANS):
+                        to_ask.append(veteran)
                 await session.commit()
-                button.disabled = True
-                button.style = discord.ButtonStyle.gray
-                button.label = "Всем ветеранам отправлен запрос"
-                button.emoji = "✅"
-                await interaction.message.edit(embed=during_embed, view=self)
-                await interaction.respond('✅', delete_after=1)
+            if to_ask:
+                await refresh_rcd_list(interaction.client)
+            await send_ask_messages(to_ask, interaction.user, date_obj.date)
+            button.disabled = True
+            button.style = discord.ButtonStyle.gray
+            button.label = "Всем ветеранам отправлен запрос"
+            button.emoji = "✅"
+            # только view: embed здесь не передаём, иначе снова зальём устаревший снимок
+            await interaction.message.edit(view=self)
+            await interaction.respond('✅', delete_after=1)
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
             logger.error(

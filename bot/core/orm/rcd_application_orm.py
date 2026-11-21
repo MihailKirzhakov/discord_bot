@@ -1,3 +1,5 @@
+import time
+
 from core.models import (
     AppMemberList,
     AskMemberList,
@@ -5,10 +7,17 @@ from core.models import (
     DateInfo,
     NoticeList,
     RcdApplication,
+    RcdParticipant,
 )
+from sqlalchemy import select, update
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .base_async_orm import AsyncORM
+
+PARTICIPANT_ASKED = 'asked'
+PARTICIPANT_DENIED = 'denied'
+PARTICIPANT_APPLIED = 'applied'
 
 
 class RcdApplicationORM(AsyncORM):
@@ -97,12 +106,71 @@ class RcdApplicationORM(AsyncORM):
         return result
 
     async def get_all_appmember_ids(self, session: AsyncSession):
-        result = await self.get_filter_obj_all(session, AppMemberList)
+        """id тех, кто подал заявку (статус applied)"""
+        result = await self.get_filter_obj_all(
+            session, RcdParticipant, status=PARTICIPANT_APPLIED
+        )
         return [member.member_id for member in result]
 
-    async def get_all_askmember_ids(self, session: AsyncSession):
-        result = await self.get_filter_obj_all(session, AskMemberList)
+    async def get_all_participant_ids(self, session: AsyncSession):
+        """id всех, кто уже есть в списке (спрошен, отказался или подал заявку)"""
+        result = await self.get_filter_obj_all(session, RcdParticipant)
         return [member.member_id for member in result]
+
+    async def get_participants(self, session: AsyncSession):
+        """Участники в порядке появления в списке"""
+        result = await session.execute(
+            select(RcdParticipant).order_by(
+                RcdParticipant.created_at, RcdParticipant.member_id
+            )
+        )
+        return result.scalars().all()
+
+    # Операции над участниками атомарны (INSERT ... ON CONFLICT / условный UPDATE):
+    # рассылка и ответы идут параллельно, и "прочитал -> вставил" ловил
+    # UNIQUE на member_id, если другая транзакция успевала вставить строку раньше
+    async def add_asked_participant(
+        self, session: AsyncSession, member_id: int, section: int
+    ) -> bool:
+        """Добавляет спрошенного (🟡). False — если он уже есть в списке."""
+        result = await session.execute(
+            sqlite_insert(RcdParticipant)
+            .values(
+                member_id=member_id, section=section,
+                status=PARTICIPANT_ASKED, created_at=time.time()
+            )
+            .on_conflict_do_nothing(index_elements=['member_id'])
+        )
+        return result.rowcount == 1
+
+    async def set_participant_applied(
+        self, session: AsyncSession, member_id: int, section: int,
+        class_role: str, honor: str
+    ):
+        """Заявка: обновляет строку на месте (порядок сохраняется) или добавляет в конец"""
+        fields = dict(
+            section=section, status=PARTICIPANT_APPLIED,
+            class_role=class_role, honor=honor
+        )
+        await session.execute(
+            sqlite_insert(RcdParticipant)
+            .values(member_id=member_id, created_at=time.time(), **fields)
+            .on_conflict_do_update(index_elements=['member_id'], set_=fields)
+        )
+
+    async def set_participant_denied(
+        self, session: AsyncSession, member_id: int
+    ) -> bool:
+        """Отказ меняет только 🟡 -> 🔴; поданную заявку не трогает"""
+        result = await session.execute(
+            update(RcdParticipant)
+            .where(
+                RcdParticipant.member_id == member_id,
+                RcdParticipant.status == PARTICIPANT_ASKED
+            )
+            .values(status=PARTICIPANT_DENIED)
+        )
+        return result.rowcount == 1
 
     async def get_notice_list_obj_all(self, session: AsyncSession):
         result = await self.get_filter_obj_all(session, NoticeList)
@@ -174,7 +242,7 @@ class RcdApplicationORM(AsyncORM):
     async def clear_rcd_data(self, session: AsyncSession):
         for model in [
             AppMemberList, AskMemberList, DateInfo,
-            NoticeList, RcdApplication
+            NoticeList, RcdApplication, RcdParticipant
         ]:
             await self.clear_table(session, model)
 

@@ -18,6 +18,7 @@ from rcd_aplication.rcd_aplication import (
     PrivateMessageView,
     StartRCDButton,
 )
+from rcd_aplication.rcd_list_state import import_legacy_rcd_list
 from rename_request.rename_request import AccessDeniedView, RenameButton
 from role_application.role_application import (
     ApplicationButton,
@@ -43,6 +44,11 @@ async def on_ready() -> None:
     """Событие запуска бота"""
 
     await async_orm.create_tables()
+    try:
+        # РЧД, начатая до перехода на RcdParticipant, хранит список только в сообщении
+        await import_legacy_rcd_list(bot)
+    except Exception as error:
+        logger.error(f'Не удалось перенести список РЧД из сообщения в БД: "{error}"')
     await restore_active_auctions(bot)
     app_channel = await bot.fetch_channel(APPLICATION_CHANNEL_ID)
     if not isinstance(app_channel, TextChannel):

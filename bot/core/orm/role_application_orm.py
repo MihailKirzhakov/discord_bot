@@ -33,6 +33,12 @@ class RoleApplicationORM(AsyncORM):
         result = await session.get(RoleApplicationData, pk)
         return result
 
+    async def get_roleapp_obj_by_user_id(self, session: AsyncSession, user_id: int):
+        """Метод для получения заявки пользователя по его Discord id"""
+        return await self.get_filter_obj_first(
+            session, RoleApplicationData, user_id=user_id
+        )
+
     async def get_roleapp_count(self, session: AsyncSession):
         """Метод для получения количества строк в таблице"""
         result = await session.execute(

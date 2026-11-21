@@ -293,6 +293,13 @@ async def check_roles(
                 await member.remove_roles(sergeant_role, veteran_role, officer_role, treasurer_role)
                 await member.add_roles(guest_role)
                 logger.info(f'У пользователя {member.display_name} забрали роль!')
+            elif member_name in guild_member_list and guild_rank_role is None:
+                # Звание из файла не сопоставлено ни с одной ролью Discord:
+                # раньше add_roles(None) ронял всю команду ('NoneType'... 'id')
+                logger.warning(
+                    f'/check_roles: для {member.display_name} звание '
+                    f'"{guild_rank_name}" не соответствует ни одной роли, пропуск'
+                )
             elif (
                 member_name in guild_member_list
                 and guest_role not in member.roles

@@ -1,6 +1,7 @@
+import asyncio
+
 import discord
 from core import (
-    ANSWER_IF_CHEAT,
     ANSWER_IF_CLICKED_THE_SAME_TIME,
     ANSWER_IF_DUPLICATE_APP,
     ANSWER_IF_DUPLICATE_NICK,
@@ -20,6 +21,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .embeds import access_embed, application_embed, denied_embed, start_app_embed
 from .functions import character_lookup, has_required_role
+
+WARNING_NOT_FOUND_IN_ARMORY = (
+    '⚠️ _Персонаж не найден в оружейке на сервере «Нить судьбы». '
+    'Возможно, данные сайта ещё не обновились — проверь ник вручную._'
+)
+WARNING_ARMORY_UNAVAILABLE = (
+    '⚠️ _Оружейка недоступна, персонаж не проверен — проверь ник вручную._'
+)
 
 
 class AcceptRoleButton(discord.ui.Button):
@@ -261,8 +270,9 @@ class RoleApplication(Modal):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(invisible=False, ephemeral=True)
+        nickname: str | None = None
         try:
-            nickname: str = self.children[0].value
+            nickname = self.children[0].value
             user: discord.User = interaction.user
             member: discord.Member | None = discord.utils.get(
                 interaction.guild.members, id=user.id
@@ -271,26 +281,16 @@ class RoleApplication(Modal):
                 interaction.guild.members, display_name=nickname
             )
             role = discord.utils.get(interaction.guild.roles, name=GUEST_ROLE)
+            # requests синхронный: в отдельном потоке, чтобы не блокировать
+            # event loop (иначе остальные взаимодействия ловят 10062)
+            player_parms = await asyncio.to_thread(character_lookup, 1, nickname)
             async with async_session_factory() as session:
                 obj = await role_app_orm.get_roleapp_obj(session, nickname)
-                player_parms = character_lookup(1, nickname)
-                if player_parms == 'Bad site work':
-                    await self.handle_bad_site_work(
-                        interaction, session, nickname, user, member
-                    )
-                    await session.commit()
-                    logger.info(
-                        f'Пользователь {interaction.user.display_name} заполнил форму, '
-                        f'она была отправлена в канал "{self.channel}"'
-                    )
-                    return
-
-                if not player_parms:
-                    return await self.respond_with_message(
-                        interaction, ANSWER_IF_CHEAT, 15
-                    )
-
-                if obj:
+                user_obj = await role_app_orm.get_roleapp_obj_by_user_id(
+                    session, user.id
+                )
+                # Проверка дубля до любой вставки, в т.ч. при упавшей оружейке
+                if obj or user_obj:
                     return await self.respond_with_message(
                         interaction, ANSWER_IF_DUPLICATE_APP, 10
                     )
@@ -299,6 +299,19 @@ class RoleApplication(Modal):
                     return await self.respond_with_message(
                         interaction, ANSWER_IF_DUPLICATE_NICK, 10
                     )
+
+                # Персонаж не подтверждён оружейкой: не отказываем, а отдаём
+                # решение офицерам с пометкой (API оружейки бывает с отставанием)
+                if player_parms == 'Bad site work' or not player_parms:
+                    warning = (
+                        WARNING_ARMORY_UNAVAILABLE if player_parms == 'Bad site work'
+                        else WARNING_NOT_FOUND_IN_ARMORY
+                    )
+                    await self.send_unverified_application(
+                        interaction, session, nickname, user, member, warning
+                    )
+                    await session.commit()
+                    return
 
                 description = self.build_description(player_parms, user)
                 await self.send_application(
@@ -321,15 +334,16 @@ class RoleApplication(Modal):
                 f'"{error}"'
             )
 
-    async def _build_button_custom_ids(self, session: AsyncSession) -> tuple[str, str]:
-        count = await role_app_orm.get_roleapp_count(session)
-        return f'{count}Выдать', f'{count}НеВыдать'
+    async def _build_button_custom_ids(self, user_id: int) -> tuple[str, str]:
+        # user_id уникален в таблице заявок, поэтому id кнопок не пересекаются.
+        # Прежняя схема от COUNT(*) давала дубли после удаления заявок.
+        return f'{user_id}Выдать', f'{user_id}НеВыдать'
 
-    async def handle_bad_site_work(
+    async def send_unverified_application(
         self, interaction, session: AsyncSession,
-        nickname, user, member
+        nickname, user, member, warning: str
     ):
-        acc_btn_cstm_id, den_btn_cstm_id = await self._build_button_custom_ids(session)
+        acc_btn_cstm_id, den_btn_cstm_id = await self._build_button_custom_ids(user.id)
         await role_app_orm.insert_role_application_data(
             session=session,
             nickname=nickname,
@@ -337,7 +351,7 @@ class RoleApplication(Modal):
             acc_btn_cstm_id=acc_btn_cstm_id,
             den_btn_cstm_id=den_btn_cstm_id
         )
-        description = f'Профиль Discord: {user.mention}\n'
+        description = f'Профиль Discord: {user.mention}\n\n{warning}'
         await self.channel.send(
             view=RoleButton(acc_btn_cstm_id, den_btn_cstm_id),
             embed=application_embed(
@@ -348,7 +362,8 @@ class RoleApplication(Modal):
             interaction, '👍\n_Твой запрос принят! Дождись выдачи роли_', 5
         )
         logger.info(
-            f'Пользователь {interaction.user.display_name} заполнил форму, '
+            f'Пользователь {interaction.user.display_name} заполнил форму '
+            f'без подтверждения оружейкой ({warning}), '
             f'она была отправлена в канал "{self.channel}"'
         )
 
@@ -368,7 +383,7 @@ class RoleApplication(Modal):
         self, interaction, session: AsyncSession,
         nickname, user, member, player_parms, description
     ):
-        acc_btn_cstm_id, den_btn_cstm_id = await self._build_button_custom_ids(session)
+        acc_btn_cstm_id, den_btn_cstm_id = await self._build_button_custom_ids(user.id)
         await role_app_orm.insert_role_application_data(
             session=session,
             nickname=nickname,
@@ -413,11 +428,18 @@ class ApplicationButton(View):
         try:
             await interaction.response.send_modal(RoleApplication(channel=self.channel))
         except Exception as error:
-            await interaction.respond('❌', ephemeral=True, delete_after=1)
             logger.error(
                 f'При попытке вызвать модальное окно нажатием на кнопку '
                 f'"{button.label}" возникла ошибка "{error}"'
             )
+            # При 10062 (истёк 3-секундный токен) или обрыве сети ответить
+            # уже нельзя: повторная попытка только порождает второе исключение
+            try:
+                await interaction.respond('❌', ephemeral=True, delete_after=1)
+            except discord.HTTPException as respond_error:
+                logger.warning(
+                    f'Не удалось ответить на нажатие "{button.label}": {respond_error}'
+                )
 
 
 @commands.slash_command()

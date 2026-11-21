@@ -53,3 +53,19 @@ class ButtonInfo(Base):
     label: Mapped[str_empty]
     style: Mapped[int_empty]
     disabled: Mapped[bool_empty]
+
+
+class RcdParticipant(Base):
+    """
+    Участник списка заявок на РЧД — единственный источник правды
+    для сообщения со списком. Сообщение целиком перерисовывается из этой таблицы.
+    """
+    member_id: Mapped[intpk]
+    # 0 — раздел "Ветераны", 1 — раздел "Старшины"
+    section: Mapped[int]
+    # asked (🟡) | denied (🔴) | applied (класс + честь)
+    status: Mapped[str]
+    class_role: Mapped[str_empty]
+    honor: Mapped[str_empty]
+    # порядок строк в списке; при смене статуса не меняется
+    created_at: Mapped[float]

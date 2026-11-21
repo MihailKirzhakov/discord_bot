@@ -1,7 +1,7 @@
 from .auc_models import UserBid, AuctionDataInfo
 from .rcd_app_models import (
     AppMemberList, AskMemberList, DateInfo,
-    NoticeList, RcdApplication, ButtonInfo
+    NoticeList, RcdApplication, ButtonInfo, RcdParticipant
 )
 from .pve_models import AppMemberListPve, DateInfoPve, PveApplication, NoticeListPve
 from .role_app_models import RoleApplicationData
@@ -18,6 +18,7 @@ __all__ = [
     'RcdApplication',
     'RoleApplicationData',
     'ButtonInfo',
+    'RcdParticipant',
     'RenameRequestModel',
     'AppMemberListPve',
     'DateInfoPve',

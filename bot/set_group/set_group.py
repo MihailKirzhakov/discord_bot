@@ -148,7 +148,14 @@ class SetGroup(Select):
                     embed.fields[0].value += f'\n{extra_number + len(members) + 2}.'
 
             if self.if_edit:
-                await self.interaction_message.edit(embed=embed)
+                try:
+                    await self.interaction_message.edit(embed=embed)
+                except discord.NotFound:
+                    # Сообщение группы удалили, пока пользователь редактировал
+                    return await interaction.respond(
+                        '_Сообщение группы уже удалено, создай группу заново_',
+                        ephemeral=True, delete_after=5
+                    )
             else:
                 await interaction.channel.send(
                     view=EditGroupButton(),

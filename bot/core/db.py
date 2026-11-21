@@ -1,5 +1,6 @@
 from typing import Annotated, TypeVar
 
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declared_attr, DeclarativeBase,  mapped_column
 
@@ -23,5 +24,22 @@ class Base(DeclarativeBase):
 
 
 ModelType = TypeVar('ModelType', bound=Base)
-async_engine = create_async_engine(settings.database_url)
+_is_sqlite = settings.database_url.startswith('sqlite')
+
+async_engine = create_async_engine(
+    settings.database_url,
+    # Сессии держат write-lock, пока идут вызовы Discord API (fetch/edit),
+    # и по умолчанию через 5 с конкурент получает "database is locked"
+    connect_args={'timeout': 30} if _is_sqlite else {},
+)
+
+if _is_sqlite:
+    @event.listens_for(async_engine.sync_engine, 'connect')
+    def _sqlite_pragmas(dbapi_connection, _):
+        cursor = dbapi_connection.cursor()
+        # WAL: чтения не блокируют запись и наоборот
+        cursor.execute('PRAGMA journal_mode=WAL')
+        cursor.execute('PRAGMA busy_timeout=30000')
+        cursor.close()
+
 async_session_factory = async_sessionmaker(async_engine)
