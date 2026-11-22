@@ -856,6 +856,8 @@ class StartRCDButton(View):
             to_ask: list[discord.Member] = []
             async with async_session_factory() as session:
                 date_obj = await rcd_app_orm.get_rcd_date_obj(session=session, pk=StaticNames.RCD_DATE)
+                # читаем до commit: после него атрибуты expire, а сессия будет закрыта
+                rcd_date: str = date_obj.date
                 for user in select.values:
                     if guest_role in user.roles:
                         continue
@@ -869,7 +871,7 @@ class StartRCDButton(View):
             # одна перерисовка на весь опрос, затем рассылка уже без блокировки
             if to_ask:
                 await refresh_rcd_list(interaction.client)
-            await send_ask_messages(to_ask, interaction.user, date_obj.date)
+            await send_ask_messages(to_ask, interaction.user, rcd_date)
             await interaction.respond('✅', delete_after=1)
         except Exception as error:
             await interaction.respond('❌', delete_after=1)
@@ -892,13 +894,15 @@ class StartRCDButton(View):
             to_ask: list[discord.Member] = []
             async with async_session_factory() as session:
                 date_obj = await rcd_app_orm.get_rcd_date_obj(session=session, pk=StaticNames.RCD_DATE)
+                # читаем до commit: после него атрибуты expire, а сессия будет закрыта
+                rcd_date: str = date_obj.date
                 for veteran in veteran_role.members:
                     if await rcd_app_orm.add_asked_participant(session, veteran.id, SECTION_VETERANS):
                         to_ask.append(veteran)
                 await session.commit()
             if to_ask:
                 await refresh_rcd_list(interaction.client)
-            await send_ask_messages(to_ask, interaction.user, date_obj.date)
+            await send_ask_messages(to_ask, interaction.user, rcd_date)
             button.disabled = True
             button.style = discord.ButtonStyle.gray
             button.label = "Всем ветеранам отправлен запрос"

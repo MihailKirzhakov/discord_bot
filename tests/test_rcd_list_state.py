@@ -197,3 +197,62 @@ def test_import_legacy_message():
         assert embed.fields[1].value == '<@3>: 🔴'
 
     asyncio.run(scenario())
+
+
+class _FakeRole:
+    def __init__(self, name, members=()):
+        self.name = name
+        self.members = list(members)
+
+
+class _FakeMember:
+    def __init__(self, member_id):
+        self.id = member_id
+        self.display_name = f'user{member_id}'
+        self.roles = []
+
+
+class _FakeInteraction:
+    """Минимум, который трогает ask_all_veteran_callback."""
+    def __init__(self, client, roles):
+        self.client = client
+        self.user = _FakeMember(1)
+        self.guild = type('G', (), {'roles': roles})()
+        self.message = client.channel.message
+        self.responses = []
+
+        async def defer(**_):
+            return None
+        self.response = type('R', (), {'defer': staticmethod(defer)})()
+
+    async def respond(self, content=None, **_):
+        self.responses.append(content)
+
+
+def test_ask_all_veterans_handler_sends_messages(monkeypatch):
+    """
+    Регрессия 22.11: дата РЧД читалась после commit -> DetachedInstanceError,
+    строки 🟡 записывались, а личные сообщения не уходили.
+    """
+    import rcd_aplication.rcd_aplication as rcd
+    from core import VETERAN_ROLE
+
+    async def scenario():
+        client = await _setup_rcd()
+        veterans = [_FakeMember(2000 + i) for i in range(3)]
+        interaction = _FakeInteraction(client, [_FakeRole(VETERAN_ROLE, veterans)])
+        sent = []
+
+        async def fake_send(users, asker, date):
+            sent.append(([u.id for u in users], date))
+        monkeypatch.setattr(rcd, 'send_ask_messages', fake_send)
+
+        view = rcd.StartRCDButton()
+        button = next(c for c in view.children if c.custom_id == 'СпроситьВсехВетеранов')
+        await button.callback(interaction)
+
+        assert interaction.responses == ['✅'], interaction.responses
+        assert sent == [([2000, 2001, 2002], '01.01')]
+        assert set(_lines(client.channel.message)) == {2000, 2001, 2002}
+
+    asyncio.run(scenario())
