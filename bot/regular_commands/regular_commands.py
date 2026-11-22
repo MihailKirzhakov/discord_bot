@@ -27,6 +27,11 @@ from loguru import logger
 
 from .embeds import removed_role_list_embed, technical_works_embed
 
+# Звание в выгрузке гильдии -> название роли в Discord, если они различаются
+GUILD_RANK_TO_ROLE: dict[str, str] = {
+    'Лидер': LEADER_ROLE,
+}
+
 
 async def command_error(
     ctx: discord.ApplicationContext, error: Exception, command_name: str
@@ -282,6 +287,8 @@ async def check_roles(
         for member in members:
             member_name = re.sub(r'[^a-zA-Zа-яА-ЯеЕёЁ0-9]', '', member.display_name)
             guild_rank_name = guild_member_list.get(member_name)
+            # в файле гильдии звания называются не всегда как роли в Discord
+            guild_rank_name = GUILD_RANK_TO_ROLE.get(guild_rank_name, guild_rank_name)
 
             guild_rank_role = role_dict.get(guild_rank_name) if guild_rank_name else None
             
@@ -293,6 +300,14 @@ async def check_roles(
                 await member.remove_roles(sergeant_role, veteran_role, officer_role, treasurer_role)
                 await member.add_roles(guest_role)
                 logger.info(f'У пользователя {member.display_name} забрали роль!')
+            elif member_name in guild_member_list and guild_rank_role == leader_role:
+                # Звание распознано, но роль лидера бот не выдаёт и не снимает:
+                # сопоставление идёт по отображаемому имени, его может сменить любой
+                if leader_role not in member.roles:
+                    logger.warning(
+                        f'/check_roles: у {member.display_name} звание "Лидер" в файле гильдии, '
+                        f'но нет роли "{LEADER_ROLE}" — роли не меняю, проверь вручную'
+                    )
             elif member_name in guild_member_list and guild_rank_role is None:
                 # Звание из файла не сопоставлено ни с одной ролью Discord:
                 # раньше add_roles(None) ронял всю команду ('NoneType'... 'id')
